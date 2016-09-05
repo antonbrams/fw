@@ -1,4 +1,4 @@
-s
+
 
 
 var webpack	= require('webpack')
