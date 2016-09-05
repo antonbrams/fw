@@ -1,27 +1,21 @@
 {
-  "name": "App",
+  "name": "fw",
   "version": "1.0.0",
-  "description": "This is an App of Anton Kluev",
+  "description": "My own javascript framework for web development",
   "author": "antonkluev",
   "email": "dev@antonkluev.com",
   
   "scripts": {
-    "client:prod": "NODE_ENV=client.prod  webpack --progress",
-    "server:prod": "NODE_ENV=server.prod  webpack --progress",
-    "client:watch": "NODE_ENV=client.watch webpack-dev-server --inline",
+    "server:build": "NODE_ENV=server.build webpack --progress",
     "server:watch": "NODE_ENV=server.watch webpack",
-    "server": "nodemon --delay 1 ."
+    "test": "sudo nodemon ./test.js"
   },
-  
+
   "devDependencies": {
     "babel-loader": "^6.2.4",
     "babel-preset-es2015-native-modules": "^6.9.0",
     "webpack": "^2.1.0-beta.19",
     "webpack-dev-server": "^2.1.0-beta.0",
     "nodemon": "^1.9.2"
-  },
-  
-  "dependencies": {
-	  
   }
 }

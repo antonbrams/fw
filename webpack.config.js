@@ -25,20 +25,16 @@
 
 var webpack 	= require('webpack')
 var env 		= process.env.NODE_ENV.split('.')
-var env    		= {target: env[0], mode: env[1]}
+	env    		= {target: env[0], mode: env[1]}
 var config 		= {add:function(o){for(var i in o)this[i]=o[i]}}
 
 if (env.target == 'server') config.add({
-	entry : {'index.js' : './fw.js'}
+	entry : {'./index.js' : './fw.js'}
 })
 
-if (env.target == 'client') config.add({
-	entry : {'index.js' : './fw.js'}
-})
-
-if (env.mode == 'prod') {
+if (env.mode == 'build') {
 	config.add({
-		//devtool	: 'inline-source-map',
+		devtool	: 'inline-source-map',
 		plugins : [
 			new webpack.LoaderOptionsPlugin({
 				minimize	: true,
@@ -58,13 +54,6 @@ if (env.mode == 'prod') {
 	if (env.target == 'server') config.add({
 		watch : true
 	})
-	if (env.target == 'client') config.add({
-		devServer : {
-	    	port		: 8000,
-			stats		: 'errors-only',
-			contentBase	: './'
-		}
-	})
 }
 
 config.add({
@@ -80,25 +69,11 @@ config.add({
 				test	: /\.(js|jsx)$/,
 				exclude	: /node_modules/,
                 query	: {
-                    presets	: ['es2015-native-modules'].map(function (name) {
-	                    return require.resolve('babel-preset-'+ name
-	                )}),
-	                plugins : [].map(function (name) {
-	                    return require.resolve('babel-preset-'+ name
-	                )})
+                    presets	: ['es2015']
                 }
             }
         ]
     },
-	resolve : {
-		modules : [
-			'node_modules',
-			// '../../libs/fw/3.0.0/'
-		]
-	},
-	resolveLoader : {
-		root : __dirname + '/node_modules'
-	}
 })
 
 module.exports = config
