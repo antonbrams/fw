@@ -1,4 +1,4 @@
-
+s
 
 
 var webpack	= require('webpack')
@@ -11,7 +11,7 @@ if (env.target == 'server') config.add({
 })
 
 if (env.mode == 'build') config.add({
-	devtool	: 'inline-source-map',
+	devtool	: 'eval',
 	plugins : [
 		new webpack.LoaderOptionsPlugin({
 			minimize	: true,
