@@ -1,3 +1,6 @@
+
+
+
 {
   "name": "fw",
   "version": "1.0.0",
@@ -6,8 +9,8 @@
   "email": "dev@antonkluev.com",
   
   "scripts": {
-    "server:build": "NODE_ENV=server.build webpack --progress",
-    "server:watch": "NODE_ENV=server.watch webpack",
+    "build": "NODE_ENV=server.build webpack --progress",
+    "watch": "NODE_ENV=server.watch webpack",
     "test": "sudo nodemon ./test.js"
   },
 
@@ -19,3 +22,5 @@
     "nodemon": "^1.9.2"
   }
 }
+
+

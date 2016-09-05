@@ -29,7 +29,7 @@ var env 		= process.env.NODE_ENV.split('.')
 var config 		= {add:function(o){for(var i in o)this[i]=o[i]}}
 
 if (env.target == 'server') config.add({
-	entry : {'./index.js' : './fw.js'}
+	entry : {'./index.js' : './libs/fw.js'}
 })
 
 if (env.mode == 'build') {
