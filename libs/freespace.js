@@ -86,8 +86,8 @@ export default {
 	},
 	
 	detach (boxes) {
-		prev = boxes.length - 2
-		last = boxes.length - 1
+		var prev = boxes.length - 2
+		var last = boxes.length - 1
 		if (
 			boxes[prev]     && 
 			boxes[prev].h 	== boxes[last].h   &&
@@ -110,7 +110,7 @@ export default {
 				}
 			}
 		}
-		return boxes.filter(_box => _box)
+		return boxes.filter(box => box)
 	},
 
 	shift (head, direction, value) {
@@ -123,9 +123,8 @@ export default {
 	},
 
 	collide (list, box) {
-		var listLength = _list.length
-		for (var i = 0; i < listLength; i ++) 
-			if (fwGeometry.boxCollision(_list[i], _box)) return true
+		for (var i = 0; i < list.length; i ++) 
+			if (fwGeometry.boxCollision(list[i], box)) return true
 		return false
 	},
 

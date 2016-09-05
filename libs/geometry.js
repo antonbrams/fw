@@ -14,7 +14,7 @@ export default {
     	}
 	},
 	
-	offset (dom, parent) {
+	offset (_dom, parent) {
 		var dom    = _dom
 		var offset = {l: 0, t: 0}
         var parent = parent || document.body

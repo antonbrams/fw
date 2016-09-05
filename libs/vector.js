@@ -7,7 +7,6 @@ export default class Vec {
         this.x = x
         this.y = y
         this.z = z
-		console.log('vector not cutted')
     }
 
     copy () {
@@ -100,7 +99,7 @@ export default class Vec {
         )
     }
 
-    getTween (vec, i) {
+    tween (vec, i) {
     	return new Vec(
 	    	i * (vec.x - this.x) + this.x,
 	    	i * (vec.y - this.y) + this.y,
