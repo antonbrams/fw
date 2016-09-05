@@ -2,7 +2,7 @@
 
 
 import {default as fwStyle} from './style'
-import {default as fwDom} from './dom'
+import {default as fwDom} 	from './dom'
 
 export default {
 

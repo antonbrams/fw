@@ -20,12 +20,11 @@ export default class Vec {
 	        this.y += vec.y
 	        this.z += vec.z
 	        return this
-        } else
-	        return new Vec(
-	            this.x + vec.x,
-	            this.y + vec.y,
-	            this.z + vec.z
-	        )
+        } else return new Vec(
+            this.x + vec.x,
+            this.y + vec.y,
+            this.z + vec.z
+        )
     }
 
     sub (vec, set) {
@@ -34,12 +33,11 @@ export default class Vec {
 	        this.y -= vec.y
 	        this.z -= vec.z
 	        return this
-		} else
-	        return new Vec(
-	            this.x - vec.x,
-	            this.y - vec.y,
-	            this.z - vec.z
-	        )
+		} else return new Vec(
+            this.x - vec.x,
+            this.y - vec.y,
+            this.z - vec.z
+        )
     }
     
     div (vec, apply) {
@@ -48,13 +46,11 @@ export default class Vec {
 	        this.y /= vec.y
 	        this.z /= vec.z
 	        return this
-        } else {
-	        return new Vec(
-	            this.x / vec.x,
-	            this.y / vec.y,
-	            this.z / vec.z
-	        )
-	    }
+        } else return new Vec(
+            this.x / vec.x,
+            this.y / vec.y,
+            this.z / vec.z
+        )
     }
 
     len () {
@@ -71,12 +67,11 @@ export default class Vec {
 			this.y *= len
 			this.z *= len
 			return this
-		} else
-			return new Vec(
-	            this.x * len,
-	            this.y * len,
-	            this.z * len
-	        )
+		} else return new Vec(
+            this.x * len,
+            this.y * len,
+            this.z * len
+        )
     }
 
     norm (set) {
@@ -86,13 +81,14 @@ export default class Vec {
 	        this.y *= len
 	        this.z *= len
 	        return this
-	    } else
+	    } else {
 		    var len = 1 / this.len()
 	        return new Vec(
 	            this.x * len,
 	            this.y * len,
 	            this.z * len
 	        )
+        }
     }
  
     resize (len) {
