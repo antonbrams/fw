@@ -11,14 +11,14 @@
 			bundle.js
 			graphic/
 				style.css
-			lib/
+			libs/
 				app.js
 				.../
 		server/
 			package.json
 			node_modules/
 			index.js
-			lib/
+			libs/
 				app.js
 				.../
 */
@@ -29,16 +29,16 @@ var env    		= {target: env[0], mode: env[1]}
 var config 		= {add:function(o){for(var i in o)this[i]=o[i]}}
 
 if (env.target == 'server') config.add({
-	entry : {'index.js'	 : './lib/app.js'}
+	entry : {'index.js'	 : './libs/index.js'}
 })
 
 if (env.target == 'client') config.add({
-	entry : {'bundle.js' : './lib/app.js'}
+	entry : {'index.js' : './libs/index.js'}
 })
 
 if (env.mode == 'prod') {
 	config.add({
-		devtool	: 'inline-source-map',
+		//devtool	: 'inline-source-map',
 		plugins : [
 			new webpack.LoaderOptionsPlugin({
 				minimize	: true,
@@ -68,7 +68,11 @@ if (env.mode == 'prod') {
 }
 
 config.add({
-    output	: {filename: '[name]'},
+    output	: {
+		filename: '[name]',
+        libraryTarget: "umd",
+        library: "fw"
+	},
     module	: {
         loaders	: [
             {
@@ -89,7 +93,7 @@ config.add({
 	resolve : {
 		modules : [
 			'node_modules',
-			'../../libs/fw/3.0.0/'
+			// '../../libs/fw/3.0.0/'
 		]
 	},
 	resolveLoader : {

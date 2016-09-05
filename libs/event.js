@@ -1,7 +1,7 @@
 
 
 
-import {dom as fwDom} from 'fw'
+import {dom as fwDom} from './index'
 
 export default {
 

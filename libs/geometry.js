@@ -4,7 +4,7 @@
 import {
 	style	as fwStyle, 
 	dom  	as fwDom
-} from 'fw'
+} from './index'
 
 export default {
 

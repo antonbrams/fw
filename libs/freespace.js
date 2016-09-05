@@ -1,7 +1,10 @@
 
 
 
-import {geometry as fwGeometry} from 'fw'
+import {
+	geometry as fwGeometry,
+	color    as fwColor
+} from './index'
 
 export default {
 
@@ -133,12 +136,11 @@ export default {
 		var oldBoxes = document.body.getElementsByClassName('collider')
 		while (oldBoxes.length > 0) document.body.removeChild(oldBoxes[0])
 		// Create New
-		var shift	= () => { return (Math.random() - 0.5) * gl.grid.gutter / 2 }
-		var rgb 	= () => { return parseInt(Math.random() * 200 + 55) }
+		var shift = () => { return (Math.random() - 0.5) * gl.grid.gutter / 2 }
 		for (var i = 0; i < box.length; i ++) {
 			var test	= document.createElement("div")
 			test.className = 'collider'
-			test.style.backgroundColor 	= fw.getRandomColor()
+			test.style.backgroundColor 	= fwColor.rand()
 			test.style.position 		= "absolute"
 			test.style.left		= shift() + gl.grid.PTtoPX(box[i].l + 1, true)
 			test.style.top 		= shift() + gl.grid.PTtoPX(box[i].t + 1, true)
