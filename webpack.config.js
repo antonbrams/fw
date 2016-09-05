@@ -29,11 +29,11 @@ var env    		= {target: env[0], mode: env[1]}
 var config 		= {add:function(o){for(var i in o)this[i]=o[i]}}
 
 if (env.target == 'server') config.add({
-	entry : {'index.js'	 : './libs/index.js'}
+	entry : {'index.js' : './fw.js'}
 })
 
 if (env.target == 'client') config.add({
-	entry : {'index.js' : './libs/index.js'}
+	entry : {'index.js' : './fw.js'}
 })
 
 if (env.mode == 'prod') {

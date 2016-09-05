@@ -1,10 +1,8 @@
 
 
 
-import {
-	style	as fwStyle, 
-	dom  	as fwDom
-} from './index'
+import {default as fwStyle} from './style'
+import {default as fwDom} from './dom'
 
 export default {
 

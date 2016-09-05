@@ -1,7 +1,7 @@
 
 
 
-import {style as fwStyle} from './index'
+import {default as fwStyle} from './style'
 
 export default {
     

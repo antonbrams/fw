@@ -1,10 +1,8 @@
 
 
 
-import {
-	geometry as fwGeometry,
-	color    as fwColor
-} from './index'
+import {default as fwGeometry} from './geometry'
+import {default as fwColor} from './color'
 
 export default {
 
