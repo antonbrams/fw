@@ -3,41 +3,26 @@
 
 import {default as fwStyle} from './style'
 import {default as fwDom} 	from './dom'
+import {default as fwVec} 	from './vector'
 
 export default {
 
 	viewPortOffset (dom) {
 		var params = dom.getBoundingClientRect()
-    	return {
-	    	l: params.left,
-	    	t: params.top
-    	}
+    	return new fwVec(params.left, params.top)
 	},
 	
 	offset (_dom, parent) {
 		var dom    = _dom
-		var offset = {l: 0, t: 0}
+		var offset = new fwVec()
         var parent = parent || document.body
 		while (dom && dom.parentNode && dom != parent) {
-            var position = {
-                l: dom.offsetLeft,
-                t: dom.offsetTop
-            }
-            var scroll = {
-                l: dom.parentNode.scrollLeft,
-                t: dom.parentNode.scrollTop
-            }
-            var margin = {
-                l: fwStyle.computed(dom, 'margin-left'),
-                t: fwStyle.computed(dom, 'margin-top'),
-            }
-            var padding = {
-                l: fwStyle.computed(dom, 'padding-left'),
-                t: fwStyle.computed(dom, 'padding-top'),
-            }
-			offset.l += position.l - scroll.l - margin.l - padding.l
-			offset.t += position.t - scroll.t - margin.t - padding.t
-			dom = dom.parentNode
+            var position = new fwVec(dom.offsetLeft, dom.offsetTop)
+			var scroll   = new fwVec(dom.parentNode.scrollLeft, dom.parentNode.scrollTop)
+            var margin   = new fwVec(fwStyle.computed(dom, 'margin-left'), fwStyle.computed(dom, 'margin-top'))
+            var padding  = new fwVec(fwStyle.computed(dom, 'padding-left'), fwStyle.computed(dom, 'padding-top'))
+			offset       = offset.add(position).sub(scroll).sub(margin).sub(padding)
+			dom          = dom.parentNode
 		}
 		return offset
 	},
