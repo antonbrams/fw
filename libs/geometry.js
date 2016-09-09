@@ -31,8 +31,12 @@ export default {
                 l: fwStyle.computed(dom, 'margin-left'),
                 t: fwStyle.computed(dom, 'margin-top'),
             }
-			offset.l += position.l - scroll.l - margin.l
-			offset.t += position.t - scroll.t - margin.t
+            var padding = {
+                l: fwStyle.computed(dom, 'padding-left'),
+                t: fwStyle.computed(dom, 'padding-top'),
+            }
+			offset.l += position.l - scroll.l - margin.l - padding.l
+			offset.t += position.t - scroll.t - margin.t - padding.t
 			dom = dom.parentNode
 		}
 		return offset
