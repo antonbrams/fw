@@ -97,22 +97,20 @@ export default {
 	},
 	
 	filter (boxes) {
-		for (var i = 0; i < boxes.length; i ++) {
-			for (var n = 0; n < boxes.length; n ++) {
-				if (
-					i != n &&  boxes[i] && boxes[n]   
-				&&	(
-						boxes[n].w == 0
-					||  boxes[n].h == 0
-					||  boxes[i].l <= boxes[n].l && boxes[i].r() >= boxes[n].r()
-					&&  boxes[i].t <= boxes[n].t && boxes[i].b() >= boxes[n].b()
-					)
-				) {
-					boxes[n] = undefined
-				}
-			}
-		}
-		return boxes.filter(box => box)
+		for (var i = 0; i < boxes.length; i ++)
+		for (var n = 0; n < boxes.length; n ++)
+			if (
+				i != n
+			&& 	boxes[i]
+			&& 	boxes[n]
+			&&	(
+					boxes[n].w == 0
+				|| 	boxes[n].h == 0
+				||  boxes[i].l <= boxes[n].l && boxes[i].r() >= boxes[n].r()
+				&&  boxes[i].t <= boxes[n].t && boxes[i].b() >= boxes[n].b()
+				)
+			) boxes[n] = undefined
+		return boxes.filter(box => {return box})
 	},
 
 	shift (head, direction, value) {
