@@ -15,40 +15,40 @@ export default class Vec {
 
     add (vec, set) {
 	    if (set) {
-	        this.x += vec.x || 0
-	        this.y += vec.y || 0
-	        this.z += vec.z || 0
+	        this.x += (vec.x || 0)
+	        this.y += (vec.y || 0)
+	        this.z += (vec.z || 0)
 	        return this
         } else return new Vec(
-            this.x + vec.x || 0,
-            this.y + vec.y || 0,
-            this.z + vec.z || 0
+            this.x + (vec.x || 0),
+            this.y + (vec.y || 0),
+            this.z + (vec.z || 0)
         )
     }
 
     sub (vec, set) {
 		if (set) {   
-	        this.x -= vec.x || 0
-	        this.y -= vec.y || 0
-	        this.z -= vec.z || 0
+	        this.x -= (vec.x || 0)
+	        this.y -= (vec.y || 0)
+	        this.z -= (vec.z || 0)
 	        return this
 		} else return new Vec(
-            this.x - vec.x || 0,
-            this.y - vec.y || 0,
-            this.z - vec.z || 0
+            this.x - (vec.x || 0),
+            this.y - (vec.y || 0),
+            this.z - (vec.z || 0)
         )
     }
     
     div (vec, apply) {
 	    if (apply) {
-	        this.x /= vec.x || 1
-	        this.y /= vec.y || 1
-	        this.z /= vec.z || 1
+	        this.x /= (vec.x || 1)
+	        this.y /= (vec.y || 1)
+	        this.z /= (vec.z || 1)
 	        return this
         } else return new Vec(
-            this.x / vec.x || 1,
-            this.y / vec.y || 1,
-            this.z / vec.z || 1
+            this.x / (vec.x || 1),
+            this.y / (vec.y || 1),
+            this.z / (vec.z || 1)
         )
     }
 
