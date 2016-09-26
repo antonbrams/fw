@@ -17,16 +17,16 @@ export default {
 		b () {return this.t + this.h}
 	},
 
-	get (_max, _boxes) {
-		var boxes	= new Array()
-		var area 	= _max.w * _max.h
+	get (max, busyBoxes) {
+		var freeBoxes	= new Array()
+		var area 		= max.w * max.h
 		for (var nCell = 0; nCell < area; nCell ++) {
 			// Head
 			var head 	= new this.box()
-			head.l 		= nCell % _max.w
-			head.t 		= parseInt(nCell / _max.w)
+			head.l 		= nCell % max.w
+			head.t 		= parseInt(nCell / max.w)
 			// Check only free Positions
-			if (!this.collide(_boxes, head)) {
+			if (!this.collide(busyBoxes, head)) {
 				// Expansion to Right and Bottom
 				var expansion = {x: true, y: true}
 				// Start Expansion to Right
@@ -35,38 +35,38 @@ export default {
 					while (expansion.y) {
 						// Check future Ranges
 						if (
-							this.collide(_boxes, this.shift(head, 'y', 1)) || 
-							head.b() == _max.h
+							this.collide(busyBoxes, this.shift(head, 'y', 1))
+						||  head.b() == max.h
 						) {
 							// Stop expansion to Bottom
 							expansion.y = false
 						} else {
 							// Expand to Bottom
-                        	head.h += 1
+                        	head.h ++
 						}
 					}
 					// Check current Range
 					if (
-						this.collide(_boxes, head) || 
-						head.r() > _max.w
+						this.collide(busyBoxes, head) || 
+						head.r() > max.w
 					) {	
 						// Stop Expansion to Right
 						expansion.x = false
-						boxes = this.detach(boxes)
+						freeBoxes = this.detach(freeBoxes)
 					} else {
 						// Start new Expansion to Bottom
 						expansion.y = true
-						boxes = this.append(boxes, head)
+						freeBoxes = this.append(freeBoxes, head)
 						// Reset Height and Expand to Right
-						head.h  = 1
-						head.w += 1
+						head.h = 1
+						head.w ++
 					}
 				}
 			}
 		}
-		boxes = this.filter(boxes)
-		if (0) this.test(boxes)
-		return boxes
+		freeBoxes = this.filter(freeBoxes)
+		if (0) this.test(freeBoxes)
+		return freeBoxes
 	},
 
 	append (boxes, head) {
@@ -89,27 +89,24 @@ export default {
 		var prev = boxes.length - 2
 		var last = boxes.length - 1
 		if (
-			boxes[prev]     && 
-			boxes[prev].h 	== boxes[last].h   &&
-			boxes[prev].r() == boxes[last].r()
+			boxes[prev]     
+		&&  boxes[prev].h 	== boxes[last].h   
+		&& 	boxes[prev].r() == boxes[last].r()
 		) boxes.pop()
 		return boxes
 	},
 	
 	filter (boxes) {
 		for (var i = 0; i < boxes.length; i ++)
-		for (var n = 0; n < boxes.length; n ++)
-			if (
-				i != n
-			&& 	boxes[i]
-			&& 	boxes[n]
-			&&	(
-					boxes[n].w == 0
-				|| 	boxes[n].h == 0
-				||  boxes[i].l <= boxes[n].l && boxes[i].r() >= boxes[n].r()
-				&&  boxes[i].t <= boxes[n].t && boxes[i].b() >= boxes[n].b()
-				)
-			) boxes[n] = undefined
+		for (var n = 0; n < boxes.length; n ++) {
+			var exist   = boxes[i] && boxes[n]
+			var isNull  = boxes[n].w == 0 || boxes[n].h == 0
+			var notSelf = i != n
+			var bigger  = 
+				boxes[i].l <= boxes[n].l && boxes[i].r() >= boxes[n].r()
+			&&  boxes[i].t <= boxes[n].t && boxes[i].b() >= boxes[n].b()
+			if (exist && (isNull || notSelf && bigger)) boxes[n] = undefined
+		}
 		return boxes.filter(box => {return box})
 	},
 
