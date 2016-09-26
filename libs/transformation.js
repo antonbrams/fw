@@ -3,20 +3,24 @@
 
 import {default as fwStyle} from './style'
 
+// Methods
+var setTransformation = dom => {
+	var translate = 'translate('+
+		dom.value.translation.x +'px, '+ 
+		dom.value.translation.y +'px)'
+	var scale = 'scale('+ 
+		dom.value.scale.x +', '+ 
+		dom.value.scale.y +')'
+	dom.style[fwStyle.vendor.transform] = translate +' '+ scale
+}
+
+var setOrigin = dom => {
+	dom.style[fwStyle.vendor.transformOrigin] =
+		dom.value.origin.x +' '+ 
+		dom.value.origin.y
+}
+
 export default element => {
-
-	// Methods
-	var setTransformation = dom => {
-		var translate 	= 'translate('+ dom.value.translation.x +'px, '+ dom.value.translation.y +'px)'
-		var scale 		= 	  'scale('+ dom.value.scale.x 	    +',   '+ dom.value.scale.y +')'
-		dom.style[fwStyle.vendorPrefix +'Transform'] = translate +' '+ scale
-	}
-
-	var setOrigin = dom => {
-		dom.style[fwStyle.vendorPrefix +'TransformOrigin'] =
-			dom.value.origin.x +' '+ 
-			dom.value.origin.y
-	}
 
 	// Store Values
 	element.value = {

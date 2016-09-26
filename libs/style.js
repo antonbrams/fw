@@ -17,12 +17,12 @@ export default {
         var prefix	= [null, 'ms', 'webkit', 'moz', 'o']
         var div     = document.createElement('div')
         props.forEach(prop => {
-            for (var n = 0; n < prefix.length; n ++) {
-                var p = prefix[n] + prefix[n]? prop: prop.charAt(0).toUpperCase() + prop.slice(1)
+            for (var i = 0; i < prefix.length; i ++) {
+                var p = prefix[i] + prefix[i]? prop.charAt(0).toUpperCase() + prop.slice(1): prop
                 if (typeof div.style[p] !== 'undefined'){out[prop] = p; break}
             }
         })
-        return props
+        return out
     })(['transform', 'transformOrigin', 'columnCount']),
 }
 
