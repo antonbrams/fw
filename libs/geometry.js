@@ -43,8 +43,8 @@ export default {
 	
 	hitTest (a, pointer) {
 		return (
-			a.l > pointer.x && pointer.x < a.l + a.w
-		&&  a.t > pointer.y && pointer.y < a.t + a.h
+			a.l < pointer.x && pointer.x < a.l + a.w
+		&&  a.t < pointer.y && pointer.y < a.t + a.h
 		)
 	},
 
