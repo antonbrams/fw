@@ -36,8 +36,15 @@ export default {
 
 	boxCollision (a, b) {
 		return (
-			a.l < b.l + b.w && a.t < b.t + b.h &&
-			b.l < a.l + a.w && b.t < a.t + a.h
+			a.l < b.l + b.w && a.t < b.t + b.h
+		&&  b.l < a.l + a.w && b.t < a.t + a.h
+		)
+	},
+	
+	hitTest (a, pointer) {
+		return (
+			a.l > pointer.x && pointer.x < a.l + a.w
+		&&  a.t > pointer.y && pointer.y < a.t + a.h
 		)
 	},
 
