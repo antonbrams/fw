@@ -99,13 +99,18 @@ export default {
 	filter (boxes) {
 		for (var i = 0; i < boxes.length; i ++)
 		for (var n = 0; n < boxes.length; n ++) {
-			var exist   = boxes[i] && boxes[n]
-			var isNull  = boxes[n].w == 0 || boxes[n].h == 0
-			var notSelf = i != n
-			var bigger  = 
-				boxes[i].l <= boxes[n].l && boxes[i].r() >= boxes[n].r()
-			&&  boxes[i].t <= boxes[n].t && boxes[i].b() >= boxes[n].b()
-			if (exist && (isNull || notSelf && bigger)) boxes[n] = undefined
+			if (
+				boxes[i]
+			&& 	boxes[n]
+			) {
+				if (boxes[n].w == 0 || boxes[n].h == 0) 
+					boxes[n] = undefined
+				else if (i != n )
+					if (
+						boxes[i].l <= boxes[n].l && boxes[i].r() >= boxes[n].r()
+					&&  boxes[i].t <= boxes[n].t && boxes[i].b() >= boxes[n].b()
+					) boxes[n] = undefined
+			}
 		}
 		return boxes.filter(box => {return box})
 	},
