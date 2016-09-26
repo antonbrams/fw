@@ -65,7 +65,7 @@ export default {
 			}
 		}
 		boxes = this.filter(boxes)
-		if (0) { this.test(boxes) }
+		if (0) this.test(boxes)
 		return boxes
 	},
 
@@ -97,14 +97,15 @@ export default {
 	},
 	
 	filter (boxes) {
-		var boxesLength = boxes.length
-		for (var i = 0; i < boxesLength; i ++) {
-			for (var n = 0; n < boxesLength; n ++) {
+		for (var i = 0; i < boxes.length; i ++) {
+			for (var n = 0; n < boxes.length; n ++) {
 				if (
-					 i != n && 
-					boxes[i]   && boxes[n]   &&
-					boxes[i].l <= boxes[n].l && boxes[i].r() >= boxes[n].r() &&
-					boxes[i].t <= boxes[n].t && boxes[i].b() >= boxes[n].b()
+					i != n
+				&&  boxes[i]   && boxes[n]   
+				&&	boxes[i].l <= boxes[n].l && boxes[i].r() >= boxes[n].r()
+				&&  boxes[i].t <= boxes[n].t && boxes[i].b() >= boxes[n].b()
+				||  boxes[i].w == 0
+				||  boxes[i].h == 0
 				) {
 					boxes[n] = undefined
 				}
