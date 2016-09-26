@@ -15,48 +15,48 @@ export default class Vec {
 
     add (vec, set) {
 	    if (set) {
-	        this.x += vec.x
-	        this.y += vec.y
-	        this.z += vec.z
+	        this.x += vec.x || 0
+	        this.y += vec.y || 0
+	        this.z += vec.z || 0
 	        return this
         } else return new Vec(
-            this.x + vec.x,
-            this.y + vec.y,
-            this.z + vec.z
+            this.x + vec.x || 0,
+            this.y + vec.y || 0,
+            this.z + vec.z || 0
         )
     }
 
     sub (vec, set) {
 		if (set) {   
-	        this.x -= vec.x
-	        this.y -= vec.y
-	        this.z -= vec.z
+	        this.x -= vec.x || 0
+	        this.y -= vec.y || 0
+	        this.z -= vec.z || 0
 	        return this
 		} else return new Vec(
-            this.x - vec.x,
-            this.y - vec.y,
-            this.z - vec.z
+            this.x - vec.x || 0,
+            this.y - vec.y || 0,
+            this.z - vec.z || 0
         )
     }
     
     div (vec, apply) {
 	    if (apply) {
-	        this.x /= vec.x
-	        this.y /= vec.y
-	        this.z /= vec.z
+	        this.x /= vec.x || 1
+	        this.y /= vec.y || 1
+	        this.z /= vec.z || 1
 	        return this
         } else return new Vec(
-            this.x / vec.x,
-            this.y / vec.y,
-            this.z / vec.z
+            this.x / vec.x || 1,
+            this.y / vec.y || 1,
+            this.z / vec.z || 1
         )
     }
 
     len () {
         return Math.sqrt(
-            Math.pow(this.x, 2) +
-            Math.pow(this.y, 2) +
-            Math.pow(this.z, 2)
+            Math.pow(this.x || 0, 2) +
+            Math.pow(this.y || 0, 2) +
+            Math.pow(this.z || 0, 2)
         )
     }
 
@@ -101,9 +101,9 @@ export default class Vec {
 
     tween (vec, i) {
     	return new Vec(
-	    	i * (vec.x - this.x) + this.x,
-	    	i * (vec.y - this.y) + this.y,
-	    	i * (vec.z - this.z) + this.z
+	    	i * (vec.x || 0 - this.x) + this.x,
+	    	i * (vec.y || 0 - this.y) + this.y,
+	    	i * (vec.z || 0 - this.z) + this.z
     	)
     }
 
