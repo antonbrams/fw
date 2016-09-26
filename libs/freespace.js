@@ -102,10 +102,10 @@ export default {
 				if (
 					i != n &&  boxes[i] && boxes[n]   
 				&&	(
-						boxes[i].l <= boxes[n].l && boxes[i].r() >= boxes[n].r()
+						boxes[n].w == 0
+					||  boxes[n].h == 0
+					||  boxes[i].l <= boxes[n].l && boxes[i].r() >= boxes[n].r()
 					&&  boxes[i].t <= boxes[n].t && boxes[i].b() >= boxes[n].b()
-					||  boxes[i].w == 0
-					||  boxes[i].h == 0
 					)
 				) {
 					boxes[n] = undefined
