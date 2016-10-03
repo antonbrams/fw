@@ -39,6 +39,15 @@ export default {
 			b: (() => this.t + this.h)()
 		}
 	},
+
+    div : function (css, content) {
+        var div = document.createElement('div')
+        css.forEach(function (style) {
+            div.classList.add(style)
+        })
+        if (content) div.innerHTML = content
+        return div
+    },
 }
 
 

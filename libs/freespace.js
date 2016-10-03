@@ -17,14 +17,14 @@ export default {
 		b () {return this.t + this.h}
 	},
 
-	get (max, busyBoxes) {
+	get (canvas, busyBoxes) {
 		var freeBoxes	= new Array()
-		var area 		= max.w * max.h
+		var area 		= canvas.w * canvas.h
 		for (var nCell = 0; nCell < area; nCell ++) {
 			// Head
 			var head 	= new this.box()
-			head.l 		= nCell % max.w
-			head.t 		= parseInt(nCell / max.w)
+			head.l 		= nCell % canvas.w
+			head.t 		= parseInt(nCell / canvas.w)
 			// Check only free Positions
 			if (!this.collide(busyBoxes, head)) {
 				// Expansion to Right and Bottom
@@ -36,7 +36,7 @@ export default {
 						// Check future Ranges
 						if (
 							this.collide(busyBoxes, this.shift(head, 'y', 1))
-						||  head.b() == max.h
+						||  head.b() == canvas.h
 						) {
 							// Stop expansion to Bottom
 							expansion.y = false
@@ -48,7 +48,7 @@ export default {
 					// Check current Range
 					if (
 						this.collide(busyBoxes, head) || 
-						head.r() > max.w
+						head.r() > canvas.w
 					) {	
 						// Stop Expansion to Right
 						expansion.x = false
