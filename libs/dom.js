@@ -42,7 +42,7 @@ export default {
 
     div : function (css, content) {
         var div = document.createElement('div')
-        css.split(',').forEach(function (style) {
+        css.split(', ').forEach(function (style) {
             div.classList.add(style)
         })
         if (content) div.innerHTML = content
