@@ -25,8 +25,8 @@ export default {
 	clone (dom) {
 		var clone = dom.cloneNode(true);
 		clone.remove = () => this.parentNode.removeChild(this)
-		dom.parentNode.appendChild(clone);
-		return clone;
+		dom.parentNode.appendChild(clone)
+		return clone
 	},
 
 	getDimensions (dom) {
