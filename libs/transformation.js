@@ -2,6 +2,7 @@
 
 
 import {default as fwStyle} from './style'
+import {default as fwVec} 	from './vector'
 
 // Methods
 var setTransformation = dom => {
@@ -31,74 +32,93 @@ export default element => {
 	}
 
 	// Origin
-	element.originXY = function (x, y) {
+	element.origin = vec => {	
+		this.value.origin.x = vec.x
+		this.value.origin.y = vec.y
+		setOrigin(this)
+		return this
+	}
+	
+	element.originXY = (x, y) => {
 		this.value.origin.x = x
 		this.value.origin.y = y
 		setOrigin(this)
 		return this
 	}
 	
-	element.originX = function (value) {
+	element.originX = value => {
 		this.value.origin.x = value
 		setOrigin(this)
 		return this
 	}
 
-	element.originY = function (value) {		
+	element.originY = value => {		
 		this.value.origin.y = value
 		setOrigin(this)
 		return this
 	}
 
 	// Translate
-	element.translateXY = function (x, y) {
+	element.translate = vec => {
+		this.value.translation.x = vec.x
+		this.value.translation.y = vec.y
+		setTransformation(this)
+		return this
+	}
+	
+	element.translateXY = (x, y) => {
 		this.value.translation.x = x
 		this.value.translation.y = y
 		setTransformation(this)
 		return this
 	}
 	
-	element.translateX = function (value) {
+	element.translateX = value => {
 		this.value.translation.x = value
 		setTransformation(this)
 		return this
 	}
 
-	element.translateY = function (value) {
+	element.translateY = value => {
 		this.value.translation.y = value
 		setTransformation(this)
 		return this
 	}
 
 	// Scale
-	element.scale = function (value) {
-		this.value.scale.x =
-		this.value.scale.y = value
+	element.scale = vec => {
+		if (vec instanceof fwVec) {
+			this.value.scale.x = vec.x
+			this.value.scale.y = vec.y
+		} else {
+			this.value.scale.x =
+			this.value.scale.y = vec
+		}
 		setTransformation(this)
 		return this
 	}
 	
-	element.scaleXY = function (x, y) {
+	element.scaleXY = (x, y) => {
 		this.value.scale.x = x
 		this.value.scale.y = y
 		setTransformation(this)
 		return this
 	}
 
-	element.scaleX = function (value) {
+	element.scaleX = value => {
 		this.value.scale.x = value
 		setTransformation(this)
 		return this
 	}
 
-	element.scaleY = function (value) {
+	element.scaleY = value => {
 		this.value.scale.y = value
 		setTransformation(this)
 		return this
 	}
 
 	// Rotate
-	element.rotate = function (value) {
+	element.rotate = value => {
 		this.value.rotation.z = value
 		setTransformation(this)
 		return this
