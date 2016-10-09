@@ -32,16 +32,14 @@ export default element => {
 	}
 
 	// Origin
-	element.origin = vec => {	
-		element.value.origin.x = vec.x
-		element.value.origin.y = vec.y
-		setOrigin(element)
-		return element
-	}
-
 	element.originXY = (x, y) => {
-		element.value.origin.x = x
-		element.value.origin.y = y
+		if (x instanceof fwVec) {
+			element.value.origin.x = x.x
+			element.value.origin.y = x.y
+		} else {
+			element.value.origin.x = x
+			element.value.origin.y = y
+		}
 		setOrigin(element)
 		return element
 	}
@@ -59,16 +57,14 @@ export default element => {
 	}
 
 	// Translate
-	element.translate = vec => {
-		element.value.translation.x = vec.x
-		element.value.translation.y = vec.y
-		setTransformation(element)
-		return element
-	}
-
 	element.translateXY = (x, y) => {
-		element.value.translation.x = x
-		element.value.translation.y = y
+		if (x instanceof fwVec) {
+			element.value.translation.x = x.x
+			element.value.translation.y = x.y
+		} else {
+			element.value.translation.x = x
+			element.value.translation.y = y
+		}
 		setTransformation(element)
 		return element
 	}
@@ -87,20 +83,20 @@ export default element => {
 
 	// Scale
 	element.scale = vec => {
-		if (vec instanceof fwVec) {
-			element.value.scale.x = vec.x
-			element.value.scale.y = vec.y
-		} else {
-			element.value.scale.x =
-			element.value.scale.y = vec
-		}
+		element.value.scale.x =
+		element.value.scale.y = vec
 		setTransformation(element)
 		return element
 	}
 	
 	element.scaleXY = (x, y) => {
-		element.value.scale.x = x
-		element.value.scale.y = y
+		if (x instanceof fwVec) {
+			element.value.scale.x = x.x
+			element.value.scale.y = x.y
+		} else {
+			element.value.scale.x = x
+			element.value.scale.y = y
+		}
 		setTransformation(element)
 		return element
 	}
