@@ -2,6 +2,7 @@
 
 
 import {default as fwStyle} from './style'
+import {default as fwVec} 	from './vector'
 
 // Methods
 var setTransformation = dom => {
@@ -31,6 +32,13 @@ export default element => {
 	}
 
 	// Origin
+	element.origin = function (vec) {	
+		this.value.origin.x = vec.x
+		this.value.origin.y = vec.y
+		setOrigin(this)
+		return this
+	}
+	
 	element.originXY = function (x, y) {
 		this.value.origin.x = x
 		this.value.origin.y = y
@@ -51,6 +59,13 @@ export default element => {
 	}
 
 	// Translate
+	element.translate = function (vec) {
+		this.value.translation.x = vec.x
+		this.value.translation.y = vec.y
+		setTransformation(this)
+		return this
+	}
+	
 	element.translateXY = function (x, y) {
 		this.value.translation.x = x
 		this.value.translation.y = y
@@ -71,9 +86,14 @@ export default element => {
 	}
 
 	// Scale
-	element.scale = function (value) {
-		this.value.scale.x =
-		this.value.scale.y = value
+	element.scale = function (vec) {
+		if (vec instanceof fwVec) {
+			this.value.scale.x = vec.x
+			this.value.scale.y = vec.y
+		} else {
+			this.value.scale.x =
+			this.value.scale.y = vec
+		}
 		setTransformation(this)
 		return this
 	}
