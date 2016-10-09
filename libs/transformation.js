@@ -38,7 +38,7 @@ export default element => {
 		setOrigin(this)
 		return this
 	}
-	
+
 	element.originXY = (x, y) => {
 		this.value.origin.x = x
 		this.value.origin.y = y
@@ -65,7 +65,7 @@ export default element => {
 		setTransformation(this)
 		return this
 	}
-	
+
 	element.translateXY = (x, y) => {
 		this.value.translation.x = x
 		this.value.translation.y = y
