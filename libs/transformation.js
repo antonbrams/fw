@@ -21,7 +21,7 @@ var setOrigin = dom => {
 		dom.value.origin.y
 }
 
-export default element => {
+export default function (element) {
 
 	// Store Values
 	element.value = {
@@ -32,96 +32,92 @@ export default element => {
 	}
 
 	// Origin
-	element.origin = vec => {	
-		element.value.origin.x = vec.x
-		element.value.origin.y = vec.y
-		setOrigin(element)
-		return element
-	}
-
 	element.originXY = (x, y) => {
-		element.value.origin.x = x
-		element.value.origin.y = y
-		setOrigin(element)
-		return element
+		if (x instanceof fwVec) {
+			this.value.origin.x = x.x
+			this.value.origin.y = x.y
+		} else {
+			this.value.origin.x = x
+			this.value.origin.y = y
+		}
+		setOrigin(this)
+		return this
 	}
 	
 	element.originX = value => {
-		element.value.origin.x = value
-		setOrigin(element)
-		return element
+		this.value.origin.x = value
+		setOrigin(this)
+		return this
 	}
 
 	element.originY = value => {		
-		element.value.origin.y = value
-		setOrigin(element)
-		return element
+		this.value.origin.y = value
+		setOrigin(this)
+		return this
 	}
 
 	// Translate
-	element.translate = vec => {
-		element.value.translation.x = vec.x
-		element.value.translation.y = vec.y
-		setTransformation(element)
-		return element
-	}
-
 	element.translateXY = (x, y) => {
-		element.value.translation.x = x
-		element.value.translation.y = y
-		setTransformation(element)
-		return element
+		if (x instanceof fwVec) {
+			this.value.translation.x = x.x
+			this.value.translation.y = x.y
+		} else {
+			this.value.translation.x = x
+			this.value.translation.y = y
+		}
+		setTransformation(this)
+		return this
 	}
 	
 	element.translateX = value => {
-		element.value.translation.x = value
-		setTransformation(element)
-		return element
+		this.value.translation.x = value
+		setTransformation(this)
+		return this
 	}
 
 	element.translateY = value => {
-		element.value.translation.y = value
-		setTransformation(element)
-		return element
+		this.value.translation.y = value
+		setTransformation(this)
+		return this
 	}
 
 	// Scale
 	element.scale = vec => {
-		if (vec instanceof fwVec) {
-			element.value.scale.x = vec.x
-			element.value.scale.y = vec.y
-		} else {
-			element.value.scale.x =
-			element.value.scale.y = vec
-		}
-		setTransformation(element)
-		return element
+		this.value.scale.x =
+		this.value.scale.y = vec
+		setTransformation(this)
+		return this
 	}
 	
 	element.scaleXY = (x, y) => {
-		element.value.scale.x = x
-		element.value.scale.y = y
-		setTransformation(element)
-		return element
+		if (x instanceof fwVec) {
+			this.value.scale.x = x.x
+			this.value.scale.y = x.y
+		} else {
+			this.value.scale.x = x
+			this.value.scale.y = y
+		}
+		setTransformation(this)
+		return this
 	}
 
 	element.scaleX = value => {
-		element.value.scale.x = value
-		setTransformation(element)
-		return element
+		this.value.scale.x = value
+		setTransformation(this)
+		return this
 	}
 
 	element.scaleY = value => {
-		element.value.scale.y = value
-		setTransformation(element)
-		return element
+		this.value.scale.y = value
+		setTransformation(this)
+		return this
 	}
 
 	// Rotate
 	element.rotate = value => {
-		element.value.rotation.z = value
-		setTransformation(element)
-		return element
+		this.value.rotation.z = value
+		setTransformation(this)
+		return this
 	}
 }
 
