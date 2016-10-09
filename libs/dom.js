@@ -3,6 +3,14 @@
 
 export default {
 
+    el (query) {
+        return (
+            query[0] == '#'? document.getElementById(query.slice(1)) :
+            query[0] == '.'? document.getElementsByClassName(query.slice(1)) :
+            document.getElementsByTagName(query)
+        )
+    },
+
     fromString (html) {
 		var parent = document.createElement('div')
 	    parent.innerHTML = html
@@ -40,7 +48,7 @@ export default {
 		}
 	},
 
-    div : function (css, content) {
+    div (css, content) {
         var div = document.createElement('div')
         css.split(', ').forEach(function (style) {
             div.classList.add(style)
