@@ -2,6 +2,10 @@
 
 
 export default {
+	
+	to (t, a, b) {
+		return this.map(t, 0, 1, a, b, true)
+	},
 
 	map (value, aMin, aMax, bMin, bMax, clamp) {
 		var x = clamp == true? (
