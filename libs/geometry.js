@@ -11,6 +11,16 @@ export default {
     	return new fwVec(params.left, params.top)
 	},
 	
+	// viewport offset
+	vpo (dom) {
+		var rect = dom.getBoundingClientRect()
+    	return {
+			position : new fwVec(rect.left,  rect.top),
+			opposite : new fwVec(rect.right, rect.bottom),
+			size     : new fwVec(rect.width, rect.height)
+		}
+	},
+	
 	offset (_dom, parent) {
 		var dom    = _dom
 		var offset = new fwVec()
