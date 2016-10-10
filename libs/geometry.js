@@ -26,7 +26,21 @@ export default {
 		return offset
 	},
 
-	getDimensions (dom) {
+	dimToVec (dims) {
+		return {
+			position : new fwVec(dims.l, dims.t),
+			size     : new fwVec(dims.w, dims.h)
+		}
+	},
+
+	vecToDim (position, size) {
+		return {
+			l: position.x, w: size.x, r: (() => {this.l + this.w})(),
+			t: position.y, h: size.y, b: (() => {this.t + this.h})()
+		}
+	},
+
+	getDim (dom) {
 		return {
 			l: dom.offsetLeft, w: dom.offsetWidth,  r: (() => {this.l + this.w})(),
 			t: dom.offsetTop,  h: dom.offsetHeight, b: (() => {this.t + this.h})()
