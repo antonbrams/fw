@@ -101,9 +101,9 @@ export default class Vec {
 
     tween (vec, i) {
     	return new Vec(
-	    	i * (vec.x || 0 - this.x) + this.x,
-	    	i * (vec.y || 0 - this.y) + this.y,
-	    	i * (vec.z || 0 - this.z) + this.z
+	    	i * ((vec.x || 0) - this.x) + this.x,
+	    	i * ((vec.y || 0) - this.y) + this.y,
+	    	i * ((vec.z || 0) - this.z) + this.z
     	)
     }
 
