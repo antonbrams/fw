@@ -2,7 +2,6 @@
 
 
 import {default as fwStyle} from './style'
-import {default as fwDom} 	from './dom'
 import {default as fwVec} 	from './vector'
 
 export default {
@@ -26,11 +25,18 @@ export default {
 		}
 		return offset
 	},
+
+	getDimensions (dom) {
+		return {
+			l: dom.offsetLeft, w: dom.offsetWidth,  r: (() => {this.l + this.w})(),
+			t: dom.offsetTop,  h: dom.offsetHeight, b: (() => {this.t + this.h})()
+		}
+	},
     
 	domCollision (a, b) {
 		return this.boxCollision(
-			fwDom.getDimensions(a),
-			fwDom.getDimensions(b)
+			this.getDimensions(a),
+			this.getDimensions(b)
 		)
 	},
 
