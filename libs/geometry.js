@@ -40,7 +40,7 @@ export default {
 		}
 	},
 
-	getDim (dom) {
+	dim (dom) {
 		return {
 			l: dom.offsetLeft, w: dom.offsetWidth,  r: (() => {this.l + this.w})(),
 			t: dom.offsetTop,  h: dom.offsetHeight, b: (() => {this.t + this.h})()
