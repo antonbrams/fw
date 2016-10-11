@@ -99,7 +99,7 @@ export default class Vec {
         )
     }
 
-    tween (vec, i) {
+    to (vec, i) {
     	return new Vec(
 	    	i * ((vec.x || 0) - this.x) + this.x,
 	    	i * ((vec.y || 0) - this.y) + this.y,
