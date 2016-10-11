@@ -50,7 +50,11 @@ export default {
             }
         }
         dom.get = prop => {
-            this.computed(dom, prop)
+                 if (prop == 'origin')      return dom.data.origin
+            else if (prop == 'translate')   return dom.data.translate
+            else if (prop == 'scale')       return dom.data.scale
+            else if (prop == 'rotate')      return dom.data.rotate.z
+            else this.computed(dom, prop)
         }
     },
 
