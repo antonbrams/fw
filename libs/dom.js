@@ -9,7 +9,7 @@ export default {
             query[0] == '.'? parent.getElementsByClassName(query.slice(1)) :
             parent.getElementsByTagName(query)
         el.child = (query) => {
-            return this.el(query, el)
+            return this.child(query, el)
         }
         return el
     },
