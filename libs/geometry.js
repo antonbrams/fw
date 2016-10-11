@@ -1,7 +1,7 @@
 
 
 
-import {default as fwStyle} from './style'
+import {default as fwCss} from './css'
 import {default as fwVec} 	from './vector'
 
 export default {
@@ -35,8 +35,8 @@ export default {
 		while (dom && dom.parentNode && dom != parent) {
             var position = new fwVec(dom.offsetLeft, dom.offsetTop)
 			var scroll   = new fwVec(dom.parentNode.scrollLeft, dom.parentNode.scrollTop)
-            var margin   = new fwVec(fwStyle.computed(dom, 'margin-left'), fwStyle.computed(dom, 'margin-top'))
-            var padding  = new fwVec(fwStyle.computed(dom, 'padding-left'), fwStyle.computed(dom, 'padding-top'))
+            var margin   = new fwVec(fwCss.computed(dom, 'margin-left'), fwCss.computed(dom, 'margin-top'))
+            var padding  = new fwVec(fwCss.computed(dom, 'padding-left'), fwCss.computed(dom, 'padding-top'))
 			offset       = offset.add(position).sub(scroll).sub(margin).sub(padding)
 			dom          = dom.parentNode
 		}

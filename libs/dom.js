@@ -3,7 +3,7 @@
 
 export default {
 
-    el (query, parent = document) {
+    child (query, parent = document) {
         var el =
             query[0] == '#'? parent.getElementById(query.slice(1)) :
             query[0] == '.'? parent.getElementsByClassName(query.slice(1)) :

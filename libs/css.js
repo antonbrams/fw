@@ -3,7 +3,7 @@
 
 import {default as fwGeo}   from './geometry'
 import {default as fwVec}   from './vector'
-import {default as fwStyle} from './style'
+import {default as fwCss} from './css'
 
 export default {
 
@@ -41,11 +41,11 @@ export default {
     
     applyTransformation (dom, data, type) {
         if (type == 'origin')
-            dom.style[fwStyle.vendor.transformOrigin] =
+            dom.style[fwCss.vendor.transformOrigin] =
                 data.origin.x +' '+ 
                 data.origin.y
         else 
-            dom.style[fwStyle.vendor.transform] = 
+            dom.style[fwCss.vendor.transform] = 
                 'translate('+ 
                     data.translate.x +'px, '+ 
                     data.translate.y +'px) '+
