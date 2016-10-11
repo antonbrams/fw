@@ -6,7 +6,7 @@ import {default as fwStyle} from './style'
 
 export default {
 
-    set (dom) {
+    init (dom) {
         dom.data = {
             origin    : {x: 0, y: 0},
             translate : {x: 0, y: 0},
@@ -51,13 +51,11 @@ export default {
             }
         }
         dom.get = prop => {
-                 if (prop == 'offset')      return fwGeo.vpo(dom)
-            else if (prop == 'origin')      return dom.data.origin
-            else if (prop == 'translate')   return dom.data.translate
-            else if (prop == 'scale')       return dom.data.scale
-            else if (prop == 'rotate')      return dom.data.rotate.z
+                 if (prop == 'offset') return fwGeo.vpo(dom)
+            else if (dom.data[prop])   return dom.data[prop]
             else this.computed(dom, prop)
         }
+        return dom
     },
 
     computed (dom, prop) {
