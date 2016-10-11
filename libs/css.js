@@ -1,8 +1,8 @@
 
 
 
-import {default as fwGeo}   from './geometry'
-import {default as fwVec}   from './vector'
+import {default as fwGeo} from './geometry'
+import {default as fwVec} from './vector'
 import {default as fwCss} from './css'
 
 export default {

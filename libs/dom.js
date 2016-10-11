@@ -1,6 +1,8 @@
 
 
 
+import {default as fwCss} from './css'
+
 export default {
 
     child (query, parent = document) {
@@ -17,7 +19,7 @@ export default {
     fromString (html) {
 		var parent = document.createElement('div')
 	    parent.innerHTML = html
-	    return parent.firstChild
+	    return fwCss.init(parent.firstChild)
 	},
 
 	// Add DOM Element at Begin of the List
