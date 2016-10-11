@@ -16,7 +16,7 @@ export default {
         }
         dom.set = params => {
             for (var p in params) {
-                if (dom.data[p]) {
+                if (typeof dom.data[p] !== 'undefined') {
             		if (p == 'rotate')
                         dom.data.rotate = params[p]
                     else {
