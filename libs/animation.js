@@ -71,23 +71,25 @@ export default {
 	},
 
 	start () {
-		// Start Loop
-		this.loop = setInterval((() => {
-			// Count Jobs
-			var jobsTemp = new Array ()	
-			for (var i = 0; i < this.jobs.length; i ++)
-				if (this.jobs[i].count() == 1.0) {
-					if (this.jobs[i].onEnd) this.jobs[i].onEnd()
-    			} else {
-	    			jobsTemp.push(this.jobs[i])
-    			}
-			this.jobs = jobsTemp
-			// If List is Empty > Stop Loop
-			if (this.jobs.length == 0) {
-				clearInterval(this.loop)
-				this.loop = null
-			}
-		}).bind(this), 1000 / this.fps)
+		window.requestAnimationFrame(this.render)
+	},
+	
+	render () {
+		// Count Jobs
+		var jobsTemp = new Array ()	
+		for (var i = 0; i < this.jobs.length; i ++)
+			if (this.jobs[i].count() == 1.0) {
+				if (this.jobs[i].onEnd) 
+					this.jobs[i].onEnd()
+			} else 
+				jobsTemp.push(this.jobs[i])
+		this.jobs = jobsTemp
+		// If List is Empty > Stop Loop
+		if (this.jobs.length > 0) {
+			window.requestAnimationFrame(this.render)
+		} else {
+			this.loop = null
+		}
 	},
 
 	play (_duration, _type, _onUpdate, _onEnd) {
