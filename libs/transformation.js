@@ -21,10 +21,10 @@ var setOrigin = dom => {
 		dom.value.origin.y
 }
 
-export default element => {
+export default dom => {
 
 	// Store Values
-	element.value = {
+	dom.value = {
 		     origin: {x: 0, y: 0},
 		translation: {x: 0, y: 0},
 		      scale: {x: 1, y: 1},
@@ -32,89 +32,94 @@ export default element => {
 	}
 
 	// Origin
-	element.originXY = function (x, y) {
+	dom.origin = function (x, y) {
 		if (x instanceof fwVec) {
 			this.value.origin.x = x.x
 			this.value.origin.y = x.y
-		} else {
+		} else if (x && y) {
 			this.value.origin.x = x
 			this.value.origin.y = y
+		} else {
+			this.value.origin.x = '50%'
+			this.value.origin.y = '50%'
 		}
 		setOrigin(this)
 		return this
 	}
 	
-	element.originX = function (value) {
+	dom.originX = function (value) {
 		this.value.origin.x = value
 		setOrigin(this)
 		return this
 	}
 
-	element.originY = function (value) {		
+	dom.originY = function (value) {		
 		this.value.origin.y = value
 		setOrigin(this)
 		return this
 	}
 
 	// Translate
-	element.translateXY = function (x, y) {
+	dom.translate = function (x, y) {
 		if (x instanceof fwVec) {
 			this.value.translation.x = x.x
 			this.value.translation.y = x.y
+		} else if (x && y) {
+			this.value.translation.x = x
+			this.value.translation.y = y
 		} else {
-			this.value.translation.x = x || 0
-			this.value.translation.y = y || 0
+			this.value.translation.x =
+			this.value.translation.y = 0
 		}
 		setTransformation(this)
 		return this
 	}
 	
-	element.translateX = function (value) {
+	dom.translateX = function (value) {
 		this.value.translation.x = value || 0
 		setTransformation(this)
 		return this
 	}
 
-	element.translateY = function (value) {
+	dom.translateY = function (value) {
 		this.value.translation.y = value || 0
 		setTransformation(this)
 		return this
 	}
 
 	// Scale
-	element.scale = function (value) {
-		this.value.scale.x =
-		this.value.scale.y = value || 1.0
-		setTransformation(this)
-		return this
-	}
-	
-	element.scaleXY = function (x, y) {
+	dom.scale = function (x, y) {
 		if (x instanceof fwVec) {
 			this.value.scale.x = x.x
 			this.value.scale.y = x.y
+		} else if (x && y) {
+			this.value.scale.x = x
+			this.value.scale.y = y
+		} else if (x) {
+			this.value.scale.x =
+			this.value.scale.y = x
 		} else {
-			this.value.scale.x = x || 1.0
-			this.value.scale.y = y || 1.0
+			this.value.scale.x =
+			this.value.scale.y = 1.0
 		}
 		setTransformation(this)
 		return this
 	}
 
-	element.scaleX = function (value) {
+	dom.scaleX = function (value) {
 		this.value.scale.x = value || 1.0
 		setTransformation(this)
 		return this
 	}
 
-	element.scaleY = function (value) {
+	dom.scaleY = function (value) {
 		this.value.scale.y = value || 1.0
 		setTransformation(this)
 		return this
 	}
 
 	// Rotate
-	element.rotate = function (value) {
+	dom.rotate = function (value) {
 		this.value.rotation.z = value || 0
 		setTransformation(this)
 		return this
