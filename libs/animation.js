@@ -53,52 +53,46 @@ export default {
 		}
 	},
 	
-	fps  : 60,
-	jobs : new Array(),
+	jobs : [],
 	loop : false,
 
 	Job  : class {
-		constructor (_duration, _easing, _onUpdate, _onEnd) {
-			this.onEnd	= _onEnd
+		constructor (time, easing, loop, end) {
+			this.end	= end || function () {}
 			var start 	= new Date()
-			_onUpdate(0.0)
-			this.count = () => {
-				var time = (new Date() - start) / 1000 / _duration
-				_onUpdate(time < 1.0? _easing(time): 1.0)
-				return time < 1.0? time: 1.0
+			loop(0.0)
+			this.run = () => {
+				var time = (new Date() - start) / 1000 / time
+				loop(time < 1.0? easing(time): 1.0)
+				return (time < 1.0? time: 1.0)
 			}
 		}
 	},
-
-	start () {
-		window.requestAnimationFrame(this.render.bind(this))
-	},
 	
-	render () {
-		// Count Jobs
-		var jobsTemp = new Array ()	
-		for (var i = 0; i < this.jobs.length; i ++)
-			if (this.jobs[i].count() == 1.0) {
-				if (this.jobs[i].onEnd) 
-					this.jobs[i].onEnd()
-			} else 
-				jobsTemp.push(this.jobs[i])
-		this.jobs = jobsTemp
-		// If List is Empty > Stop Loop
+	loop () {
+		var jobs = []
+		this.jobs.forEach(job => {
+			if (job.run() == 1.0)
+				job.end()
+			else 
+				jobs.push(job)
+		})
+		this.jobs = jobs
 		if (this.jobs.length > 0)
-			window.requestAnimationFrame(this.render.bind(this))
+			window.requestAnimationFrame(this.loop.bind(this))
 		else 
 			this.loop = null
 	},
 
-	play (_duration, _type, _onUpdate, _onEnd) {
+	play (time, type, loop, end) {
 		this.jobs.push(new this.Job(
-			_duration, 
-			this.easing[_type], 
-			_onUpdate,
-			_onEnd
+				time, this.easing[type], 
+				loop, end
 		))
-		if (!this.loop) this.start()
+		if (!this.loop) {
+			this.loop = true
+			window.requestAnimationFrame(this.loop.bind(this))
+		}
 	},
 
 	// Other Functions
