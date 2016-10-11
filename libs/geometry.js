@@ -5,11 +5,6 @@ import {default as fwStyle} from './style'
 import {default as fwVec} 	from './vector'
 
 export default {
-
-	viewPortOffset (dom) {
-		var params = dom.getBoundingClientRect()
-    	return new fwVec(params.left, params.top)
-	},
 	
 	// viewport offset
 	vpo (dom) {
@@ -19,6 +14,18 @@ export default {
 			opposite : new fwVec(rect.right, rect.bottom),
 			size     : new fwVec(rect.width, rect.height)
 		}
+	},
+
+	vp () {
+		return new fwVec(
+			document.documentElement.clientWidth,
+			document.documentElement.clientHeight
+		)
+	},
+
+	viewPortOffset (dom) {
+		var params = dom.getBoundingClientRect()
+    	return new fwVec(params.left, params.top)
 	},
 	
 	offset (_dom, parent) {
