@@ -53,26 +53,26 @@ export default {
 		}
 	},
 	
-	jobs : [],
-	loop : false,
+	jobs   : [],
+	active : false,
 
 	Job  : class {
 		constructor (time, easing, loop, end) {
 			this.end	= end || function () {}
 			var start 	= new Date()
-			loop(0.0)
+			loop(.0)
 			this.run = () => {
-				var time = (new Date() - start) / 1000 / time
-				loop(time < 1.0? easing(time): 1.0)
-				return (time < 1.0? time: 1.0)
+				var clock = (new Date() - start) / 1000 / time
+				loop(clock < 1.? easing(clock): 1.)
+				return (clock < 1.? clock: 1.)
 			}
 		}
 	},
-	
+
 	loop () {
 		var jobs = []
 		this.jobs.forEach(job => {
-			if (job.run() == 1.0)
+			if (job.run() == 1.)
 				job.end()
 			else 
 				jobs.push(job)
@@ -81,7 +81,7 @@ export default {
 		if (this.jobs.length > 0)
 			window.requestAnimationFrame(this.loop.bind(this))
 		else 
-			this.loop = null
+			this.active = null
 	},
 
 	play (time, type, loop, end) {
@@ -89,8 +89,8 @@ export default {
 				time, this.easing[type], 
 				loop, end
 		))
-		if (!this.loop) {
-			this.loop = true
+		if (!this.active) {
+			this.active = true
 			window.requestAnimationFrame(this.loop.bind(this))
 		}
 	},
