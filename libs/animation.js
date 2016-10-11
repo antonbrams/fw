@@ -71,7 +71,7 @@ export default {
 	},
 
 	start () {
-		window.requestAnimationFrame(this.render)
+		window.requestAnimationFrame(this.render.bind(this))
 	},
 	
 	render () {
@@ -85,11 +85,10 @@ export default {
 				jobsTemp.push(this.jobs[i])
 		this.jobs = jobsTemp
 		// If List is Empty > Stop Loop
-		if (this.jobs.length > 0) {
-			window.requestAnimationFrame(this.render)
-		} else {
+		if (this.jobs.length > 0)
+			window.requestAnimationFrame(this.render.bind(this))
+		else 
 			this.loop = null
-		}
 	},
 
 	play (_duration, _type, _onUpdate, _onEnd) {
