@@ -2,22 +2,23 @@
 
 
 import {default as fwGeo}   from './geometry'
+import {default as fwVec}   from './vector'
 import {default as fwStyle} from './style'
 
 export default {
 
     init (dom) {
         dom.data = {
-            origin    : {x: 0, y: 0},
-            translate : {x: 0, y: 0},
-            scale     : {x: 1, y: 1},
-            rotate    : {z: 0}
+            origin    : new fwVec(),
+            translate : new fwVec(),
+            scale     : new fwVec(1, 1),
+            rotate    : 0
         }
         dom.set = params => {
             for (var p in params) {
                 if (dom.data[p]) {
             		if (p == 'rotate')
-                        dom.data.rotate.z = params[p]
+                        dom.data.rotate = params[p]
                     else {
                         if (params[p].x !== 'undefined') dom.data[p].x = params[p].x
                         if (params[p].y !== 'undefined') dom.data[p].y = params[p].y
@@ -46,7 +47,7 @@ export default {
                     data.translate.x +'px, '+ 
                     data.translate.y +'px) '+
                 'rotate('+ 
-                    data.rotate.z +'deg) '+
+                    data.rotate +'deg) '+
                 'scale('+ 
                     data.scale.x +', '+
                     data.scale.y +')'
