@@ -62,29 +62,29 @@ export default element => {
 			this.value.translation.x = x.x
 			this.value.translation.y = x.y
 		} else {
-			this.value.translation.x = x
-			this.value.translation.y = y
+			this.value.translation.x = x || 0
+			this.value.translation.y = y || 0
 		}
 		setTransformation(this)
 		return this
 	}
 	
 	element.translateX = function (value) {
-		this.value.translation.x = value
+		this.value.translation.x = value || 0
 		setTransformation(this)
 		return this
 	}
 
 	element.translateY = function (value) {
-		this.value.translation.y = value
+		this.value.translation.y = value || 0
 		setTransformation(this)
 		return this
 	}
 
 	// Scale
-	element.scale = function (vec) {
+	element.scale = function (value) {
 		this.value.scale.x =
-		this.value.scale.y = vec
+		this.value.scale.y = value || 1.0
 		setTransformation(this)
 		return this
 	}
@@ -94,28 +94,28 @@ export default element => {
 			this.value.scale.x = x.x
 			this.value.scale.y = x.y
 		} else {
-			this.value.scale.x = x
-			this.value.scale.y = y
+			this.value.scale.x = x || 1.0
+			this.value.scale.y = y || 1.0
 		}
 		setTransformation(this)
 		return this
 	}
 
 	element.scaleX = function (value) {
-		this.value.scale.x = value
+		this.value.scale.x = value || 1.0
 		setTransformation(this)
 		return this
 	}
 
 	element.scaleY = function (value) {
-		this.value.scale.y = value
+		this.value.scale.y = value || 1.0
 		setTransformation(this)
 		return this
 	}
 
 	// Rotate
 	element.rotate = function (value) {
-		this.value.rotation.z = value
+		this.value.rotation.z = value || 0
 		setTransformation(this)
 		return this
 	}
