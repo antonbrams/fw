@@ -3,6 +3,13 @@
 
 export default {
 
+    set (dom) {
+        dom.set = function (props) {
+            for (var param in props)
+                this.style[param] = props[param]
+        }
+    },
+
     computed (dom, prop) {
 	    return parseInt(
 	    	document.defaultView
