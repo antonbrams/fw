@@ -60,7 +60,7 @@ export default dom => {
 	}
 
 	// Translate
-	dom.translate = function (x, y) {
+	dom.move = function (x, y) {
 		if (x instanceof fwVec) {
 			this.value.translation.x = x.x
 			this.value.translation.y = x.y
@@ -75,13 +75,13 @@ export default dom => {
 		return this
 	}
 	
-	dom.translateX = function (value) {
+	dom.moveX = function (value) {
 		this.value.translation.x = value || 0
 		setTransformation(this)
 		return this
 	}
 
-	dom.translateY = function (value) {
+	dom.moveY = function (value) {
 		this.value.translation.y = value || 0
 		setTransformation(this)
 		return this
