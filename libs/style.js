@@ -13,41 +13,18 @@ export default {
             scale     : {x: 1, y: 1},
             rotate    : {z: 0}
         }
-        var transform = () => {
-        	dom.style[fwStyle.vendor.transform] = 
-                'translate('+ 
-                    dom.data.translate.x +'px, '+ 
-                    dom.data.translate.y +'px) '+
-                'rotate('+ 
-                    dom.data.rotate.z +'deg) '+
-                'scale('+ 
-                    dom.data.scale.x +', '+
-                    dom.data.scale.y +')'
-        }
-        var origin = () => {
-        	dom.style[fwStyle.vendor.transformOrigin] =
-        		dom.data.origin.x +' '+ 
-        		dom.data.origin.y
-        }
-        dom.set = function (props) {
-            for (var param in props) {
-                if (param == 'origin') {
-                    if (props[param].x !== 'undefined') this.data.origin.x = props[param].x
-                    if (props[param].y !== 'undefined') this.data.origin.y = props[param].y
-                    origin()
-                } else if (param == 'translate') {
-                    if (props[param].x !== 'undefined') this.data.translate.x = props[param].x
-                    if (props[param].y !== 'undefined') this.data.translate.y = props[param].y
-                    transform()
-                } else if (param == 'scale') {
-                    if (props[param].x !== 'undefined') this.data.scale.x = props[param].x
-                    if (props[param].y !== 'undefined') this.data.scale.y = props[param].y
-                    transform(this)
-                } else if (param == 'rotate') {
-            		this.data.rotate.z = props[param]
-            		transform()
+        dom.set = params => {
+            for (var p in params) {
+                if (dom.data[p]) {
+            		if (p == 'rotate')
+                        dom.data.rotate.z = params[p]
+                    else {
+                        if (params[p].x !== 'undefined') dom.data[p].x = params[p].x
+                        if (params[p].y !== 'undefined') dom.data[p].y = params[p].y
+                    }
+                    this.applyTransformation(dom, dom.data, p)
                 } else
-                    this.style[param] = props[param]
+                    dom.style[p] = params[p]
             }
         }
         dom.get = prop => {
@@ -56,6 +33,23 @@ export default {
             else this.computed(dom, prop)
         }
         return dom
+    },
+    
+    applyTransformation (dom, data, type) {
+        if (type == 'origin')
+            dom.style[fwStyle.vendor.transformOrigin] =
+                data.origin.x +' '+ 
+                data.origin.y
+        else 
+            dom.style[fwStyle.vendor.transform] = 
+                'translate('+ 
+                    data.translate.x +'px, '+ 
+                    data.translate.y +'px) '+
+                'rotate('+ 
+                    data.rotate.z +'deg) '+
+                'scale('+ 
+                    data.scale.x +', '+
+                    data.scale.y +')'
     },
 
     computed (dom, prop) {
