@@ -16,6 +16,7 @@ export default {
         }
         dom.set = params => {
             for (var p in params) {
+                // transformation
                 if (typeof dom.data[p] !== 'undefined') {
             		if (p == 'rotate')
                         dom.data.rotate = params[p]
@@ -24,6 +25,14 @@ export default {
                         if (typeof params[p].y !== 'undefined') dom.data[p].y = params[p].y
                     }
                     this.applyTransformation(dom, dom.data, p)
+                // movement and sizing
+                } else if (p =='move') {
+                    dom.style.left = params[p].x
+                    dom.style.top  = params[p].y
+                } else if (p =='size') {
+                    dom.style.width  = params[p].x
+                    dom.style.height = params[p].y
+                // custom parameters
                 } else
                     dom.style[p] = params[p]
             }
