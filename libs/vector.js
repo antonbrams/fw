@@ -96,6 +96,13 @@ export default class Vec {
     getAngle2D () {
 	    return Math.atan2(this.x, this.y) * 180 / Math.PI
     }
-};
+
+    unit (unit) {
+    	return {
+	    	x: this.x + unit,
+	    	y: this.y + unit
+    	}
+    }
+}
 
 
