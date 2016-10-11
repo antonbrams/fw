@@ -1,6 +1,7 @@
 
 
 
+import {default as fwGeo}   from './geometry'
 import {default as fwStyle} from './style'
 
 export default {
@@ -31,16 +32,16 @@ export default {
         dom.set = function (props) {
             for (var param in props) {
                 if (param == 'origin') {
-                    if (props[param].x) this.data.origin.x = props[param].x
-                    if (props[param].y) this.data.origin.y = props[param].y
+                    if (props[param].x !== 'undefined') this.data.origin.x = props[param].x
+                    if (props[param].y !== 'undefined') this.data.origin.y = props[param].y
                     origin()
                 } else if (param == 'translate') {
-                    if (props[param].x) this.data.translate.x = props[param].x
-                    if (props[param].y) this.data.translate.y = props[param].y
+                    if (props[param].x !== 'undefined') this.data.translate.x = props[param].x
+                    if (props[param].y !== 'undefined') this.data.translate.y = props[param].y
                     transform()
                 } else if (param == 'scale') {
-                    if (props[param].x) this.data.scale.x = props[param].x
-                    if (props[param].y) this.data.scale.y = props[param].y
+                    if (props[param].x !== 'undefined') this.data.scale.x = props[param].x
+                    if (props[param].y !== 'undefined') this.data.scale.y = props[param].y
                     transform(this)
                 } else if (param == 'rotate') {
             		this.data.rotate.z = props[param]
@@ -50,7 +51,8 @@ export default {
             }
         }
         dom.get = prop => {
-                 if (prop == 'origin')      return dom.data.origin
+                 if (prop == 'offset')      return fwGeo.vpo(dom)
+            else if (prop == 'origin')      return dom.data.origin
             else if (prop == 'translate')   return dom.data.translate
             else if (prop == 'scale')       return dom.data.scale
             else if (prop == 'rotate')      return dom.data.rotate.z
