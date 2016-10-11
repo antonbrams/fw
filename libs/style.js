@@ -20,8 +20,8 @@ export default {
             		if (p == 'rotate')
                         dom.data.rotate = params[p]
                     else {
-                        if (params[p].x !== 'undefined') dom.data[p].x = params[p].x
-                        if (params[p].y !== 'undefined') dom.data[p].y = params[p].y
+                        if (typeof params[p].x !== 'undefined') dom.data[p].x = params[p].x
+                        if (typeof params[p].y !== 'undefined') dom.data[p].y = params[p].y
                     }
                     this.applyTransformation(dom, dom.data, p)
                 } else
@@ -29,9 +29,12 @@ export default {
             }
         }
         dom.get = prop => {
-                 if (prop == 'offset') return fwGeo.vpo(dom)
-            else if (dom.data[prop])   return dom.data[prop]
-            else this.computed(dom, prop)
+            if (prop == 'offset') 
+                return fwGeo.vpo(dom)
+            else if (typeof dom.data[prop] !== 'undefined') 
+                return dom.data[prop]
+            else
+                this.computed(dom, prop)
         }
         return dom
     },
