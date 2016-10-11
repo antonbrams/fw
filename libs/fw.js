@@ -11,7 +11,7 @@ export {default as color}       from './color'
 export {default as dom}         from './dom'
 export {default as event}       from './event'
 export {default as etc}         from './etc'
-export {default as style}       from './style'
+export {default as css}         from './css'
 export {default as text}        from './text'
 
 

@@ -1,7 +1,7 @@
 
 
 
-import {default as fwStyle} from './style'
+import {default as fwCss} from './css'
 
 export default {
     
@@ -29,7 +29,7 @@ export default {
 	lineCount (dom) {
 		return (
 			dom.offsetHeight / 
-			parseInt(fwStyle.computed(dom, 'line-height'))
+			parseInt(fwCss.computed(dom, 'line-height'))
 		)
 	},
 

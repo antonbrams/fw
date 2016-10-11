@@ -3,8 +3,8 @@
 
 export default {
 
-	argExist (_argument) {
-		return typeof _argument !== 'undefined'
+	arg (arg) {
+		return typeof arg !== 'undefined'
 	},
 
 	cloneObject (_object) {
