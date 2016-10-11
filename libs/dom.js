@@ -3,12 +3,15 @@
 
 export default {
 
-    el (query) {
-        return (
-            query[0] == '#'? document.getElementById(query.slice(1)) :
-            query[0] == '.'? document.getElementsByClassName(query.slice(1)) :
-            document.getElementsByTagName(query)
-        )
+    el (query, parent = document) {
+        var el =
+            query[0] == '#'? parent.getElementById(query.slice(1)) :
+            query[0] == '.'? parent.getElementsByClassName(query.slice(1)) :
+            parent.getElementsByTagName(query)
+        el.child = (query) => {
+            return this.el(query, el)
+        }
+        return el
     },
 
     fromString (html) {
@@ -35,17 +38,6 @@ export default {
 		clone.remove = () => this.parentNode.removeChild(this)
 		dom.parentNode.appendChild(clone)
 		return clone
-	},
-
-	getDimensions (dom) {
-		return {
-			l: dom.offsetLeft, 
-			w: dom.offsetWidth,
-			t: dom.offsetTop,  
-			h: dom.offsetHeight,
-			r: (() => this.l + this.w)(),
-			b: (() => this.t + this.h)()
-		}
 	},
 
     div (css, content) {
