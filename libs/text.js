@@ -8,7 +8,8 @@ export default {
     
     ellipsis (dom, count) {
         // multi column solution
-        if (fwCss.computed(dom, 'column-count') > 1) {
+        var column = fwCss.computed(dom, 'column-count')
+        if (!isNaN(column) && column > 1) {
             var string    = dom.innerHTML
             var max       = line * count + 1
             // get the maximum height
