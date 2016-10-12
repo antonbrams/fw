@@ -22,6 +22,7 @@ export default {
         if (line < block && block > line * count) {
             var frame = dom.getBoundingClientRect()
             fwMath.binarySearch(length, function (i, end) {
+                i = i < length - 1? i: i - 2
                 range.setStart(string, end? i - 3: i)
                 return range.getBoundingClientRect().top - frame.top < line * count
             })
