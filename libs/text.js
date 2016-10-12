@@ -10,16 +10,12 @@ export default {
         // multi column solution
         if (fwCss.computed(dom, 'column-count') > 1) {
             var string    = dom.innerHTML
-            var max       = line * count + 1
             // get the maximum height
             var block     = dom.offsetHeight
             // get line height
             dom.innerHTML = string[0]
             var line      = dom.offsetHeight
-            console.log('max', max);
-            console.log('block', block);
-            console.log('line', line);
-            console.log('check', line < block && block > max);
+            var max       = line * count + 1
             // check if it's necessary to do a search
             if (line < block && block > max) {
                 binarySearch(string.length, function (i, end) {
