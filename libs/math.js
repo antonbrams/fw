@@ -19,14 +19,14 @@ export default {
 		)
 	},
 
-	// Binary Search
-	binarySearch (max, min, check, set) {
-		var target = length = max
-		while (length >= min) {
-			length *= 0.5
-			target += length * (check()? 1: -1)
-			set(target)
+	binarySearch (length, check) {
+        var i = h = Math.round(.5 * length)
+        while (h > 1) {
+            h = Math.round(.5 * h)
+            i += (check(i)? 1: -1) * h
 		}
+        check(i, true)
+        return i
 	},
 	
 	linearInterpolation (t, points) {
@@ -46,11 +46,11 @@ export default {
 		return params
 	},
 
-	getValueBySize (value, sizes) {
-		var lineCounts  = null
-		for (var i = 0; i < sizes.length; i ++)
-			if 	(value >= sizes[i][0]) lineCounts = sizes[i][1]
-		return lineCounts
+	getValueBySize (value, list) {
+		var out
+		for (var i = 0; i < list.length; i ++)
+			if 	(value >= list[i][0]) out = list[i][1]
+		return out
 	},
 
 	rubberEffect (value, min, max, threshold, state) {
