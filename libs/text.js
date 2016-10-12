@@ -16,10 +16,13 @@ export default {
             // get line height
             dom.innerHTML = string[0]
             var line      = dom.offsetHeight
+            console.log('max', max);
+            console.log('block', block);
+            console.log('line', line);
+            console.log('check', line < block && block > max);
             // check if it's necessary to do a search
             if (line < block && block > max) {
                 binarySearch(string.length, function (i, end) {
-                    console.log(i)
                     dom.innerHTML = string.substring(0, end? i - 3: i)
                     return dom.offsetHeight < max
                 })
