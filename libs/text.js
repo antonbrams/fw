@@ -18,7 +18,7 @@ export default {
             var max       = line * count + 1
             // check if it's necessary to do a search
             if (line < block && block > max) {
-                binarySearch(string.length, function (i, end) {
+                fwMath.binarySearch(string.length, function (i, end) {
                     dom.innerHTML = string.substring(0, end? i - 3: i)
                     return dom.offsetHeight < max
                 })
