@@ -20,7 +20,8 @@ export default {
 	},
 
 	binarySearch (length, check) {
-        var i = h = Math.round(.5 * length)
+        var i = Math.round(.5 * length)
+		var h = i
         while (h > 1) {
             h = Math.round(.5 * h)
             i += (check(i)? 1: -1) * h
