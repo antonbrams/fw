@@ -8,9 +8,7 @@ export default {
     
     ellipsis (dom, count) {
         // multi column solution
-        var column = fwCss.computed(dom, 'column-count')
-        if (!isNaN(column) && column > 1) {
-            console.log('multiline')
+        if (fwCss.computed(dom, 'column-count') > 1) {
             var string    = dom.innerHTML
             var max       = line * count + 1
             // get the maximum height
@@ -21,6 +19,7 @@ export default {
             // check if it's necessary to do a search
             if (line < block && block > max) {
                 binarySearch(string.length, function (i, end) {
+                    console.log(i)
                     dom.innerHTML = string.substring(0, end? i - 3: i)
                     return dom.offsetHeight < max
                 })
@@ -30,7 +29,6 @@ export default {
             } else dom.innerHTML = string
         // single column solution
         } else {
-            console.log('singleline')
             var string = dom.firstChild
             var length = dom.innerHTML.length
             // create range and set cursor to the end
