@@ -10,6 +10,7 @@ export default {
         // multi column solution
         var column = fwCss.computed(dom, 'column-count')
         if (!isNaN(column) && column > 1) {
+            console.log('multiline')
             var string    = dom.innerHTML
             var max       = line * count + 1
             // get the maximum height
@@ -29,6 +30,7 @@ export default {
             } else dom.innerHTML = string
         // single column solution
         } else {
+            console.log('singleline')
             var string = dom.firstChild
             var length = dom.innerHTML.length
             // create range and set cursor to the end
