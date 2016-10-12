@@ -21,13 +21,13 @@ export default {
         // check if it's necessary to do a search
         if (line < block && block > line * count) {
             var frame = dom.getBoundingClientRect()
-            var last  = fwMath.binarySearch(length, function (i, end) {
-                range.setStart(string, i)
+            fwMath.binarySearch(length, function (i, end) {
+                range.setStart(string, end? i - 3: i)
                 return range.getBoundingClientRect().top - frame.top < line * count
             })
             // delete rest and add ellipsis
             range.deleteContents()
-            if (last < length) dom.innerHTML += '&hellip;'
+            dom.innerHTML += '&hellip;'
         }
     },
 
