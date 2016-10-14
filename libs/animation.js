@@ -1,13 +1,7 @@
 
 
 
-/*
-	animation.play(0.5, 'linear', t => {
-		dom.style.opacity = 1-t
-	}, () => {
-		obj.style.display = 'none'	
-	})
-*/
+import {default as fwCss} from './css'
 
 export default {
 
@@ -52,6 +46,14 @@ export default {
 			else 					 { return 7.5625 * t * (t -= (2.625 / 2.75)) + 0.984375 }
 		}
 	},
+
+	/*
+		animation.play(0.5, 'linear', t => {
+			dom.style.opacity = 1-t
+		}, () => {
+			obj.style.display = 'none'	
+		})
+	*/
 	
 	jobs   : [],
 	active : false,
@@ -100,6 +102,42 @@ export default {
 		var time 	= new Date().getTime() * 0.001;
 		var sin		= Math.sin(time * (speed || 1))
 		return 		this.root.math.map(sin, -1, 1, from, to)
+	},
+	
+	/*
+		a.set({
+			opacity    : 0.5,
+			translate  : new fw.vec(0, -100),
+			background : 'green'
+		}).flow(1.5, 'ease', {
+			opacity    : 0.5,
+			translate  : new fw.vec(0, 53.5),
+			background : 'red'
+		}, function () {
+			console.log('test')
+		})
+	*/
+	
+	flow : function (dom) {
+		dom.flow = function (time, ease, next, end) {
+	        var bang = function () {
+	            dom.removeEventListener('transitionend', bang)
+	            dom.style[fwCss.vendor.transition] = null
+	            if (end) {
+	                if (typeof end === "function") 
+						end() 
+					else 
+						if (dom.set) dom.set(end)
+	                end = null
+	            }
+	        }
+	        setTimeout(function () {
+	            dom.addEventListener('transitionend', bang)
+	            dom.style[fwCss.vendor.transition] = time +'s '+ ease
+	            if (typeof next === "function") next(); else dom.set(next)
+	        }, 0)
+	    }
+	    return dom
 	}
 }
 

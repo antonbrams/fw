@@ -7,20 +7,18 @@ import {default as fwMath}  from './math'
 export default {
     
     ellipsis (dom, count) {
+        var line   = this.getLineHeight(dom)
+        var length = dom.innerHTML.length
+        var target = line * count
         // multi column solution
         if (fwCss.computed(dom, 'column-count') > 1) {
             var string    = dom.innerHTML
-            // get the maximum height
             var block     = dom.offsetHeight
-            // get line height
-            dom.innerHTML = string[0]
-            var line      = dom.offsetHeight
-            var max       = line * count + 1
             // check if it's necessary to do a search
-            if (line < block && block > max) {
-                fwMath.binarySearch(string.length, function (i, end) {
+            if (line < block && block > target) {
+                fwMath.binarySearch(length, function (i, end) {
                     dom.innerHTML = string.substring(0, end? i - 3: i)
-                    return dom.offsetHeight < max
+                    return dom.offsetHeight < target
                 })
                 // add ellipsis
                 dom.innerHTML += '&hellip;'
@@ -29,22 +27,14 @@ export default {
         // single column solution
         } else {
             var string = dom.firstChild
-            var length = dom.innerHTML.length
-            // create range and set cursor to the end
-            var range = document.createRange()
-            range.setEnd(string, length)
-            // get line height
-            range.setStart(string, length - 1)
-            var line = range.getBoundingClientRect().height
-            // get whole height
-            range.setStart(string, 0)
-            var block = range.getBoundingClientRect().height
-            // check if it's necessary to do a search
-            if (line < block && block > line * count) {
-                var frame = dom.getBoundingClientRect()
-                fwMath.binarySearch(length - 1, function (i, end) {
+            var block  = dom.offsetHeight
+            if (line < block && block > target) {
+                var frame  = dom.getBoundingClientRect()
+                var range  = document.createRange()
+                range.setEnd(string, length)
+                fwMath.binarySearch(length - 2, function (i, end) {
                     range.setStart(string, end? i - 3: i)
-                    return range.getBoundingClientRect().top - frame.top < line * count
+                    return range.getBoundingClientRect().top - frame.top < target
                 })
                 // delete rest and add ellipsis
                 range.deleteContents()
@@ -56,9 +46,17 @@ export default {
 	lineCount (dom) {
 		return (
 			dom.offsetHeight / 
-			parseInt(fwCss.computed(dom, 'line-height'))
+			this.getLineHeight(dom)
 		)
 	},
+
+    getLineHeight (dom) {
+        var string = dom.firstChild
+        var range  = document.createRange()
+        range.setStart(string, 0)
+        range.setEnd  (string, 1)
+        return range.getBoundingClientRect().height
+    },
 
 	capitalize (string) {
     	return string.charAt(0).toUpperCase() + string.slice(1)

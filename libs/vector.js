@@ -103,6 +103,26 @@ export default class Vec {
 	    	y: this.y + unit
     	}
     }
+
+    log (name) {
+        var data = {x: this.x, y: this.y}
+        if (typeof name === 'undefined') 
+            console.log(data)
+        else
+            console.log(name, data)
+    }
+    
+    set (params) {
+        for (var i in params)
+            this[i](params[i])
+    }
+    
+    apply (fn) {
+        return new Vec(
+            fn(this.x),
+            fn(this.y),
+        )
+    }
 }
 
 

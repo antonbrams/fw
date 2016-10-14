@@ -4,10 +4,12 @@
 import {default as fwGeo} from './geometry'
 import {default as fwVec} from './vector'
 import {default as fwCss} from './css'
+import {default as fwAnimation} from './animation'
 
 export default {
 
     init (dom) {
+        fwAnimation.flow(dom)
         dom.data = {
             origin    : new fwVec(),
             translate : new fwVec(),
@@ -36,6 +38,7 @@ export default {
                 } else
                     dom.style[p] = params[p]
             }
+            return dom
         }
         dom.get = prop => {
             if (prop == 'offset') 
@@ -85,7 +88,12 @@ export default {
             }
         })
         return out
-    })(['transform', 'transformOrigin', 'columnCount']),
+    })([
+        'transform', 
+        'transformOrigin', 
+        'columnCount',
+        'transition'
+    ]),
 }
 
 
