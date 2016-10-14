@@ -2,7 +2,6 @@
 
 
 export {default as animation}   from './animation'
-export {default as freespace}   from './freespace'
 export {default as geo}         from './geometry'
 export {default as arr}         from './array'
 export {default as vec}         from './vector'
