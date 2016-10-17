@@ -20,8 +20,8 @@ export default {
 	},
 
 	binarySearch (length, check) {
-        var i = Math.round(.5 * length)
-		var h = i
+        var i =  Math.floor(.5 * length) // result
+		var h = i // pointer
         while (h > 1) {
             h = Math.round(.5 * h)
             i += (check(i)? 1: -1) * h
