@@ -105,7 +105,7 @@ export default {
 	},
 	
 	/*
-		a.set({
+		dom.set({
 			opacity    : 0.5,
 			translate  : new fw.vec(0, -100),
 			background : 'green'
@@ -114,7 +114,7 @@ export default {
 			translate  : new fw.vec(0, 53.5),
 			background : 'red'
 		}, function () {
-			console.log('test')
+			console.log('done')
 		})
 	*/
 	

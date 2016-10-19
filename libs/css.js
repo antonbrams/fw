@@ -9,7 +9,34 @@ import {default as fwAnimation} from './animation'
 export default {
 
     init (dom) {
+        // animation
         fwAnimation.flow(dom)
+        // pop
+        dom.pop = () => {
+            dom.pop = {
+                parent   : dom.parentNode,
+                move     : new fwVec(dom.style.left, dom.style.top),
+                offset   : fwGeo.vpo(dom)
+            }
+            dom.set({
+                position  : 'fixed',
+                move      : new fwVec(),
+                translate : dom.pop.offset.position
+            })
+            document.body.appendChild(dom)
+        }
+        dom.push = () => {
+            dom.pop.parent.appendChild(dom)
+            dom.set({
+                position  : null,
+                move      : dom.pop.move,
+                translate : new fwVec(),
+                scale     : new fwVec(1, 1),
+                origin    : {x: 'center', y: 'center'}
+            })
+            delete dom.pop
+        }
+        // transition
         dom.data = {
             origin    : new fwVec(),
             translate : new fwVec(),
