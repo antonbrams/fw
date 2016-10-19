@@ -13,7 +13,7 @@ export default {
         fwAnimation.flow(dom)
         // pop
         dom.pop = () => {
-            dom.pop = {
+            dom.data.pop = {
                 parent   : dom.parentNode,
                 move     : new fwVec(dom.style.left, dom.style.top),
                 offset   : fwGeo.vpo(dom)
@@ -21,20 +21,20 @@ export default {
             dom.set({
                 position  : 'fixed',
                 move      : new fwVec(),
-                translate : dom.pop.offset.position
+                translate : dom.data.pop.offset.position
             })
             document.body.appendChild(dom)
         }
         dom.push = () => {
-            dom.pop.parent.appendChild(dom)
+            dom.data.pop.parent.appendChild(dom)
             dom.set({
                 position  : null,
-                move      : dom.pop.move,
+                move      : dom.data.pop.move,
                 translate : new fwVec(),
                 scale     : new fwVec(1, 1),
                 origin    : {x: 'center', y: 'center'}
             })
-            delete dom.pop
+            delete dom.data.pop
         }
         // transition
         dom.data = {
