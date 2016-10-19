@@ -16,11 +16,14 @@ export default {
             dom.data.pop = {
                 parent   : dom.parentNode,
                 move     : new fwVec(dom.style.left, dom.style.top),
+                size     : new fwVec(dom.style.width, dom.style.height),
                 offset   : fwGeo.vpo(dom)
             }
+            var size = new fwVec(dom.offsetWidth, dom.offsetHeight)
             dom.set({
                 position  : 'fixed',
                 move      : new fwVec(),
+                size      : size.unit('px'),
                 translate : dom.data.pop.offset.position
             })
             document.body.appendChild(dom)
@@ -30,6 +33,7 @@ export default {
             dom.set({
                 position  : null,
                 move      : dom.data.pop.move,
+                size      : dom.data.pop.size,
                 translate : new fwVec(),
                 scale     : new fwVec(1, 1),
                 origin    : {x: 'center', y: 'center'}
