@@ -17,6 +17,16 @@ export default {
 	        }
         }
     })(),
+    
+    toggle (object, event, id, callback, flag) {
+        if (callback) window[id] = callback
+        var action = (callback?'add':'remove')+'EventListener'
+        object[action]('resize', window[id], flag)
+        if (callback)
+            return callback
+        else
+            delete object[id]
+    },
 
     drag (dom, down, move, up) {
         var params = new Object();
