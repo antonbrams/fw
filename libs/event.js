@@ -22,7 +22,7 @@ export default {
         if (ev) object[id] = {ev, callback}
         var action = ev? 'add': 'remove'
         object[action +'EventListener']
-            (object[id].e, object[id].callback, flag || false)
+            (object[id].ev, object[id].callback, flag || false)
         if (ev) return callback
         else delete object[id]
     },
