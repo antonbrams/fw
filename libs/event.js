@@ -3,7 +3,30 @@
 
 import {default as fwDom} from './dom'
 
+var events = {}
+
 export default {
+
+    add (id, object, ev, callback, flag) {
+        events[id] = {object, ev, callback, flag}
+        return this.on(id)
+    },
+
+    del (id) {
+        this.off(id)
+        delete events[id]
+    },
+
+    on (id) {
+        var a = events[id]
+        a.object.addEventListener(a.ev, a.callback, a.flag)
+        return a.callback
+    },
+
+    off (id) {
+        var a = events[id]
+        a.object.removeEventListener(a.ev, a.callback, a.flag)
+    },
 
     type : (() => {
         if (typeof window !== 'undefined') {
@@ -17,15 +40,6 @@ export default {
 	        }
         }
     })(),
-    
-    toggle (id, object, ev, callback, flag) {
-        if (ev) object[id] = {ev, callback}
-        var action = ev? 'add': 'remove'
-        object[action +'EventListener']
-            (object[id].ev, object[id].callback, flag || false)
-        if (ev) return callback
-        else delete object[id]
-    },
     
     drag (dom, down, move, up) {
         var params = new Object();
