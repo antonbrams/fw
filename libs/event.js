@@ -18,11 +18,12 @@ export default {
         }
     })(),
     
-    toggle (object, id, e, callback, flag) {
-        if (e) object[id] = callback
-        var action = e?'add':'remove'
-        object[action +'EventListener'](e, object[id], flag || false)
-        if (e) return callback
+    toggle (id, object, e, callback, flag) {
+        if (object) object[id] = {e, callback}
+        var action = object? 'add': 'remove'
+        object[action +'EventListener']
+            (object[id].e, object[id].callback, flag || false)
+        if (object) return callback
         else delete object[id]
     },
     
