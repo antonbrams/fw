@@ -3,29 +3,32 @@
 
 import {default as fwDom} from './dom'
 
-var events = {}
-
 export default {
-
-    add (id, object, ev, callback, flag) {
-        events[id] = {object, ev, callback, flag}
-        return this.on(id)
-    },
-
-    del (id) {
-        this.off(id)
-        delete events[id]
-    },
-
-    on (id) {
-        var a = events[id]
-        a.object.addEventListener(a.ev, a.callback, a.flag)
-        return a.callback
-    },
-
-    off (id) {
-        var a = events[id]
-        a.object.removeEventListener(a.ev, a.callback, a.flag)
+    
+    watcher : class {
+        
+        constructor (object, ev, callback, flag) {
+            this.object   = object
+            this.ev       = ev
+            this.callback = callback
+            this.flag     = flag
+        }
+        
+        on (bool) {
+            this.object.addEventListener
+                (this.ev, this.callback, this.flag)
+            if (bool) this.callback()
+        }
+        
+        off () {
+            this.object.removeEventListener
+                (this.ev, this.callback, this.flag)
+        }
+        
+        destroy () {
+            this.off()
+            delete this
+        }
     },
 
     type : (() => {
