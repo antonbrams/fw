@@ -18,16 +18,14 @@ export default {
         }
     })(),
     
-    toggle (object, event, id, callback, flag) {
-        if (callback) window[id] = callback
-        var action = (callback?'add':'remove')+'EventListener'
-        object[action]('resize', window[id], flag)
-        if (callback)
-            return callback
-        else
-            delete object[id]
+    toggle (object, id, e, callback, flag) {
+        if (e) object[id] = callback
+        var action = e?'add':'remove'
+        object[action +'EventListener'](e, object[id], flag || false)
+        if (e) return callback
+        else delete object[id]
     },
-
+    
     drag (dom, down, move, up) {
         var params = new Object();
         var touchstart = () => {
