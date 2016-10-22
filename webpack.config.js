@@ -28,11 +28,13 @@ config.add({
 })
 
 if (env.mode == 'build') config.add({
+		devtool : 'eval',
 		plugins : [
 			new webpack.optimize.UglifyJsPlugin()
 	    ]
 	})
-else if (env.mode == 'watch') config.add({
+else
+	if (env.mode == 'watch') config.add({
 		watch : true
 	})
 
