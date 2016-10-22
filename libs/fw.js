@@ -1,7 +1,7 @@
 
 
 
-export var debug = false
+export var debug = {enable: false}
 
 export {default as animation}   from './animation'
 export {default as geo}         from './geometry'
