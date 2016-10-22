@@ -135,7 +135,7 @@ export default {
             dom.style[fwCss.vendor.transition] = time +'s '+ ease
 	        setTimeout(() => {
 	            if (typeof next === 'function') next(); else dom.set(next)
-	        }, 0)
+	        }, 1)
 	    }
 	    return dom
 	}
