@@ -16,7 +16,7 @@ export default {
     },
 
     emit (topic, transport) {
-        if (debug) console.log('[event] fired:', topic)
+        if (debug.enable) console.log('[event] fired:', topic)
         if (topics[topic])
             topics[topic].forEach(bang => bang(transport))
     },

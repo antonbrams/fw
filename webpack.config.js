@@ -30,7 +30,10 @@ config.add({
 if (env.mode == 'build') config.add({
 		devtool : 'eval',
 		plugins : [
-			new webpack.optimize.UglifyJsPlugin()
+			new webpack.optimize.UglifyJsPlugin({
+      			output: {comments: false},
+      			sourceMap: true
+			})
 	    ]
 	})
 else
