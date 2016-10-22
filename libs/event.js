@@ -1,10 +1,27 @@
 
 
 
-import {default as fwDom} from './dom'
+import {arr}   from './array'
+import {debug} from './fw'
+
+var topics = {}
 
 export default {
     
+    // event engine
+    on (topic, bang, id) {
+        if (!topics[topic])
+            topics[topic] = []
+        topics[topic].push(bang)        
+    },
+
+    emit (topic, transport) {
+        if (debug) console.log('[event] fired:', topic)
+        if (topics[topic])
+            topics[topic].forEach(bang => bang(transport))
+    },
+    
+    // event watcher
     watcher : class {
         
         constructor (object, ev, callback, flag) {
@@ -30,7 +47,8 @@ export default {
             delete this
         }
     },
-
+    
+    // event types
     type : (() => {
         if (typeof window !== 'undefined') {
 	        var isTouch = 'ontouchstart' in window
@@ -44,38 +62,7 @@ export default {
         }
     })(),
     
-    drag (dom, down, move, up) {
-        var params = new Object();
-        var touchstart = () => {
-            fwDom.selection(false);
-            params.event = this.type.touch?
-                window.event.targetTouches[0]:
-                window.event
-            down(params)
-            dom[this.type.down]            = null
-            document.body[this.type.move]  = touchmove.bind(this)
-            document.body[this.type.up]    = touchend.bind(this)
-            document.body[this.type.out]   = touchend.bind(this)
-        }
-        
-        var touchmove = () => {
-            window.event.preventDefault()
-            params.event = this.type.touch?
-                window.event.targetTouches[0]:
-                window.event
-            move(params)
-        }
-
-        var touchend = () => {
-           	fwDom.selection(true)
-            document.body[this.type.move]    = null
-            document.body[this.type.up]      = null
-            dom[this.type.down]              = touchstart.bind(this)
-            up(params)
-        }
-        dom[this.type.down] = touchstart.bind(this)
-    },
-    
+    // on resize debouncer
 	resize : class {
 		
 		constructor (onDragStart, onDragUpdate, onDragRelease) {
