@@ -131,11 +131,11 @@ export default {
 	                end = null
 	            }
 	        }
-            dom.addEventListener('transitionend', bang)
-            dom.style[fwCss.vendor.transition] = time +'s '+ ease
 	        setTimeout(() => {
+	            dom.addEventListener('transitionend', bang)
+	            dom.style[fwCss.vendor.transition] = time +'s '+ ease
 	            if (typeof next === 'function') next(); else dom.set(next)
-	        }, 1)
+	        }, 0)
 	    }
 	    return dom
 	}
