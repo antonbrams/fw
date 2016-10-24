@@ -52,15 +52,15 @@ export default {
 
 	vecdim (position, size) {
 		return {
-			l: position.x, w: size.x, r: (() => {return this.l + this.w})(),
-			t: position.y, h: size.y, b: (() => {return this.t + this.h})()
+			l: position.x, w: size.x, r: (function () {return this.l + this.w})(),
+			t: position.y, h: size.y, b: (function () {return this.t + this.h})()
 		}
 	},
 
 	dim (dom) {
 		return {
-			l: dom.offsetLeft, w: dom.offsetWidth,  r: (() => {return this.l + this.w})(),
-			t: dom.offsetTop,  h: dom.offsetHeight, b: (() => {return this.t + this.h})()
+			l: dom.offsetLeft, w: dom.offsetWidth,  r: (function () {return this.l + this.w})(),
+			t: dom.offsetTop,  h: dom.offsetHeight, b: (function () {return this.t + this.h})()
 		}
 	},
     
