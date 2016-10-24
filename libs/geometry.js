@@ -43,24 +43,24 @@ export default {
 		return offset
 	},
 
-	dimToVec (dims) {
+	dimvec (dims) {
 		return {
 			position : new fwVec(dims.l, dims.t),
 			size     : new fwVec(dims.w, dims.h)
 		}
 	},
 
-	vecToDim (position, size) {
+	vecdim (position, size) {
 		return {
-			l: position.x, w: size.x, r: (() => {this.l + this.w})(),
-			t: position.y, h: size.y, b: (() => {this.t + this.h})()
+			l: position.x, w: size.x, r: (() => {return this.l + this.w})(),
+			t: position.y, h: size.y, b: (() => {return this.t + this.h})()
 		}
 	},
 
 	dim (dom) {
 		return {
-			l: dom.offsetLeft, w: dom.offsetWidth,  r: (() => {this.l + this.w})(),
-			t: dom.offsetTop,  h: dom.offsetHeight, b: (() => {this.t + this.h})()
+			l: dom.offsetLeft, w: dom.offsetWidth,  r: (() => {return this.l + this.w})(),
+			t: dom.offsetTop,  h: dom.offsetHeight, b: (() => {return this.t + this.h})()
 		}
 	},
     
