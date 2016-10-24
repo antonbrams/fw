@@ -44,31 +44,20 @@ export default {
 	},
 
 	dimvec (dims) {
-		return {
-			position : new fwVec(dims.l, dims.t),
-			size     : new fwVec(dims.w, dims.h)
-		}
+		var size = 
+			dims.w? new fwVec(dims.w, dims.h):
+			dims.r? new fwVec(dims.r - dims.l, dims.b - dims.t): null
+		return {size, position: new fwVec(dims.l, dims.t)}
 	},
 
 	vecdim (position, size) {
-		return {
-			l: position.x, w: size.x, r: (function () {return this.l + this.w})(),
-			t: position.y, h: size.y, b: (function () {return this.t + this.h})()
+		var box = {
+			l: position.x, w: size.x,
+			t: position.y, h: size.y
 		}
-	},
-
-	dim (dom) {
-		return {
-			l: dom.offsetLeft, w: dom.offsetWidth,  r: (function () {return this.l + this.w})(),
-			t: dom.offsetTop,  h: dom.offsetHeight, b: (function () {return this.t + this.h})()
-		}
-	},
-    
-	domCollision (a, b) {
-		return this.boxCollision(
-			this.getDimensions(a),
-			this.getDimensions(b)
-		)
+		box.r = box.l + box.w
+		box.b = box.t + box.h
+		return box
 	},
 
 	boxCollision (a, b) {
