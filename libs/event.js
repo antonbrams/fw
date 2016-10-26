@@ -48,6 +48,19 @@ export default {
         }
     },
     
+    attach (object, ev, callback, flag) {
+        object.data[ev] = callback
+        callback.on = function () {
+            object.addEventListener
+                (ev, object.data[ev], flag)
+        }
+        callback.off = function () {
+            object.removeEventListener
+                (ev, object.data[ev], flag)
+        }
+        return callback
+    },
+    
     // event types
     type : (() => {
         if (typeof window !== 'undefined') {
