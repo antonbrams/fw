@@ -120,8 +120,9 @@ export default {
 	
 	flow : function (dom) {
 		dom.flow = function (time, ease, next, end) {
-	        var bang = function () {
-	            dom.removeEventListener('transitionend', bang)
+			dom.bang = null
+	        dom.bang = function () {
+	            dom.removeEventListener('transitionend', dom.bang)
 	            dom.style[fwCss.vendor.transition] = null
 	            if (end) {
 	                if (typeof end === "function") 
@@ -131,8 +132,8 @@ export default {
 	                end = null
 	            }
 	        }
-			dom.removeEventListener('transitionend', bang)
-            dom.addEventListener('transitionend', bang)
+			dom.removeEventListener('transitionend', dom.bang)
+            dom.addEventListener('transitionend', dom.bang)
             dom.style[fwCss.vendor.transition] = time +'s '+ ease
 	        setTimeout(() => {
 	            if (typeof next === 'function') next(); else dom.set(next)
