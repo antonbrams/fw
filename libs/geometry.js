@@ -42,7 +42,26 @@ export default {
 		}
 		return offset
 	},
-
+	
+	center (params) {
+		// for regular vector system
+		if (this.isvec(params))
+			return params.position.add(params.size.scale(.5))
+		// for dimension system
+		else if (this.isdim(params)) {
+			var rect = this.dimvec(params)
+			return rect.position.add(rect.size.scale(.5))
+		}
+	},
+	
+	isvec (obj) {
+		return obj.position || obj.opposite
+	},
+	
+	isdim (obj) {
+		return obj.l || obj.r
+	},
+	
 	dimvec (dims) {
 		var size = 
 			dims.w? new fwVec(dims.w, dims.h):
