@@ -51,15 +51,15 @@ export default {
     attach (object, ev, callback, flag) {
         object.data     = object.data || {}
         object.data[ev] = callback
-        callback.on = function () {
+        object.data[ev].on = function () {
             object.addEventListener
                 (ev, object.data[ev], flag)
         }
-        callback.off = function () {
+        object.data[ev].off = function () {
             object.removeEventListener
                 (ev, object.data[ev], flag)
         }
-        return callback
+        return object.data[ev]
     },
     
     // event types
