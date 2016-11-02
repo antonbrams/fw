@@ -93,7 +93,7 @@ export default class Vec {
     	)
     }
     
-    rotate (angle) {
+    rotate (angle, set) {
         var rad = Math.PI / 180 * angle
         var cos = Math.cos(rad)
         var sin = Math.sin(rad)
