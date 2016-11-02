@@ -92,8 +92,23 @@ export default class Vec {
 	    	i * ((vec.y || 0) - this.y) + this.y
     	)
     }
+    
+    rotate (angle) {
+        var rad = Math.PI / 180 * angle
+        var cos = Math.cos(rad)
+        var sin = Math.sin(rad)
+        var x   = (cos * this.x) + (sin * this.y)
+        var y   = (cos * this.y) - (sin * this.x)
+	    if (set) {
+	        this.x = x
+	        this.y = y
+	        return this
+	    } else {
+	        return new Vec(x, y)
+        }
+    }
 
-    getAngle2D () {
+    getAngle () {
 	    return Math.atan2(this.x, this.y) * 180 / Math.PI
     }
 
