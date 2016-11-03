@@ -68,10 +68,10 @@ export default {
             }
             return this
         }
-        Element.prototype.get = prop => {
-            if (prop == 'offset') 
+        Element.prototype.get = function (prop) {
+            if (prop == 'offset')
                 return fwGeo.vpo(this)
-            else if (typeof this.data[prop] !== 'undefined') 
+            else if (typeof this.data[prop] !== 'undefined')
                 return this.data[prop]
             else
                 fwCss.computed(this, prop)
