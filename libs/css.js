@@ -4,9 +4,8 @@
 import {default as fwGeo} from './geometry'
 import {default as fwVec} from './vector'
 import {default as fwCss} from './css'
-import {default as fwAnimation} from './animation'
 
-export default css = {
+export default {
 
     init : (function () {
         // pop
@@ -55,7 +54,7 @@ export default css = {
                         if (typeof params[p].x !== 'undefined') this.data[p].x = params[p].x
                         if (typeof params[p].y !== 'undefined') this.data[p].y = params[p].y
                     }
-                    css.applyTransformation(this, this.data, p)
+                    fwCss.applyTransformation(this, this.data, p)
                 // movement and sizing
                 } else if (p =='move') {
                     this.style.left = params[p].x
@@ -75,7 +74,7 @@ export default css = {
             else if (typeof this.data[prop] !== 'undefined') 
                 return this.data[prop]
             else
-                css.computed(this, prop)
+                fwCss.computed(this, prop)
         }
         return this
     })(),
