@@ -8,95 +8,94 @@ import {default as fwAnimation} from './animation'
 
 export default {
 
-    init (dom) {
-        // animation
-        fwAnimation.flow(dom)
+    init : (() => {
+        var that = this
         // pop
-        dom.pop = () => {
-            dom.data.pop = {
-                parent   : dom.parentNode,
-                move     : new fwVec(dom.style.left, dom.style.top),
-                size     : new fwVec(dom.style.width, dom.style.height),
-                offset   : fwGeo.vpo(dom)
+        Element.prototype.pop = function () {
+            this.data.pop = {
+                parent   : this.parentNode,
+                move     : new fwVec(this.style.left,  this.style.top),
+                size     : new fwVec(this.style.width, this.style.height),
+                offset   : fwGeo.vpo(this)
             }
-            var size = new fwVec(dom.offsetWidth, dom.offsetHeight)
-            dom.set({
+            var size = new fwVec(this.offsetWidth, this.offsetHeight)
+            this.set({
                 position  : 'fixed',
                 move      : new fwVec(),
                 size      : size.unit('px'),
-                translate : dom.data.pop.offset.position
+                translate : this.data.pop.offset.position
             })
-            document.body.appendChild(dom)
+            document.body.appendChild(this)
         }
-        dom.push = () => {
-            dom.data.pop.parent.appendChild(dom)
-            dom.set({
+        Element.prototype.push = function () {
+            this.data.pop.parent.appendChild(this)
+            this.set({
                 position  : null,
-                move      : dom.data.pop.move,
-                size      : dom.data.pop.size,
+                move      : this.data.pop.move,
+                size      : this.data.pop.size,
                 translate : new fwVec(),
                 scale     : new fwVec(1, 1),
                 origin    : {x: 'center', y: 'center'}
             })
-            delete dom.data.pop
+            delete this.data.pop
         }
         // transition
-        dom.data = {
+        Element.prototype.data = {
             origin    : new fwVec(),
             translate : new fwVec(),
             scale     : new fwVec(1, 1),
             rotate    : 0
         }
-        dom.set = params => {
+        Element.prototype.set = function (params) {
             for (var p in params) {
                 // transformation
-                if (typeof dom.data[p] !== 'undefined') {
+                if (typeof this.data[p] !== 'undefined') {
             		if (p == 'rotate')
-                        dom.data.rotate = params[p]
+                        this.data.rotate = params[p]
                     else {
-                        if (typeof params[p].x !== 'undefined') dom.data[p].x = params[p].x
-                        if (typeof params[p].y !== 'undefined') dom.data[p].y = params[p].y
+                        if (typeof params[p].x !== 'undefined') this.data[p].x = params[p].x
+                        if (typeof params[p].y !== 'undefined') this.data[p].y = params[p].y
                     }
-                    this.applyTransformation(dom, dom.data, p)
+                    that.applyTransformation(this, this.data, p)
                 // movement and sizing
                 } else if (p =='move') {
-                    dom.style.left = params[p].x
-                    dom.style.top  = params[p].y
+                    this.style.left = params[p].x
+                    this.style.top  = params[p].y
                 } else if (p =='size') {
-                    dom.style.width  = params[p].x
-                    dom.style.height = params[p].y
+                    this.style.width  = params[p].x
+                    this.style.height = params[p].y
                 // custom parameters
                 } else
-                    dom.style[p] = params[p]
+                    this.style[p] = params[p]
             }
-            return dom
+            return this
         }
-        dom.get = prop => {
+        Element.prototype.get = prop => {
             if (prop == 'offset') 
-                return fwGeo.vpo(dom)
-            else if (typeof dom.data[prop] !== 'undefined') 
-                return dom.data[prop]
+                return fwGeo.vpo(this)
+            else if (typeof this.data[prop] !== 'undefined') 
+                return this.data[prop]
             else
-                this.computed(dom, prop)
+                that.computed(this, prop)
         }
-        return dom
-    },
+        return this
+    })(),
     
     applyTransformation (dom, data, type) {
         if (type == 'origin')
-            dom.style[fwCss.vendor.transformOrigin] =
-                data.origin.x +' '+ 
-                data.origin.y
+            dom.style[fwCss.vendor.transformOrigin] = 
+                `${data.origin.x} 
+                 ${data.origin.y}`
         else 
             dom.style[fwCss.vendor.transform] = 
-                'translate('+ 
-                    data.translate.x +'px, '+ 
-                    data.translate.y +'px) '+
-                'rotate('+ 
-                    data.rotate +'deg) '+
-                'scale('+ 
-                    data.scale.x +', '+
-                    data.scale.y +')'
+                `translate(
+                    ${data.translate.x}, 
+                    ${data.translate.y}) 
+                rotate(
+                    ${data.rotate}deg) 
+                scale(
+                    ${data.scale.x}, 
+                    ${data.scale.y})`
     },
 
     computed (dom, prop) {

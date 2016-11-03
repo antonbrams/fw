@@ -5,6 +5,51 @@ import {default as fwCss} from './css'
 
 export default {
 
+	/*
+		dom.set({
+			opacity    : 0.5,
+			translate  : new fw.vec(0, -100),
+			background : 'green'
+		}).flow(1.5, 'ease', {
+			opacity    : 0.5,
+			translate  : new fw.vec(0, 53.5),
+			background : 'red'
+		}, function () {
+			console.log('done')
+		})
+	*/
+
+	flow : (() => {
+		Element.prototype.flow = function (time, ease, next, end) {
+			var bang = () => {
+				this.removeEventListener('transitionend', bang)
+				this.style[fwCss.vendor.transition] = null
+				if (end) {
+					if (typeof end === "function") 
+						end() 
+					else 
+						if (this.set) this.set(end)
+					end = null
+				}
+				this.data.animating = false
+			}
+			this.addEventListener('transitionend', bang)
+			this.style[fwCss.vendor.transition] = time +'s '+ ease
+			setTimeout(() => {
+				this.data.animating = true
+				if (typeof next === 'function') next(); else this.set(next)
+			}, 0)
+		}
+		return this
+	})(),
+
+	// Other Functions
+	getSinus : function (from, to, speed) {
+		var time 	= new Date().getTime() * 0.001;
+		var sin		= Math.sin(time * (speed || 1))
+		return 		this.root.math.map(sin, -1, 1, from, to)
+	},
+
 	easing : {
 
 		linear (t) {
@@ -96,51 +141,6 @@ export default {
 			window.requestAnimationFrame(this.loop.bind(this))
 		}
 	},
-
-	// Other Functions
-	getSinus : function (from, to, speed) {
-		var time 	= new Date().getTime() * 0.001;
-		var sin		= Math.sin(time * (speed || 1))
-		return 		this.root.math.map(sin, -1, 1, from, to)
-	},
-	
-	/*
-		dom.set({
-			opacity    : 0.5,
-			translate  : new fw.vec(0, -100),
-			background : 'green'
-		}).flow(1.5, 'ease', {
-			opacity    : 0.5,
-			translate  : new fw.vec(0, 53.5),
-			background : 'red'
-		}, function () {
-			console.log('done')
-		})
-	*/
-	
-	flow : function (dom) {
-		dom.flow = function (time, ease, next, end) {
-	        var bang = function () {
-	            dom.removeEventListener('transitionend', bang)
-	            dom.style[fwCss.vendor.transition] = null
-	            if (end) {
-	                if (typeof end === "function") 
-						end() 
-					else 
-						if (dom.set) dom.set(end)
-	                end = null
-	            }
-				dom.data.animating = false
-	        }
-            dom.addEventListener('transitionend', bang)
-            dom.style[fwCss.vendor.transition] = time +'s '+ ease
-	        setTimeout(() => {
-				dom.data.animating = true
-	            if (typeof next === 'function') next(); else dom.set(next)
-	        }, 0)
-	    }
-	    return dom
-	}
 }
 
 
