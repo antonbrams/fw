@@ -8,7 +8,7 @@ import {default as fwAnimation} from './animation'
 
 export default {
 
-    init : (() => {
+    init : (function () {
         var that = this
         // pop
         Element.prototype.pop = function () {

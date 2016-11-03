@@ -19,7 +19,7 @@ export default {
 		})
 	*/
 
-	flow : (() => {
+	flow : (function () {
 		Element.prototype.flow = function (time, ease, next, end) {
 			var bang = () => {
 				this.removeEventListener('transitionend', bang)
