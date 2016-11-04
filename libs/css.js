@@ -8,7 +8,7 @@ import fwCss       from './css'
 
 export default {
 
-    init : (function (dom) {
+    init : function (dom) {
         // add animation support
         fwAnimation.flow(dom)
         // set data
@@ -81,7 +81,7 @@ export default {
                 fwCss.computed(this, prop)
         }
         return this
-    })(Element.prototype),
+    },
     
     applyTransformation (dom, data, type) {
         // create data
