@@ -19,29 +19,29 @@ export default {
 		})
 	*/
 
-	flow : (function () {
-		Element.prototype.flow = function (time, ease, next, end) {
+	flow : (function (dom) {
+		dom.flow = function (time, ease, next, end) {
 			var bang = () => {
-				this.removeEventListener('transitionend', bang)
-				this.style[fwCss.vendor.transition] = null
+				dom.removeEventListener('transitionend', bang)
+				dom.style[fwCss.vendor.transition] = null
 				if (end) {
 					if (typeof end === "function") 
 						end() 
 					else 
-						if (this.set) this.set(end)
+						if (dom.set) dom.set(end)
 					end = null
 				}
-				this.data.animating = false
+				dom.data.animating = false
 			}
-			this.addEventListener('transitionend', bang)
-			this.style[fwCss.vendor.transition] = time +'s '+ ease
+			dom.addEventListener('transitionend', bang)
+			dom.style[fwCss.vendor.transition] = time +'s '+ ease
 			setTimeout(() => {
-				this.data.animating = true
-				if (typeof next === 'function') next(); else this.set(next)
+				dom.data.animating = true
+				if (typeof next === 'function') next(); else dom.set(next)
 			}, 0)
 		}
-		return this
-	})(),
+		return dom
+	})(Element.prototype),
 
 	// Other Functions
 	getSinus : function (from, to, speed) {

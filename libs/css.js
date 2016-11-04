@@ -7,77 +7,78 @@ import {default as fwCss} from './css'
 
 export default {
 
-    init : (function () {
+    init : (function (dom) {
+        // set data
+        dom.data = {
+            origin    : new fwVec(),
+            translate : new fwVec(),
+            scale     : new fwVec(1, 1),
+            rotate    : 0
+        } 
         // pop
-        HTMLElement.prototype.pop = function () {
-            this.data.pop = {
-                parent   : this.parentNode,
-                move     : new fwVec(this.style.left,  this.style.top),
-                size     : new fwVec(this.style.width, this.style.height),
+        dom.pop = () => {
+            dom.data.pop = {
+                parent   : dom.parentNode,
+                move     : new fwVec(dom.style.left,  dom.style.top),
+                size     : new fwVec(dom.style.width, dom.style.height),
                 offset   : fwGeo.vpo(this)
             }
-            var size = new fwVec(this.offsetWidth, this.offsetHeight)
-            this.set({
+            var size = new fwVec(dom.offsetWidth, dom.offsetHeight)
+            dom.set({
                 position  : 'fixed',
                 move      : new fwVec(),
                 size      : size.unit('px'),
-                translate : this.data.pop.offset.position.unit('px')
+                translate : dom.data.pop.offset.position.unit('px')
             })
             document.body.appendChild(this)
         }
-        HTMLElement.prototype.push = function () {
-            this.data.pop.parent.appendChild(this)
-            this.set({
+        dom.push = () => {
+            dom.data.pop.parent.appendChild(this)
+            dom.set({
                 position  : null,
-                move      : this.data.pop.move,
-                size      : this.data.pop.size,
+                move      : dom.data.pop.move,
+                size      : dom.data.pop.size,
                 translate : new fwVec(),
                 scale     : new fwVec(1, 1),
                 origin    : {x: 'center', y: 'center'}
             })
-            delete this.data.pop
+            delete dom.data.pop
         }
-        HTMLElement.prototype.set = function (params) {
-            this.data = this.data || {
-                origin    : new fwVec(),
-                translate : new fwVec(),
-                scale     : new fwVec(1, 1),
-                rotate    : 0
-            } 
+        dom.set = params => {
             for (var p in params) {
                 // transformation
-                if (typeof this.data[p] !== 'undefined') {
+                if (typeof dom.data[p] !== 'undefined') {
                     // transition
             		if (p == 'rotate')
-                        this.data.rotate = params[p]
+                        dom.data.rotate = params[p]
                     else {
-                        if (typeof params[p].x !== 'undefined') this.data[p].x = params[p].x
-                        if (typeof params[p].y !== 'undefined') this.data[p].y = params[p].y
+                        if (typeof params[p].x !== 'undefined') dom.data[p].x = params[p].x
+                        if (typeof params[p].y !== 'undefined') dom.data[p].y = params[p].y
                     }
-                    fwCss.applyTransformation(this, this.data, p)
+                    fwCss.applyTransformation(this, dom.data, p)
                 // movement and sizing
                 } else if (p =='move') {
-                    this.style.left = params[p].x
-                    this.style.top  = params[p].y
+                    dom.style.left = params[p].x
+                    dom.style.top  = params[p].y
                 } else if (p =='size') {
-                    this.style.width  = params[p].x
-                    this.style.height = params[p].y
+                    dom.style.width  = params[p].x
+                    dom.style.height = params[p].y
                 // custom parameters
                 } else
-                    this.style[p] = params[p]
+                    dom.style[p] = params[p]
             }
             return this
         }
-        HTMLElement.prototype.get = function (prop) {
+        dom.get = prop => {
             if (prop == 'offset')
                 return fwGeo.vpo(this)
-            else if (typeof this.data[prop] !== 'undefined')
-                return this.data[prop]
+            else if (typeof dom.data[prop] !== 'undefined')
+                return dom.data[prop]
             else
                 fwCss.computed(this, prop)
         }
         return this
-    })(),
+    })(Element.prototype),
     
     applyTransformation (dom, data, type) {
         // create data
