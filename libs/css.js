@@ -1,35 +1,35 @@
 
 
 
-import fwAnimation from './animation'
-import fwGeo       from './geometry'
-import fwVec       from './vector'
-import fwCss       from './css'
+import animation from './animation'
+import geo       from './geometry'
+import vec       from './vector'
+import css       from './css'
 
 export default {
 
     init : function (dom) {
         // add animation support
-        fwAnimation.flow(dom)
+        animation.flow(dom)
         // set data
         dom.data = {
-            origin    : new fwVec(),
-            translate : new fwVec(),
-            scale     : new fwVec(1, 1),
+            origin    : new vec(),
+            translate : new vec(),
+            scale     : new vec(1, 1),
             rotate    : 0
         } 
         // pop
         dom.pop = () => {
             dom.data.pop = {
                 parent   : dom.parentNode,
-                move     : new fwVec(dom.style.left,  dom.style.top),
-                size     : new fwVec(dom.style.width, dom.style.height),
-                offset   : fwGeo.vpo(this)
+                move     : new vec(dom.style.left,  dom.style.top),
+                size     : new vec(dom.style.width, dom.style.height),
+                offset   : geo.vpo(this)
             }
-            var size = new fwVec(dom.offsetWidth, dom.offsetHeight)
+            var size = new vec(dom.offsetWidth, dom.offsetHeight)
             dom.set({
                 position  : 'fixed',
-                move      : new fwVec(),
+                move      : new vec(),
                 size      : size.unit('px'),
                 translate : dom.data.pop.offset.position.unit('px')
             })
@@ -41,8 +41,8 @@ export default {
                 position  : null,
                 move      : dom.data.pop.move,
                 size      : dom.data.pop.size,
-                translate : new fwVec(),
-                scale     : new fwVec(1, 1),
+                translate : new vec(),
+                scale     : new vec(1, 1),
                 origin    : {x: 'center', y: 'center'}
             })
             delete dom.data.pop
@@ -58,7 +58,7 @@ export default {
                         if (typeof params[p].x !== 'undefined') dom.data[p].x = params[p].x
                         if (typeof params[p].y !== 'undefined') dom.data[p].y = params[p].y
                     }
-                    fwCss.applyTransformation(this, dom.data, p)
+                    css.applyTransformation(this, dom.data, p)
                 // movement and sizing
                 } else if (p =='move') {
                     dom.style.left = params[p].x
@@ -74,11 +74,11 @@ export default {
         }
         dom.get = prop => {
             if (prop == 'offset')
-                return fwGeo.vpo(this)
+                return geo.vpo(this)
             else if (typeof dom.data[prop] !== 'undefined')
                 return dom.data[prop]
             else
-                fwCss.computed(this, prop)
+                css.computed(this, prop)
         }
         return this
     },
@@ -86,11 +86,11 @@ export default {
     applyTransformation (dom, data, type) {
         // create data
         if (type == 'origin')
-            dom.style[fwCss.vendor.transformOrigin] = 
+            dom.style[css.vendor.transformOrigin] = 
                 `${data.origin.x} 
                  ${data.origin.y}`
         else 
-            dom.style[fwCss.vendor.transform] = 
+            dom.style[css.vendor.transform] = 
                 `translate(
                     ${data.translate.x}, 
                     ${data.translate.y}) 

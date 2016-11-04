@@ -1,14 +1,14 @@
 
 
 
-import fwCss from './css'
+import css from './css'
 
 export default {
 
     fromString (html) {
 		var parent = document.createElement('div')
 	    parent.innerHTML = html
-	    return fwCss(parent.firstChild)
+	    return css.init(parent.firstChild)
 	},
 
 	// Add DOM Element at Begin of the List
@@ -37,7 +37,7 @@ export default {
             div.classList.add(style)
         })
         if (content) div.innerHTML = content
-        return fwCss(div)
+        return css.init(div)
     },
 }
 
