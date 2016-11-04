@@ -9,7 +9,7 @@ export default {
 
     init : (function () {
         // pop
-        Element.prototype.pop = function () {
+        HTMLElement.prototype.pop = function () {
             this.data.pop = {
                 parent   : this.parentNode,
                 move     : new fwVec(this.style.left,  this.style.top),
@@ -25,7 +25,7 @@ export default {
             })
             document.body.appendChild(this)
         }
-        Element.prototype.push = function () {
+        HTMLElement.prototype.push = function () {
             this.data.pop.parent.appendChild(this)
             this.set({
                 position  : null,
@@ -37,7 +37,7 @@ export default {
             })
             delete this.data.pop
         }
-        Element.prototype.set = function (params) {
+        HTMLElement.prototype.set = function (params) {
             this.data = this.data || {
                 origin    : new fwVec(),
                 translate : new fwVec(),
@@ -68,7 +68,7 @@ export default {
             }
             return this
         }
-        Element.prototype.get = function (prop) {
+        HTMLElement.prototype.get = function (prop) {
             if (prop == 'offset')
                 return fwGeo.vpo(this)
             else if (typeof this.data[prop] !== 'undefined')
