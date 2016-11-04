@@ -8,7 +8,7 @@ import css       from './css'
 
 export default {
 
-    init : function (dom) {
+    init (dom) {
         // add animation support
         animation.flow(dom)
         // set data
@@ -80,7 +80,7 @@ export default {
             else
                 css.computed(this, prop)
         }
-        return this
+        return dom
     },
     
     applyTransformation (dom, data, type) {
