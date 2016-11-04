@@ -21,7 +21,7 @@ export default {
                 position  : 'fixed',
                 move      : new fwVec(),
                 size      : size.unit('px'),
-                translate : this.data.pop.offset.position
+                translate : this.data.pop.offset.position.unit('px')
             })
             document.body.appendChild(this)
         }
