@@ -24,7 +24,7 @@ export default {
                 parent   : dom.parentNode,
                 move     : new vec(dom.style.left,  dom.style.top),
                 size     : new vec(dom.style.width, dom.style.height),
-                offset   : geo.vpo(this)
+                offset   : geo.vpo(dom)
             }
             var size = new vec(dom.offsetWidth, dom.offsetHeight)
             dom.set({
@@ -33,10 +33,10 @@ export default {
                 size      : size.unit('px'),
                 translate : dom.data.pop.offset.position.unit('px')
             })
-            document.body.appendChild(this)
+            document.body.appendChild(dom)
         }
         dom.push = () => {
-            dom.data.pop.parent.appendChild(this)
+            dom.data.pop.parent.appendChild(dom)
             dom.set({
                 position  : null,
                 move      : dom.data.pop.move,
@@ -58,7 +58,7 @@ export default {
                         if (typeof params[p].x !== 'undefined') dom.data[p].x = params[p].x
                         if (typeof params[p].y !== 'undefined') dom.data[p].y = params[p].y
                     }
-                    css.applyTransformation(this, dom.data, p)
+                    css.applyTransformation(dom, dom.data, p)
                 // movement and sizing
                 } else if (p =='move') {
                     dom.style.left = params[p].x
@@ -70,15 +70,15 @@ export default {
                 } else
                     dom.style[p] = params[p]
             }
-            return this
+            return dom
         }
         dom.get = prop => {
             if (prop == 'offset')
-                return geo.vpo(this)
+                return geo.vpo(dom)
             else if (typeof dom.data[prop] !== 'undefined')
                 return dom.data[prop]
             else
-                css.computed(this, prop)
+                css.computed(dom, prop)
         }
         return dom
     },
