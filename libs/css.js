@@ -37,17 +37,17 @@ export default {
             })
             delete this.data.pop
         }
-        // transition
-        Element.prototype.data = (function () { return {
-            origin    : new fwVec(),
-            translate : new fwVec(),
-            scale     : new fwVec(1, 1),
-            rotate    : 0
-        }})()
         Element.prototype.set = function (params) {
+            this.data = this.data || {
+                origin    : new fwVec(),
+                translate : new fwVec(),
+                scale     : new fwVec(1, 1),
+                rotate    : 0
+            } 
             for (var p in params) {
                 // transformation
                 if (typeof this.data[p] !== 'undefined') {
+                    // transition
             		if (p == 'rotate')
                         this.data.rotate = params[p]
                     else {
@@ -80,6 +80,7 @@ export default {
     })(),
     
     applyTransformation (dom, data, type) {
+        // create data
         if (type == 'origin')
             dom.style[fwCss.vendor.transformOrigin] = 
                 `${data.origin.x} 
