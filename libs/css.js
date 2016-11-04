@@ -38,12 +38,12 @@ export default {
             delete this.data.pop
         }
         // transition
-        Element.prototype.data = {
+        Element.prototype.data = (function () { return {
             origin    : new fwVec(),
             translate : new fwVec(),
             scale     : new fwVec(1, 1),
             rotate    : 0
-        }
+        }})()
         Element.prototype.set = function (params) {
             for (var p in params) {
                 // transformation
