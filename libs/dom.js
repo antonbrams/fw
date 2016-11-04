@@ -1,23 +1,14 @@
 
 
 
-export default {
+import fwCss from './css'
 
-    child (query, parent = document) {
-        var el =
-            query[0] == '#'? parent.getElementById(query.slice(1)) :
-            query[0] == '.'? parent.getElementsByClassName(query.slice(1)) :
-            parent.getElementsByTagName(query)
-        el.child = (query) => {
-            return this.child(query, el)
-        }
-        return el
-    },
+export default {
 
     fromString (html) {
 		var parent = document.createElement('div')
 	    parent.innerHTML = html
-	    return parent.firstChild
+	    return fwCss(parent.firstChild)
 	},
 
 	// Add DOM Element at Begin of the List
@@ -46,7 +37,7 @@ export default {
             div.classList.add(style)
         })
         if (content) div.innerHTML = content
-        return div
+        return fwCss(div)
     },
 }
 

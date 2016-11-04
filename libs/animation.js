@@ -19,7 +19,7 @@ export default {
 		})
 	*/
 
-	flow : (function (dom) {
+	flow (dom) {
 		dom.flow = function (time, ease, next, end) {
 			var bang = () => {
 				dom.removeEventListener('transitionend', bang)
@@ -41,7 +41,7 @@ export default {
 			}, 0)
 		}
 		return dom
-	})(Element.prototype),
+	},
 
 	// Other Functions
 	getSinus : function (from, to, speed) {

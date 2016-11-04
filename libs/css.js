@@ -1,13 +1,16 @@
 
 
 
-import {default as fwGeo} from './geometry'
-import {default as fwVec} from './vector'
-import {default as fwCss} from './css'
+import fwAnimation from './animation'
+import fwGeo       from './geometry'
+import fwVec       from './vector'
+import fwCss       from './css'
 
 export default {
 
     init : (function (dom) {
+        // add animation support
+        fwAnimation.flow(dom)
         // set data
         dom.data = {
             origin    : new fwVec(),

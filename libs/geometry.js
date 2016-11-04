@@ -1,8 +1,8 @@
 
 
 
-import {default as fwCss} from './css'
-import {default as fwVec} 	from './vector'
+import fwCss from './css'
+import fwVec from './vector'
 
 export default {
 	
