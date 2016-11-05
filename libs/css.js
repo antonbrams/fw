@@ -47,11 +47,10 @@ export default {
                 size     : new vec(dom.style.width, dom.style.height),
                 offset   : geo.vpo(dom)
             }
-            var size = new vec(dom.offsetWidth, dom.offsetHeight)
             dom.set({
                 position  : 'fixed',
                 move      : new vec(),
-                size      : size.unit('px'),
+                size      : new vec(dom.offsetWidth +.5, dom.offsetHeight +.5).unit('px'),
                 translate : dom.data.pop.offset.position.unit('px')
             })
             document.body.appendChild(dom)
