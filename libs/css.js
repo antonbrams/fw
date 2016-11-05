@@ -9,16 +9,37 @@ import css       from './css'
 export default {
 
     init (dom) {
-        // add animation support
-        animation.flow(dom)
-        // set data
         dom.data = {
             origin    : new vec(),
             translate : new vec(),
             scale     : new vec(1, 1),
             rotate    : 0
         } 
-        // pop
+        this.poppush(dom)
+        this.setget(dom)
+        animation.flow(dom)
+        return dom
+    },
+    
+    applyTransformation (dom, data, type) {
+        // create data
+        if (type == 'origin')
+            dom.style[css.vendor.transformOrigin] = 
+                `${data.origin.x} 
+                 ${data.origin.y}`
+        else 
+            dom.style[css.vendor.transform] = 
+                `translate(
+                    ${data.translate.x}, 
+                    ${data.translate.y}) 
+                rotate(
+                    ${data.rotate}deg) 
+                scale(
+                    ${data.scale.x}, 
+                    ${data.scale.y})`
+    },
+    
+    poppush (dom) {
         dom.pop = () => {
             dom.data.pop = {
                 parent   : dom.parentNode,
@@ -47,6 +68,9 @@ export default {
             })
             delete dom.data.pop
         }
+    },
+    
+    setget (dom) {
         dom.set = params => {
             for (var p in params) {
                 // transformation
@@ -80,25 +104,6 @@ export default {
             else
                 css.computed(dom, prop)
         }
-        return dom
-    },
-    
-    applyTransformation (dom, data, type) {
-        // create data
-        if (type == 'origin')
-            dom.style[css.vendor.transformOrigin] = 
-                `${data.origin.x} 
-                 ${data.origin.y}`
-        else 
-            dom.style[css.vendor.transform] = 
-                `translate(
-                    ${data.translate.x}, 
-                    ${data.translate.y}) 
-                rotate(
-                    ${data.rotate}deg) 
-                scale(
-                    ${data.scale.x}, 
-                    ${data.scale.y})`
     },
 
     computed (dom, prop) {
