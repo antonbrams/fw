@@ -1,0 +1,133 @@
+
+
+
+<html>
+<head>
+    <title>fw</title>
+    <script src="../index.js"></script>
+</head>
+<body>
+
+</body>
+<script>
+    
+    // var body = new fw.Layer({
+    //     dom : document.body
+    // })
+    // 
+    // var layerA = new fw.Layer({
+    //     dom             : '<div id ="id"></div>',
+    //     content         : 'jesus christ',
+    //     display         : 'inline-block',
+    //     backgroundColor : 'red',
+    //     parent          : body
+    // })
+    // 
+    // var layerB = new fw.Layer({
+    //     content         : 'some test',
+    //     backgroundColor : 'green',
+    //     width           : 100
+    // }).animate(1, 'ease', {
+    //     marginTop : 100
+    // }, () => {
+    //     layerA.set({
+    //         backgroundColor : 'yellow'
+    //     })
+    // })
+    // 
+    // body.set({
+    //     prepend : layerB
+    // })
+    
+    // 
+    // var customContainerData = [
+    //     {l: 4, t: 0, w: 2, h: 2},
+    // ]
+    // 
+    // var container = {
+    //     type1 : {
+    //         id       : 'model.int()', 
+    //         position : 'customContainerData', 
+    //         type     : 'notes', 
+    //         visible  : 'true', 
+    //         text     : 'fish'
+    //     },
+    //     type2 : {
+    //         id             : '11', 
+    //         position       : 'customContainerData', 
+    //         type           : 'image', 
+    //         visible        : 'true', 
+    //         text           : 'fish', 
+    //         preview        : 'img()', 
+    //         embed          : './graphic/dummy/12_original.jpeg', 
+    //         resolution     : '1920x1080', 
+    //         textVisibility : 'false'
+    //     },
+    // }
+    // 
+    // var album = {
+    //     type1 : {
+    //         id         : '10',
+    //         position   : '{o: 0, w: 32, m: 8}',
+    //         title      : 'As i Combine',
+    //         containers : '[]'
+    //     },
+    // }
+    
+    
+    var custom = [
+        {l: 1}, {l: 2}, {l: 3}, {l: 4}, {l: 5}, {l: 6}, {l: 0}, {l: 1}, // 1
+        {l: 1}, {l: 1}, {l: 0}, {l: 1}, {l: 0}, {l: 1}, {l: 0}, {l: 1}, // 2
+        {l: 1}, {l: 1}, {l: 0}, {l: 1}, {l: 0}, // 3
+    ]
+    
+    var wall = fw.model.render({
+        // wall
+        id     : fw.model.int({type: 'all', from: 1}),
+        title  : fw.model.str({type: 'text', min: 1, max: 3}),
+        albums : fw.model.put({count: 3, item: {
+            // album
+            id    : fw.model.int({type: 'all', from: 1}),
+            title : fw.model.str({type: 'text', min: 1, max: 3}),
+            notes : fw.model.str({type: 'text', count: 5}),
+            boxes : fw.model.put({count: [8, 3, 10], item: {
+                // containers
+                id     : fw.model.int({type: 'forward', from: 1}),
+                title  : fw.model.str({type: 'text', min: 1, max: 3}),
+                notes  : fw.model.str({type: 'text', count: 5}),
+                pos    : fw.model.merge(i => {return custom[i]})
+            }})
+        }})
+    })
+        
+    var Screen = new fw.Layer(document.body)
+    
+    var scroller = new fw.Scroller({
+        flow         : 'x',
+        position     : 'absolute',
+        size         : new fw.vec(300, 300),
+        borderRadius : 5,
+        boxShadow    : '0 25px 50px 0 rgba(0,0,0, .5)',
+        center       : Screen.center
+    })
+    
+    var model = fw.model.put({count: 5, item: {
+        id    : fw.model.int({type: 'all', from: 1}),
+        image : fw.model.img({source: 'local'})
+    }}).render()
+    
+    model.forEach(function (item) {
+        var layerA = new fw.Layer({
+            parent : scroller
+        })
+        fw.etc.compressImage(item.image, .1, url => {
+            layerA.image(url)
+        })
+    }.bind(this))
+    
+    var dragGesture = scroller.gesture('drag')
+    
+</script>
+</html>
+
+

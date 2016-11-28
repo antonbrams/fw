@@ -1,5 +1,6 @@
 
 
+import {val} from './fw'
 
 export default {
 	
@@ -18,7 +19,23 @@ export default {
 			(bMax - bMin) + bMin
 		)
 	},
-
+	
+	min (x, lim) {
+		return x > lim? x: lim
+	},
+	
+	max (x, lim) {
+		return x < lim? x: lim
+	},
+	
+	range (min, val, max) {
+		return this.max(this.min(val, min), max)
+	},
+	
+	randInt (min, max) {
+		return Math.floor(this.to(Math.random(), min, max))
+	},
+	
 	binarySearch (length, check) {
         var i =  Math.floor(.5 * length) // result
 		var h = i // pointer
@@ -58,12 +75,12 @@ export default {
         // https://www.desmos.com/calculator
         // Based on 1-pow(1+x,-1)
 		var factor 	= 1.3
-		var maxTrue = typeof max !== 'undefined'
-		var minTrue = typeof min !== 'undefined'
+		var maxTrue = val.exists(max)
+		var minTrue = val.exists(min)
 		if (maxTrue || minTrue) {
-			var direction 	= value < max
-			var threshold 	= (direction? 1: -1) * threshold
-			var range		= direction? max: min
+			var direction = value < max
+			var threshold = (direction? 1: -1) * threshold
+			var range     = direction? max: min
 			var x = (range - value) / threshold
 			var y = range - threshold * (1 - Math.pow(1 + x, -factor))
 		}

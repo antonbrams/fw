@@ -1,11 +1,14 @@
 
 
 
+import {val} from './fw'
+
 export default class Vec {
 
-    constructor (x = 0, y = 0) {
+    constructor (x = 0, y = 0, z = 0) {
         this.x = x
         this.y = y
+        this.z = z
     }
 
     copy () {
@@ -16,10 +19,12 @@ export default class Vec {
 	    if (set) {
 	        this.x += (vec.x || 0)
 	        this.y += (vec.y || 0)
+	        this.z += (vec.z || 0)
 	        return this
         } else return new Vec(
             this.x + (vec.x || 0),
-            this.y + (vec.y || 0)
+            this.y + (vec.y || 0),
+            this.z + (vec.z || 0)
         )
     }
 
@@ -27,10 +32,12 @@ export default class Vec {
 		if (set) {   
 	        this.x -= (vec.x || 0)
 	        this.y -= (vec.y || 0)
+	        this.z -= (vec.z || 0)
 	        return this
 		} else return new Vec(
             this.x - (vec.x || 0),
-            this.y - (vec.y || 0)
+            this.y - (vec.y || 0),
+            this.z - (vec.z || 0)
         )
     }
     
@@ -38,17 +45,20 @@ export default class Vec {
 	    if (apply) {
 	        this.x /= (vec.x || 1)
 	        this.y /= (vec.y || 1)
+	        this.z /= (vec.z || 1)
 	        return this
         } else return new Vec(
             this.x / (vec.x || 1),
-            this.y / (vec.y || 1)
+            this.y / (vec.y || 1),
+            this.z / (vec.z || 1)
         )
     }
 
     len () {
         return Math.sqrt(
             Math.pow(this.x || 0, 2) +
-            Math.pow(this.y || 0, 2)
+            Math.pow(this.y || 0, 2) +
+            Math.pow(this.z || 0, 2)
         )
     }
 
@@ -56,10 +66,12 @@ export default class Vec {
 	    if (set) {	
 			this.x *= len
 			this.y *= len
+			this.z *= len
 			return this
 		} else return new Vec(
             this.x * len,
-            this.y * len
+            this.y * len,
+            this.z * len
         )
     }
 
@@ -68,12 +80,14 @@ export default class Vec {
 		    var len = 1 / this.len()
 	        this.x *= len
 	        this.y *= len
+	        this.z *= len
 	        return this
 	    } else {
 		    var len = 1 / this.len()
 	        return new Vec(
 	            this.x * len,
-	            this.y * len
+	            this.y * len,
+	            this.z * len
 	        )
         }
     }
@@ -82,14 +96,16 @@ export default class Vec {
         var norm = this.getNorm()
         return new Vec(
             norm.x * len,
-            norm.y * len
+            norm.y * len,
+            norm.z * len
         )
     }
 
     to (vec, i) {
     	return new Vec(
 	    	i * ((vec.x || 0) - this.x) + this.x,
-	    	i * ((vec.y || 0) - this.y) + this.y
+	    	i * ((vec.y || 0) - this.y) + this.y,
+	    	i * ((vec.z || 0) - this.z) + this.z
     	)
     }
     
@@ -108,19 +124,22 @@ export default class Vec {
         }
     }
 
-    getAngle () {
+    angle2d () {
 	    return Math.atan2(this.x, this.y) * 180 / Math.PI
     }
 
     unit (unit) {
-    	return {
-	    	x: this.x + unit,
-	    	y: this.y + unit
-    	}
+        var data = {}
+        if (val.exists(this.x)) data.x = this.x + unit
+        if (val.exists(this.y)) data.y = this.y + unit
+        if (val.exists(this.z)) data.z = this.z + unit
+    	return data
     }
 
     log (name) {
-        var data = {x: this.x, y: this.y}
+        var data = {x: this.x}
+        if (val.exists(this.y)) data.y = this.y
+        if (val.exists(this.z)) data.z = this.z
         if (typeof name === 'undefined') 
             console.log(data)
         else

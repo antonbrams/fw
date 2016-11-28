@@ -1,11 +1,9 @@
 
 
 
-export default {
+import {val} from './fw'
 
-	arg (arg) {
-		return typeof arg !== 'undefined'
-	},
+export default {
 
 	cloneObject (_object) {
 		return JSON.parse(JSON.stringify(_object))
@@ -54,23 +52,30 @@ export default {
 		}).bind(this)
 	},
 	
-	compressImage (list, scale, quality, callback) {
-		var output = []
-		list.forEach(data => {
-			var image		= document.createElement('img')
-			image.onload 	= () => {
-				var canvas 		= document.createElement('canvas')
-				var context 	= canvas.getContext('2d')
-				var width 		= this.width  * scale
-				var height 		= this.height * scale
-				canvas.width 	= width
-				canvas.height 	= height
-			    context.drawImage(this, 0, 0, width, height)
-			    output.push(canvas.toDataURL("image/jpeg", quality))
-			    if (output.length == list.length) callback(output)
+	compressImage (list, scale, onload, quality) {
+		var compressor = (url, render) => {
+			var image = document.createElement('img')
+			image.onload = function () {
+				var canvas    = document.createElement('canvas')
+				var context   = canvas.getContext('2d')
+				var width     = this.width  * scale
+				var height    = this.height * scale
+				canvas.width  = width
+				canvas.height = height
+				context.drawImage(this, 0, 0, width, height)
+				render(canvas.toDataURL('image/jpeg', quality || 1))
 			}
-			image.src = data
-		})
+			image.src = url
+		}
+		if (val.isArr(list))
+			list.forEach((url, i) => {
+				compressor(url, scaled => {
+					list[i] = scaled
+					if (i == list.length - 1) onload(urls)
+				})
+			})
+		else
+			compressor(list, onload)
 	},
 
 /*
@@ -136,20 +141,20 @@ export default {
 	},
 
     timeout : function (duration, interval, check, execute, timeout) {
-        var count	= duration / interval;
+        var count	= duration / interval
         var loop 	= setInterval (() => {
             check (success => {
                 if (success) {
-                    execute();
-                    clearInterval(loop);
+                    execute()
+                    clearInterval(loop)
                 }
             })
             if (count == 0) {
-                if (timeout) timeout();
+                timeout && timeout()
                 clearInterval(loop)
             }
-            count --;
-        }, interval * 1000);
+            count --
+        }, interval * 1000)
     },
 }
 

@@ -1,7 +1,7 @@
 
 
 
-import {default as fwCss} from './css'
+import {css, Layer} from './fw'
 
 export default {
 
@@ -19,35 +19,35 @@ export default {
 		})
 	*/
 
-	flow (dom) {
-		dom.flow = function (time, ease, next, end) {
-			var bang = () => {
-				dom.removeEventListener('transitionend', bang)
-				dom.style[fwCss.vendor.transition] = null
-				if (end) {
-					if (typeof end === "function") 
-						end() 
-					else 
-						if (dom.set) dom.set(end)
-					end = null
-				}
-				dom.data.animating = false
+	flow (object, time, ease, next, end) {
+		// will be deprecated
+		var element = object instanceof Layer? object.dom: object
+		var bang = () => {
+			element.removeEventListener('transitionend', bang)
+			element.style[css.vendor.transition] = null
+			if (end) {
+				if (typeof end === 'function')
+					end()
+				else if (element.set)
+					object.set(end)
+				end = null
 			}
-			dom.addEventListener('transitionend', bang)
-			dom.style[fwCss.vendor.transition] = time +'s '+ ease
-			setTimeout(() => {
-				dom.data.animating = true
-				if (typeof next === 'function') next(); else dom.set(next)
-			}, 0)
 		}
-		return dom
+		element.addEventListener('transitionend', bang)
+		element.style[css.vendor.transition] = `${time}s ${ease}`
+		setTimeout(() => {
+			if (typeof next === 'function')
+				next()
+			else 
+				object.set(next)
+		}, 0)
 	},
 
 	// Other Functions
 	getSinus : function (from, to, speed) {
-		var time 	= new Date().getTime() * 0.001;
-		var sin		= Math.sin(time * (speed || 1))
-		return 		this.root.math.map(sin, -1, 1, from, to)
+		var time = new Date().getTime() * 0.001;
+		var sin  = Math.sin(time * (speed || 1))
+		return this.root.math.map(sin, -1, 1, from, to)
 	},
 
 	easing : {
@@ -94,7 +94,7 @@ export default {
 
 	/*
 		animation.play(0.5, 'linear', t => {
-			dom.style.opacity = 1-t
+			element.style.opacity = 1-t
 		}, () => {
 			obj.style.display = 'none'	
 		})
@@ -103,7 +103,7 @@ export default {
 	jobs   : [],
 	active : false,
 
-	Job  : class {
+	Job : class {
 		constructor (time, easing, loop, end) {
 			this.end	= end || function () {}
 			var start 	= new Date()
@@ -133,8 +133,8 @@ export default {
 
 	play (time, type, loop, end) {
 		this.jobs.push(new this.Job(
-				time, this.easing[type], 
-				loop, end
+			time, this.easing[type], 
+			loop, end
 		))
 		if (!this.active) {
 			this.active = true

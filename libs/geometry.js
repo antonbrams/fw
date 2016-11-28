@@ -1,8 +1,7 @@
 
 
 
-import fwCss from './css'
-import fwVec from './vector'
+import {vec, val} from './fw'
 
 export default {
 	
@@ -10,14 +9,14 @@ export default {
 	vpo (dom) {
 		var rect = dom.getBoundingClientRect()
     	return {
-			position : new fwVec(rect.left,  rect.top),
-			opposite : new fwVec(rect.right, rect.bottom),
-			size     : new fwVec(rect.width, rect.height)
+			position : new vec(rect.left,  rect.top),
+			opposite : new vec(rect.right, rect.bottom),
+			size     : new vec(rect.width, rect.height)
 		}
 	},
 
 	vp () {
-		return new fwVec(
+		return new vec(
 			document.documentElement.clientWidth,
 			document.documentElement.clientHeight
 		)
@@ -25,28 +24,20 @@ export default {
 	
 	center (params) {
 		// for regular vector system
-		if (this.isvec(params))
+		if (val.isVec(params))
 			return params.position.add(params.size.scale(.5))
 		// for dimension system
-		else if (this.isdim(params)) {
+		else if (val.isDim(params)) {
 			var rect = this.dimvec(params)
 			return rect.position.add(rect.size.scale(.5))
 		}
 	},
 	
-	isvec (obj) {
-		return obj.position || obj.opposite
-	},
-	
-	isdim (obj) {
-		return obj.l || obj.r
-	},
-	
 	dimvec (dims) {
 		var size = 
-			dims.w? new fwVec(dims.w, dims.h):
-			dims.r? new fwVec(dims.r - dims.l, dims.b - dims.t): null
-		return {size, position: new fwVec(dims.l, dims.t)}
+			dims.w? new vec(dims.w, dims.h):
+			dims.r? new vec(dims.r - dims.l, dims.b - dims.t): null
+		return {size, position: new vec(dims.l, dims.t)}
 	},
 
 	vecdim (position, size) {

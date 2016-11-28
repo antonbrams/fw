@@ -14,16 +14,30 @@ config.add({
         library: "fw"
 	},
     module : {
-        loaders	: [
-            {
-                loader	: 'babel-loader',
-				test	: /\.(js|jsx)$/,
-				exclude	: /node_modules/,
-                query	: {
-                    presets	: ['es2015']
-                }
-            }
-        ]
+		loaders	: [
+			{ 
+				test     : /\.(coffee)$/,
+				loader   : 'coffee',
+				exclude	 : /node_modules/
+			},
+			{
+				test	: /\.(js)$/,
+				loader	: 'babel',
+				query	: {
+					presets	: ["es2015"]
+				},
+				exclude	: /node_modules/
+			},
+			{
+				test    : /\.(sass)$/,
+				loaders : ['style', 'css', 'sass?sourceMap'],
+				exclude	: /node_modules/
+			},
+			{
+				test: /\.(jpg|png|svg)$/, 
+				loader: 'url'
+			}
+		]
     },
 })
 

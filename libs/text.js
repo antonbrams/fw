@@ -1,8 +1,7 @@
 
 
 
-import {default as fwCss}   from './css'
-import {default as fwMath}  from './math'
+import {css, math} from './fw'
 
 export default {
     
@@ -10,7 +9,7 @@ export default {
         // set target height
         dom.style.height = this.getLineHeight(dom) * lineCount +'px'
         var domRect      = dom.getBoundingClientRect()
-        var multiColumn  = fwCss.computed(dom, 'column-count') > 1
+        var multiColumn  = css.computed(dom, 'column-count') > 1
         // check if iteration is necessary
         if (multiColumn
         &&  dom.scrollWidth  > domRect.width  + 1
@@ -22,7 +21,7 @@ export default {
             var range  = document.createRange()
             range.setEnd(string, length)
             // search for position
-            fwMath.binarySearch(length, function (i, end) {
+            math.binarySearch(length, function (i, end) {
                 // make selection
                 range.setStart(string, end? i - 3: i)
                 // return check
