@@ -75,57 +75,138 @@
     // }
     
     
-    var custom = [
-        {l: 1}, {l: 2}, {l: 3}, {l: 4}, {l: 5}, {l: 6}, {l: 0}, {l: 1}, // 1
-        {l: 1}, {l: 1}, {l: 0}, {l: 1}, {l: 0}, {l: 1}, {l: 0}, {l: 1}, // 2
-        {l: 1}, {l: 1}, {l: 0}, {l: 1}, {l: 0}, // 3
-    ]
+    // var custom = [
+    //     {l: 1}, {l: 2}, {l: 3}, {l: 4}, {l: 5}, {l: 6}, {l: 0}, {l: 1}, // 1
+    //     {l: 1}, {l: 1}, {l: 0}, {l: 1}, {l: 0}, {l: 1}, {l: 0}, {l: 1}, // 2
+    //     {l: 1}, {l: 1}, {l: 0}, {l: 1}, {l: 0}, // 3
+    // ]
+    // 
+    // var wall = fw.model.render({
+    //     // wall
+    //     id     : fw.model.int({type: 'all', from: 1}),
+    //     title  : fw.model.str({type: 'text', min: 1, max: 3}),
+    //     albums : fw.model.put({count: 3, item: {
+    //         // album
+    //         id    : fw.model.int({type: 'all', from: 1}),
+    //         title : fw.model.str({type: 'text', min: 1, max: 3}),
+    //         notes : fw.model.str({type: 'text', count: 5}),
+    //         boxes : fw.model.put({count: [8, 3, 10], item: {
+    //             // containers
+    //             id     : fw.model.int({type: 'forward', from: 1}),
+    //             title  : fw.model.str({type: 'text', min: 1, max: 3}),
+    //             notes  : fw.model.str({type: 'text', count: 5}),
+    //             pos    : fw.model.merge(i => {return custom[i]})
+    //         }})
+    //     }})
+    // })
     
-    var wall = fw.model.render({
-        // wall
-        id     : fw.model.int({type: 'all', from: 1}),
-        title  : fw.model.str({type: 'text', min: 1, max: 3}),
-        albums : fw.model.put({count: 3, item: {
-            // album
-            id    : fw.model.int({type: 'all', from: 1}),
-            title : fw.model.str({type: 'text', min: 1, max: 3}),
-            notes : fw.model.str({type: 'text', count: 5}),
-            boxes : fw.model.put({count: [8, 3, 10], item: {
-                // containers
-                id     : fw.model.int({type: 'forward', from: 1}),
-                title  : fw.model.str({type: 'text', min: 1, max: 3}),
-                notes  : fw.model.str({type: 'text', count: 5}),
-                pos    : fw.model.merge(i => {return custom[i]})
-            }})
-        }})
-    })
-        
-    var Screen = new fw.Layer(document.body)
     
-    var scroller = new fw.Scroller({
-        flow         : 'x',
-        position     : 'absolute',
-        size         : new fw.vec(300, 300),
-        borderRadius : 5,
-        boxShadow    : '0 25px 50px 0 rgba(0,0,0, .5)',
-        center       : Screen.center
-    })
     
-    var model = fw.model.put({count: 5, item: {
-        id    : fw.model.int({type: 'all', from: 1}),
-        image : fw.model.img({source: 'local'})
-    }}).render()
+    //     
+    // var Screen = new fw.Layer(document.body)
+    // 
+    // var scroller = new fw.Scroller({
+    //     flow         : 'x',
+    //     position     : 'absolute',
+    //     size         : new fw.vec(300, 300),
+    //     borderRadius : 5,
+    //     boxShadow    : '0 25px 50px 0 rgba(0,0,0, .5)',
+    //     center       : Screen.center
+    // })
+    // 
+    // var model = fw.model.put({count: 5, item: {
+    //     id    : fw.model.int({type: 'all', from: 1}),
+    //     image : fw.model.img({source: 'local'})
+    // }}).render()
+    // 
+    // model.forEach(function (item) {
+    //     var layerA = new fw.Layer({
+    //         parent : scroller
+    //     })
+    //     fw.etc.compressImage(item.image, .1, url => {
+    //         layerA.image(url)
+    //     })
+    // }.bind(this))
     
-    model.forEach(function (item) {
-        var layerA = new fw.Layer({
-            parent : scroller
-        })
-        fw.etc.compressImage(item.image, .1, url => {
-            layerA.image(url)
-        })
-    }.bind(this))
     
-    var dragGesture = scroller.gesture('drag')
+    
+    
+    
+    // var containerA = new fw.Layer({
+    //     position : 'absolute',
+    //     move     : new fw.vec(100, 100),
+    //     size     : new fw.vec(200, 200),
+    //     // content  : 'A',
+    //     text     : {
+    //         align : 'center',
+    //     },
+    //     padding : '10'
+    // })
+    // 
+    // var containerB = containerA.clone({
+    //     move    : new fw.vec(400, 100),
+    //     content : 'B'
+    // })
+    // 
+    // var object = new fw.Layer({
+    //     parent : containerA
+    // })
+    // 
+    // var drag = object.gesture('pinch')
+    // 
+    // var tap = object.on('tap', e => {
+    //     alert('niger')
+    // })
+    // 
+    // var drag = object.gesture('drag')
+    
+    
+    
+    // for (var i = 0; i < 3; i ++) 
+    //     new fw.Layer({
+    //         position : 'absolute',
+    //         content  : i,
+    //         width    : 100,
+    //         height   : 100,
+    //         opacity  : 0,
+    //         left     : 110 * i + 10,
+    //         top      : 10,
+    //         scale    : 0.8
+    //     }).animate({
+    //         time  : .3,
+    //         delay : 0.1 * i,
+    //         type  : 'ease'
+    //     }, {
+    //         opacity : 1,
+    //         scale   : 1
+    //     })
+    
+    
+    // var model = [
+    //     {title : '1'},
+    //     {title : '2'},
+    //     {title : '3'},
+    // ]
+    // 
+    // model.forEach(function (item) {
+    //     var layerA = new fw.Layer({
+    //         margin : 10
+    //     }).bind(item, {
+    //         content : {
+    //             key : 'title', 
+    //             set (layer, value) {
+    //                 layer.set({content: 'test ' + value})
+    //             }
+    //         }
+    //     })
+    // })
+    // 
+    // document.body.onclick = function () {
+    //     model[1].title = 'pufok'
+    //     console.log(model[1]);
+    // }
+    
+    
     
 </script>
 </html>

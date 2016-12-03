@@ -255,19 +255,14 @@ var Layer = function () {
             scale: new _fw.vec(1, 1, 1),
             rotate: new _fw.vec(0, 0, 0)
         };
+        // listeners
+        this._events = {};
+        this._dom = null;
         // if options incoming
-        if (_fw.val.isObj(options)) {
+        if (_fw.val.isDom(options)) this.dom = options;else if (_fw.val.isObj(options)) {
             // create dom element
             if ('dom' in options) {
-                // element
-                if (_fw.val.isDom(options.dom)) this.dom = options.dom;
-                // string
-                else if (_fw.val.isStr(options.dom)) {
-                        // template
-                        if (options.dom.match(/<.*>.*<\/.*>/)) this.dom = _fw.dom.fromString(options.dom);
-                        // create new element
-                        else this.dom = _fw.dom.create(options.dom);
-                    } else this.dom = _fw.dom.create('.layer');
+                this.dom = options.dom;
                 delete options.dom;
                 // if no dom, create just div with .layer
             } else this.dom = _fw.dom.create('.layer');
@@ -275,15 +270,54 @@ var Layer = function () {
             if (!_fw.val.exists(options.parent)) document.body.appendChild(this.dom);
             // set other values
             this.set(options);
-        } else if (_fw.val.isDom(options)) this.dom = options;
-        // link dom with object
-        this.dom.layer = this;
+        }
     }
 
-    // setter getters
+    // event handlers
 
 
     _createClass(Layer, [{
+        key: 'on',
+        value: function on(topic, fn, options) {
+            var _this = this;
+
+            // check for standard dom events
+            if (topic in _fw.event.types) {
+                var type = _fw.event.types[topic];
+                this.dom.addEventListener(type, fn, options);
+                return {
+                    on: function on() {
+                        return _this.dom.addEventListener(type, fn, options);
+                    },
+                    off: function off() {
+                        return _this.dom.removeEventListener(type, fn, options);
+                    }
+                };
+                // listen for dom changes
+            } else {
+                if (!this._events[topic]) this._events[topic] = [];
+                this._events[topic].push(fn);
+                return {
+                    on: function on() {
+                        return _this._events[topic].push(fn);
+                    },
+                    off: function off() {
+                        return _this._events.splice(_this._events.indexOf(fn), 1);
+                    }
+                };
+            }
+        }
+    }, {
+        key: '_emit',
+        value: function _emit(topic, payload) {
+            if (this._events[topic]) this._events[topic].forEach(function (fn) {
+                return fn(payload);
+            });
+        }
+
+        // setter getters
+
+    }, {
         key: 'set',
         value: function set(options) {
             for (var key in options) {
@@ -293,44 +327,86 @@ var Layer = function () {
                     if (_fw.val.isFn(this[key])) this[key](value);else this[key] = value;
                     // set standard css parameters
 
-                } else this.dom.style[key] = value;
+                } else this.setStyle(key, value);
             }
             return this;
         }
     }, {
-        key: 'get',
-        value: function get(key) {
+        key: 'setStyle',
+        value: function setStyle(options, value) {
+            var _this2 = this;
+
+            var set = function set(key, value) {
+                _this2._emit(key, value);
+                _this2.dom.style[key] = value;
+            };
+            if (_fw.val.isStr(options)) set(options, value);else if (_fw.val.isObj(options)) for (var key in options) {
+                set(key, options[key]);
+            }
+        }
+    }, {
+        key: 'getStyle',
+        value: function getStyle(key) {
             return _fw.css.computed(this.dom, key);
         }
-
-        // Events
-
     }, {
-        key: 'on',
-        value: function on(type, fn, flag) {
-            var _this = this;
+        key: 'bind',
 
-            // tap, long tap, drag, zoom, rotate
-            var type = _fw.event.types[type];
-            this.dom.addEventListener(type, fn, flag);
-            return {
-                on: function on() {
-                    return _this.dom.addEventListener(type, fn, flag);
-                },
-                off: function off() {
-                    return _this.dom.removeEventListener(type, fn, flag);
-                }
-            };
+
+        /*
+            model.forEach(function (item) {
+                var layerA = new fw.Layer({
+                    margin : 10
+                }).bind(item, {
+                    content : {
+                        key : 'title', 
+                        set (layer, value) {
+                            layer.set({content: 'test ' + value})
+                        }
+                    }
+                })
+            })
+        */
+
+        value: function bind(model, params) {
+            var _this3 = this;
+
+            for (var key in params) {
+                var options = params[key];
+                var modelKey = _fw.val.isObj(options) ? options.key : options;
+                var initValue = model[modelKey];
+                var curValue = null;
+                this.on(key, function (value) {
+                    return curValue = value;
+                });
+                var set = function set(value) {
+                    if (options.set) options.set(_this3, value);else {
+                        var param = {};
+                        param[key] = value;
+                        _this3.set(param);
+                    }
+                };
+                var get = function get() {
+                    return options.get ? options.get(_this3) : curValue;
+                };
+                Object.defineProperty(model, modelKey, { set: set, get: get });
+                model[modelKey] = initValue;
+            }
+            return this;
         }
     }, {
         key: 'gesture',
         value: function gesture(type, options) {
-            var dictionary = { drag: 'gestureDrag' };
+            var dictionary = {
+                drag: 'gestureDrag',
+                pinch: 'gesturePinch'
+            };
             return _fw.event[dictionary[type]](this, options);
         }
     }, {
         key: 'pop',
         value: function pop() {
+            this._emit('pop', this.props.pop);
             this.props.pop = {
                 parent: this.dom.parentNode,
                 pos: new _fw.vec(this.dom.style.left, this.dom.style.top),
@@ -349,13 +425,14 @@ var Layer = function () {
     }, {
         key: 'push',
         value: function push() {
+            this._emit('push', this.props.pop);
             this.props.pop.parent.appendChild(this.dom);
             this.set({
                 position: null,
                 pos: this.props.pop.pos,
                 size: this.props.pop.size,
                 translate: new _fw.vec(),
-                scale: new _fw.vec(1, 1),
+                scale: new _fw.vec(1, 1, 1),
                 origin: { x: 'center', y: 'center' }
             });
             delete this.props.pop;
@@ -363,18 +440,19 @@ var Layer = function () {
         }
     }, {
         key: 'animate',
-        value: function animate(time, ease, next, end) {
-            _fw.animation.flow(this, time, ease, next, end);
+        value: function animate(options, next, end) {
+            this._emit('animate', options);
+            _fw.animation.flow(this, options.time || 1, options.ease || 'linear', options.delay || 0, next, end);
             return this;
         }
     }, {
         key: 'clone',
-        value: function clone() {
+        value: function clone(options) {
             var clone = this.dom.cloneNode(true);
             this.dom.parentNode.appendChild(clone);
             return new Layer({
                 dom: clone
-            });
+            }).set(options);
         }
     }, {
         key: 'collision',
@@ -398,10 +476,11 @@ var Layer = function () {
     }, {
         key: 'append',
         value: function append(value) {
-            var _this2 = this;
+            var _this4 = this;
 
+            this._emit('append', value);
             var append = function append(el) {
-                _this2.dom.appendChild(el instanceof Layer ? el.dom : el);
+                _this4.dom.appendChild(el instanceof Layer ? el.dom : el);
             };
             if (_fw.val.isArr(value)) value.forEach(function (item) {
                 return append(item);
@@ -410,11 +489,13 @@ var Layer = function () {
     }, {
         key: 'prepend',
         value: function prepend(value) {
+            this._emit('prepend', value);
             _fw.dom.prepend(this.dom, value instanceof Layer ? value.dom : value);
         }
     }, {
-        key: 'remove',
-        value: function remove(value) {
+        key: 'detach',
+        value: function detach(value) {
+            this._emit('detach', value);
             this.dom.removeChild(value instanceof Layer ? value.dom : value);
         }
     }, {
@@ -423,6 +504,7 @@ var Layer = function () {
 
         // classes
         value: function toggleClass(value) {
+            this._emit('toggleClass', value);
             return this.dom.classList.toggle(value);
         }
     }, {
@@ -433,19 +515,21 @@ var Layer = function () {
     }, {
         key: 'addClass',
         value: function addClass(value) {
-            var _this3 = this;
+            var _this5 = this;
 
+            this._emit('addClass', value);
             if (_fw.val.isArr(value)) value.forEach(function (item) {
-                return _this3.dom.classList.add(item);
+                return _this5.dom.classList.add(item);
             });else this.dom.classList.add(value);
         }
     }, {
         key: 'deleteClass',
         value: function deleteClass(value) {
-            var _this4 = this;
+            var _this6 = this;
 
+            this._emit('deleteClass', value);
             if (_fw.val.isArr(value)) value.forEach(function (item) {
-                return _this4.dom.classList.remove(item);
+                return _this6.dom.classList.remove(item);
             });else this.dom.classList.remove(value);
         }
 
@@ -454,22 +538,24 @@ var Layer = function () {
     }, {
         key: 'image',
         value: function image(value) {
-            this.background({ image: value });
+            this.bg({ image: value });
         }
     }, {
-        key: 'background',
-        value: function background(value) {
-            if (_fw.val.isStr(value)) this.dom.style.background = value;else if (_fw.val.isObj(value)) if ('image' in value) this.dom.style.backgroundImage = 'url(' + value.image + ')';
-            if ('origin' in value) this.dom.style.backgroundOrigin = _fw.val.isObj(value.origin) ? value.origin.x + ' ' + value.origin.y : value.origin;
-            if ('position' in value) this.dom.style.backgroundPosition = _fw.val.isObj(value.position) ? value.position.x + ' ' + value.position.y : value.position;
-            if ('size' in value) this.dom.style.backgroundSize = _fw.val.isObj(value.size) ? value.size.x + ' ' + value.size.y : value.size;
-            if ('repeat' in value) this.dom.style.backgroundRepeat = value.repeat == 'x' ? 'repeat-x' : value.repeat == 'y' ? 'repeat-y' : value.repeat == 'no' ? 'no-repeat' : value.repeat == 'yes' ? 'repeat' : value.repeat;
-            if ('color' in value) this.dom.style.backgroundColor = value.color;
+        key: 'bg',
+        value: function bg(value) {
+            if (_fw.val.isStr(value)) this.setStyle('background', value);else if (_fw.val.isObj(value)) var params = {};
+            if ('image' in value) params.backgroundImage = 'url(' + value.image + ')';
+            if ('origin' in value) params.backgroundOrigin = _fw.val.isObj(value.origin) ? value.origin.x + ' ' + value.origin.y : value.origin;
+            if ('position' in value) params.backgroundPosition = _fw.val.isObj(value.position) ? value.position.x + ' ' + value.position.y : value.position;
+            if ('size' in value) params.backgroundSize = _fw.val.isObj(value.size) ? value.size.x + ' ' + value.size.y : value.size;
+            if ('repeat' in value) params.backgroundRepeat = value.repeat == 'x' ? 'repeat-x' : value.repeat == 'y' ? 'repeat-y' : value.repeat == 'no' ? 'no-repeat' : value.repeat == 'yes' ? 'repeat' : value.repeat;
+            if ('color' in value) params.backgroundColor = value.color;
+            this.setStyle(params);
         }
     }, {
         key: 'text',
         value: function text(value) {
-            if (_fw.val.isStr(value)) this.dom.style.font = value;else if (_fw.val.isObj(value)) {
+            if (_fw.val.isStr(value)) this.setStyle('font', value);else if (_fw.val.isObj(value)) {
                 var props = {
                     style: 'fontStyle',
                     variant: 'fontVariant',
@@ -477,22 +563,22 @@ var Layer = function () {
                     size: 'fontSize',
                     height: 'fontHeight',
                     family: 'fontFamily',
-                    color: 'colorColor',
+                    color: 'color',
                     align: 'textAlign',
                     lineHeight: 'lineHeight',
                     shadow: 'textShadow'
                 };
                 for (var key in props) {
-                    if (key in value) this.dom.style[props[key]] = value[key];
+                    if (key in value) this.setStyle(props[key], value[key]);
                 }
             }
         }
     }, {
         key: 'border',
         value: function border(value) {
-            var _this5 = this;
+            var _this7 = this;
 
-            if (_fw.val.isStr(value)) this.dom.style.border = value;else if (_fw.val.isObj(value)) {
+            if (_fw.val.isStr(value)) this.setStyle('border', value);else if (_fw.val.isObj(value)) {
                 var set = function set(value, side) {
                     var props = {
                         color: 'Color',
@@ -501,7 +587,7 @@ var Layer = function () {
                         style: 'Style'
                     };
                     for (var key in props) {
-                        if (key in value) _this5.dom.style['border' + side + props[key]] = value[key];
+                        if (key in value) _this7.setStyle('border' + side + props[key], value[key]);
                     }
                 };
                 set(value, '');
@@ -524,8 +610,30 @@ var Layer = function () {
         // transformation
 
     }, {
+        key: 'dom',
+        set: function set(value) {
+            var old = this.dom && this.dom.parentNode ? this.dom : null;
+            // if dom
+            if (_fw.val.isDom(value)) this._dom = value;
+            // string a string
+            else if (_fw.val.isStr(value))
+                    // template
+                    if (value.match(/<.*>.*<\/.*>/)) this._dom = _fw.dom.fromString(value);
+                    // create new element
+                    else this._dom = _fw.dom.create(value);
+            // link dom with layer
+            this._dom.layer = this;
+            this.addClass('layer');
+            // replace old dom
+            if (old) old.replaceWith(this.dom);
+        },
+        get: function get() {
+            return this._dom;
+        }
+    }, {
         key: 'parent',
         set: function set(value) {
+            this._emit('parent', value);
             (value instanceof Layer ? value.dom : value).appendChild(this.dom);
         },
         get: function get() {
@@ -534,6 +642,7 @@ var Layer = function () {
     }, {
         key: 'content',
         set: function set(value) {
+            this._emit('content', value);
             this.dom.innerHTML = value;
         },
         get: function get() {
@@ -542,8 +651,8 @@ var Layer = function () {
     }, {
         key: 'move',
         set: function set(value) {
-            if ('x' in value) this.dom.style.left = value.x;
-            if ('y' in value) this.dom.style.top = value.y;
+            if ('x' in value) this.setStyle('left', value.x);
+            if ('y' in value) this.setStyle('top', value.y);
         },
         get: function get() {
             return new _fw.vec(this.dom.offsetLeft, this.dom.offsetTop);
@@ -551,8 +660,8 @@ var Layer = function () {
     }, {
         key: 'size',
         set: function set(value) {
-            if ('x' in value) this.dom.style.width = value.x;
-            if ('y' in value) this.dom.style.height = value.y;
+            if ('x' in value) this.setStyle('width', value.x);
+            if ('y' in value) this.setStyle('height', value.y);
         },
         get: function get() {
             return new _fw.vec(this.dom.offsetWidth, this.dom.offsetHeight);
@@ -560,14 +669,20 @@ var Layer = function () {
     }, {
         key: 'padding',
         set: function set(value) {
-            if (_fw.val.isStr(value)) this.dom.style.padding = value;else if (_fw.val.isObj(value)) {
-                if ('x' in value && 'y' in value) this.dom.style.padding = value.y + ' ' + value.x;else if ('x' in value) this.dom.style.padding = '0 ' + value.x;
-                if ('y' in value) this.dom.style.padding = value.y + ' 0';
-                if ('l' in value) this.dom.style.paddingLeft = value.l;
-                if ('t' in value) this.dom.style.paddingTop = value.t;
-                if ('r' in value) this.dom.style.paddingRight = value.r;
-                if ('b' in value) this.dom.style.paddingBottom = value.b;
-            }
+            if (_fw.val.isObj(value)) {
+                if ('x' in value && 'y' in value) {
+                    this.setStyle('padding', value.y + ' ' + value.x);
+                } else {
+                    var params = {};
+                    if ('x' in value) params.padding = '0 ' + value.x;
+                    if ('y' in value) params.padding = value.y + ' 0';
+                    if ('l' in value) params.paddingLeft = value.l;
+                    if ('t' in value) params.paddingTop = value.t;
+                    if ('r' in value) params.paddingRight = value.r;
+                    if ('b' in value) params.paddingBottom = value.b;
+                    this.setStyle(params);
+                }
+            } else this.setStyle('padding', value);
         },
         get: function get() {
             return {
@@ -580,14 +695,20 @@ var Layer = function () {
     }, {
         key: 'margin',
         set: function set(value) {
-            if (_fw.val.isStr(value)) this.dom.style.margin = value;else if (_fw.val.isObj(value)) {
-                if ('x' in value && 'y' in value) this.dom.style.margin = value.y + ' ' + value.x;else if ('x' in value) this.dom.style.margin = '0 ' + value.x;
-                if ('y' in value) this.dom.style.margin = value.y + ' 0';
-                if ('l' in value) this.dom.style.marginLeft = value.l;
-                if ('t' in value) this.dom.style.marginTop = value.t;
-                if ('r' in value) this.dom.style.marginRight = value.r;
-                if ('b' in value) this.dom.style.marginBottom = value.b;
-            }
+            if (_fw.val.isObj(value)) {
+                if ('x' in value && 'y' in value) {
+                    this.setStyle('margin', value.y + ' ' + value.x);
+                } else {
+                    var params = {};
+                    if ('x' in value) params.margin = '0 ' + value.x;
+                    if ('y' in value) params.margin = value.y + ' 0';
+                    if ('l' in value) params.marginLeft = value.l;
+                    if ('t' in value) params.marginTop = value.t;
+                    if ('r' in value) params.marginRight = value.r;
+                    if ('b' in value) params.marginBottom = value.b;
+                    this.setStyle(params);
+                }
+            } else this.setStyle('margin', value);
         },
         get: function get() {
             return {
@@ -600,10 +721,11 @@ var Layer = function () {
     }, {
         key: 'origin',
         set: function set(value) {
-            var _this6 = this;
+            var _this8 = this;
 
+            this._emit('origin', value);
             ['x', 'y', 'z'].forEach(function (axis) {
-                if (axis in value) _this6.props.origin[axis] = value[axis];
+                if (axis in value) _this8.props.origin[axis] = value[axis];
             });
             _fw.css.applyTransformation(this.dom, this.props, 'origin');
         },
@@ -613,10 +735,11 @@ var Layer = function () {
     }, {
         key: 'translate',
         set: function set(value) {
-            var _this7 = this;
+            var _this9 = this;
 
+            this._emit('translate', value);
             ['x', 'y', 'z'].forEach(function (axis) {
-                if (axis in value) _this7.props.translate[axis] = value[axis];
+                if (axis in value) _this9.props.translate[axis] = value[axis];
             });
             _fw.css.applyTransformation(this.dom, this.props);
         },
@@ -626,12 +749,13 @@ var Layer = function () {
     }, {
         key: 'scale',
         set: function set(value) {
-            var _this8 = this;
+            var _this10 = this;
 
+            this._emit('scale', value);
             if (_fw.val.isNum(value)) {
                 this.props.scale.x = this.props.scale.y = this.props.scale.z = value;
             } else ['x', 'y', 'z'].forEach(function (axis) {
-                if (axis in value) _this8.props.scale[axis] = value[axis];
+                if (axis in value) _this10.props.scale[axis] = value[axis];
             });
             _fw.css.applyTransformation(this.dom, this.props);
         },
@@ -641,10 +765,11 @@ var Layer = function () {
     }, {
         key: 'rotate',
         set: function set(value) {
-            var _this9 = this;
+            var _this11 = this;
 
+            this._emit('rotate', value);
             if (_fw.val.isNum(value)) this.props.rotate.z = value;else ['x', 'y', 'z'].forEach(function (axis) {
-                if (axis in value) _this9.props.rotate[axis] = value[axis];
+                if (axis in value) _this11.props.rotate[axis] = value[axis];
             });
             _fw.css.applyTransformation(this.dom, this.props);
         },
@@ -752,21 +877,20 @@ exports.default = {
  	})
  */
 
-	flow: function flow(object, time, ease, next, end) {
+	flow: function flow(layer, time, ease, delay, next, end) {
 		// will be deprecated
-		var element = object instanceof _fw.Layer ? object.dom : object;
 		var bang = function bang() {
-			element.removeEventListener('transitionend', bang);
-			element.style[_fw.css.vendor.transition] = null;
+			layer.dom.removeEventListener('transitionend', bang);
+			layer.dom.style[_fw.css.vendor.transition] = null;
 			if (end) {
-				if (typeof end === 'function') end();else if (element.set) object.set(end);
+				if (_fw.val.isFn(end)) end();else if (_fw.val.isObj(end)) layer.set(end);
 				end = null;
 			}
 		};
-		element.addEventListener('transitionend', bang);
-		element.style[_fw.css.vendor.transition] = time + 's ' + ease;
+		layer.dom.addEventListener('transitionend', bang);
+		layer.dom.style[_fw.css.vendor.transition] = time + 's ' + ease + ' ' + delay + 's';
 		setTimeout(function () {
-			if (typeof next === 'function') next();else object.set(next);
+			if (_fw.val.isFn(next)) next();else if (_fw.val.isObj(next)) layer.set(next);
 		}, 0);
 	},
 
@@ -775,8 +899,9 @@ exports.default = {
 	getSinus: function getSinus(from, to, speed) {
 		var time = new Date().getTime() * 0.001;
 		var sin = Math.sin(time * (speed || 1));
-		return this.root.math.map(sin, -1, 1, from, to);
+		return _fw.math.map(sin, -1, 1, from, to);
 	},
+
 
 	easing: {
 		linear: function linear(t) {
@@ -799,15 +924,7 @@ exports.default = {
 			return Math.pow(2, -10 * t) * Math.sin((t - p / 4) * (2 * Math.PI) / p) + 1;
 		},
 		easeOutBounce: function easeOutBounce(t) {
-			if (t < 1.0 / 2.75) {
-				return 7.5625 * t * t;
-			} else if (t < 2.0 / 2.75) {
-				return 7.5625 * t * (t -= 1.500 / 2.75) + 0.750000;
-			} else if (t < 2.5 / 2.75) {
-				return 7.5625 * t * (t -= 2.250 / 2.75) + 0.937500;
-			} else {
-				return 7.5625 * t * (t -= 2.625 / 2.75) + 0.984375;
-			}
+			if (t < 1.0 / 2.75) return 7.5625 * t * t;else if (t < 2.0 / 2.75) return 7.5625 * t * (t -= 1.500 / 2.75) + 0.750000;else if (t < 2.5 / 2.75) return 7.5625 * t * (t -= 2.250 / 2.75) + 0.937500;else return 7.5625 * t * (t -= 2.625 / 2.75) + 0.984375;
 		}
 	},
 
@@ -1317,7 +1434,7 @@ var topics = {};
 exports.default = {
 
     // event engine
-    on: function on(topic, bang, id) {
+    on: function on(topic, bang) {
         if (!topics[topic]) topics[topic] = [];
         topics[topic].push(bang);
     },
@@ -1389,50 +1506,32 @@ exports.default = {
         }
     }(),
 
-    gestureDrag: function gestureDrag(layer) {
+    gesture: function gesture(layer, options) {
         var _this = this;
-
-        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
         var t = {};
         var down = function down(e) {
+            t.event = e;
+            t.isTouch = _this.types.isTouch;
             document.addEventListener(_this.types.move, move, true);
             document.addEventListener(_this.types.up, up, true);
-            t.down = new _fw.vec(e.clientX, e.clientY);
-            t.event = e;
-            options.down && options.down(t);
+            options.down(t);
             e.preventDefault();
-            e.stopPropagation();
         };
         var move = function move(e) {
-            t.move = new _fw.vec(e.clientX, e.clientY);
-            if (!t.recognized && t.move.sub(t.down).len() > 10) {
-                t.recognized = true;
-                t.down = t.move.copy();
-            }
-            if (t.recognized) {
-                t.event = e;
-                t.dist = t.move.sub(t.down);
-                options.move && options.move(t);
-                layer.translate = t.dist.unit('px');
-            }
+            t.event = e;
+            t.isTouch = _this.types.isTouch;
+            options.move(t);
             e.preventDefault();
-            e.stopPropagation();
         };
         var up = function up(e) {
+            t.event = e;
+            t.isTouch = _this.types.isTouch;
+            if (!options.up(t)) return false;
             document.removeEventListener(_this.types.move, move, true);
             document.removeEventListener(_this.types.up, up, true);
-            if (t.recognized) {
-                t.event = e;
-                options.up && options.up(t);
-                layer.set({
-                    translate: new _fw.vec(),
-                    move: layer.move.add(t.dist).unit('px')
-                });
-            }
             t = {};
             e.preventDefault();
-            e.stopPropagation();
         };
         layer.dom.addEventListener(this.types.down, down, true);
         var out = {
@@ -1441,7 +1540,6 @@ exports.default = {
                 return out;
             },
             off: function off() {
-                options.cancel && options.cancel();
                 layer.dom.removeEventListener(_this.types.down, down, true);
                 document.removeEventListener(_this.types.move, move, true);
                 document.removeEventListener(_this.types.up, up, true);
@@ -1449,6 +1547,95 @@ exports.default = {
             }
         };
         return out;
+    },
+    gestureDrag: function gestureDrag(layer) {
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+        return this.gesture(layer, {
+            down: function down(t) {
+                if (t.isTouch) {
+                    var touch = t.event.touches;
+                    var fingerA = new _fw.vec(touch[0].clientX, touch[0].clientY);
+                    if (touch.length > 1) {
+                        var fingerB = new _fw.vec(touch[1].clientX, touch[1].clientY);
+                        t.down = fingerA.to(fingerB, .5);
+                    } else {
+                        t.down = fingerA;
+                    }
+                } else {
+                    t.down = new _fw.vec(t.event.clientX, t.event.clientY);
+                }
+                options.down && options.down(t);
+            },
+            move: function move(t) {
+                if (t.isTouch) {
+                    var touch = t.event.touches;
+                    var fingerA = new _fw.vec(touch[0].clientX, touch[0].clientY);
+                    if (touch.length > 1) {
+                        var fingerB = new _fw.vec(touch[1].clientX, touch[1].clientY);
+                        t.move = fingerA.to(fingerB, .5);
+                    } else {
+                        t.move = fingerA;
+                    }
+                } else {
+                    t.move = new _fw.vec(t.event.clientX, t.event.clientY);
+                }
+                if (!t.recognized && t.move.sub(t.down).len() > 5) {
+                    t.recognized = true;
+                    t.down = t.move.copy();
+                    layer.pop();
+                    layer.addClass('drag');
+                }
+                if (t.recognized) {
+                    var a = layer.props.pop.offset.position;
+                    t.dist = t.move.sub(t.down);
+                    options.move && options.move(t);
+                    layer.translate = t.dist.add(a).unit('px');
+                }
+            },
+            up: function up(t) {
+                if (t.isTouch) {
+                    var touch = t.event.touches;
+                    if (touch.length > 0) return false;
+                }
+                if (t.recognized) {
+                    options.up && options.up(t);
+                    layer.push();
+                    layer.deleteClass('drag');
+                }
+                return true;
+            }
+        });
+    },
+    gesturePinch: function gesturePinch(layer) {
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+        return this.gesture(layer, {
+            down: function down(t) {
+                if (t.isTouch) {
+                    var touch = t.event.touches;
+                    var fingerA = new _fw.vec(touch[0].clientX, touch[0].clientY);
+                    var fingerB = new _fw.vec(touch[1].clientX, touch[1].clientY);
+                    t.downDist = fingerA.sub(fingerB).len();
+                }
+                options.down && options.down(t);
+            },
+            move: function move(t) {
+                if (t.isTouch) {
+                    var touch = t.event.touches;
+                    var fingerA = new _fw.vec(touch[0].clientX, touch[0].clientY);
+                    var fingerB = new _fw.vec(touch[1].clientX, touch[1].clientY);
+                    var moveDist = fingerA.sub(fingerB).len();
+                    var diff = moveDist - t.downDist;
+                    layer.scale = 1 + diff * .01;
+                }
+                options.move && options.move(t);
+            },
+            up: function up(t) {
+                options.up && options.up(t);
+                return true;
+            }
+        });
     }
 };
 
@@ -2016,7 +2203,7 @@ exports = module.exports = __webpack_require__(18)();
 
 
 // module
-exports.push([module.i, "* {\n  margin: 0;\n  box-sizing: border-box; }\n\nbody {\n  background-color: #1f2428; }\n\n.layer {\n  display: inline-block;\n  width: 100;\n  height: 100;\n  background-color: rgba(255, 255, 255, 0.1);\n  background-size: cover; }\n\n.scroller {\n  width: 100%;\n  height: 100%;\n  -webkit-scroll-snap-type: mandatory;\n  -webkit-scroll-snap-destination: 50% 50%; }\n  .scroller > .layer {\n    width: 100%;\n    height: 100%;\n    -webkit-scroll-snap-coordinate: 50% 50%; }\n  .scroller.x {\n    overflow-y: hidden;\n    white-space: nowrap; }\n    .scroller.x > .layer {\n      display: inline-block;\n      white-space: normal; }\n  .scroller.y {\n    overflow-x: hidden; }\n", ""]);
+exports.push([module.i, "* {\n  margin: 0;\n  box-sizing: border-box; }\n\nbody {\n  background-color: #1f2428; }\n\n.layer {\n  display: inline-block;\n  width: 100;\n  height: 100;\n  font-family: 'arial';\n  font-size: 13;\n  background-color: rgba(255, 255, 255, 0.7);\n  background-size: cover;\n  transition: box-shadow .2s; }\n  .layer.drag {\n    box-shadow: 0 0 50px 0 rgba(0, 0, 0, 0.5); }\n\n.scroller {\n  width: 100%;\n  height: 100%;\n  -webkit-scroll-snap-type: mandatory;\n  -webkit-scroll-snap-destination: 50% 50%; }\n  .scroller > .layer {\n    width: 100%;\n    height: 100%;\n    -webkit-scroll-snap-coordinate: 50% 50%; }\n  .scroller.x {\n    overflow-y: hidden;\n    white-space: nowrap; }\n    .scroller.x > .layer {\n      display: inline-block;\n      white-space: normal; }\n  .scroller.y {\n    overflow-x: hidden; }\n", ""]);
 
 // exports
 

@@ -1,7 +1,7 @@
 
 
 
-import {css, Layer} from './fw'
+import {css, math, val} from './fw'
 
 export default {
 
@@ -19,35 +19,34 @@ export default {
 		})
 	*/
 
-	flow (object, time, ease, next, end) {
+	flow (layer, time, ease, delay, next, end) {
 		// will be deprecated
-		var element = object instanceof Layer? object.dom: object
 		var bang = () => {
-			element.removeEventListener('transitionend', bang)
-			element.style[css.vendor.transition] = null
+			layer.dom.removeEventListener('transitionend', bang)
+			layer.dom.style[css.vendor.transition] = null
 			if (end) {
-				if (typeof end === 'function')
+				if (val.isFn(end))
 					end()
-				else if (element.set)
-					object.set(end)
+				else if (val.isObj(end))
+					layer.set(end)
 				end = null
 			}
 		}
-		element.addEventListener('transitionend', bang)
-		element.style[css.vendor.transition] = `${time}s ${ease}`
+		layer.dom.addEventListener('transitionend', bang)
+		layer.dom.style[css.vendor.transition] = `${time}s ${ease} ${delay}s`
 		setTimeout(() => {
-			if (typeof next === 'function')
+			if (val.isFn(next))
 				next()
-			else 
-				object.set(next)
+			else if (val.isObj(next))
+				layer.set(next)
 		}, 0)
 	},
 
 	// Other Functions
-	getSinus : function (from, to, speed) {
+	getSinus (from, to, speed) {
 		var time = new Date().getTime() * 0.001;
 		var sin  = Math.sin(time * (speed || 1))
-		return this.root.math.map(sin, -1, 1, from, to)
+		return math.map(sin, -1, 1, from, to)
 	},
 
 	easing : {
@@ -85,10 +84,10 @@ export default {
 		},
 	
 		easeOutBounce (t) {
-				 if (t < 1.0 / 2.75) { return 7.5625 * t *  t }
-			else if (t < 2.0 / 2.75) { return 7.5625 * t * (t -= (1.500 / 2.75)) + 0.750000 } 
-			else if (t < 2.5 / 2.75) { return 7.5625 * t * (t -= (2.250 / 2.75)) + 0.937500 } 
-			else 					 { return 7.5625 * t * (t -= (2.625 / 2.75)) + 0.984375 }
+				 if (t < 1.0 / 2.75) return 7.5625 * t *  t
+			else if (t < 2.0 / 2.75) return 7.5625 * t * (t -= (1.500 / 2.75)) + 0.750000 
+			else if (t < 2.5 / 2.75) return 7.5625 * t * (t -= (2.250 / 2.75)) + 0.937500
+			else 					 return 7.5625 * t * (t -= (2.625 / 2.75)) + 0.984375
 		}
 	},
 

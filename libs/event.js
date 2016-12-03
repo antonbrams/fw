@@ -8,7 +8,7 @@ var topics = {}
 export default {
     
     // event engine
-    on (topic, bang, id) {
+    on (topic, bang) {
         if (!topics[topic])
             topics[topic] = []
         topics[topic].push(bang)
@@ -72,46 +72,30 @@ export default {
         }
     })(),
     
-    gestureDrag (layer, options = {}) {
+    gesture (layer, options) {
         var t = {}
         var down = e => {
+            t.event   = e
+            t.isTouch = this.types.isTouch
             document.addEventListener(this.types.move, move, true)
             document.addEventListener(this.types.up, up, true)
-            t.down  = new vec(e.clientX, e.clientY)
-            t.event = e
-            options.down && options.down(t)
+            options.down(t)
             e.preventDefault()
-            e.stopPropagation()
         }
         var move = e => {
-            t.move = new vec(e.clientX, e.clientY)
-            if (!t.recognized && t.move.sub(t.down).len() > 10) {
-                t.recognized = true
-                t.down = t.move.copy()
-            }
-            if (t.recognized) {
-                t.event = e
-                t.dist  = t.move.sub(t.down)
-                options.move && options.move(t)
-                layer.translate = t.dist.unit('px')
-            }
+            t.event   = e
+            t.isTouch = this.types.isTouch
+            options.move(t)
             e.preventDefault()
-            e.stopPropagation()
         }
         var up = e => {
+            t.event   = e
+            t.isTouch = this.types.isTouch
+            if (!options.up(t)) return false
             document.removeEventListener(this.types.move, move, true)
             document.removeEventListener(this.types.up, up, true)
-            if (t.recognized) {
-                t.event = e
-                options.up && options.up(t)
-                layer.set({
-                    translate : new vec(),
-                    move      : layer.move.add(t.dist).unit('px')
-                })
-            }
             t = {}
             e.preventDefault()
-            e.stopPropagation()
         }
         layer.dom.addEventListener(this.types.down, down, true)
         var out = {
@@ -120,7 +104,6 @@ export default {
                 return out
             },
             off : () => {
-                options.cancel && options.cancel()
                 layer.dom.removeEventListener(this.types.down, down, true)
                 document.removeEventListener(this.types.move, move, true)
                 document.removeEventListener(this.types.up, up, true)
@@ -128,7 +111,94 @@ export default {
             }
         }
         return out
-    }
+    },
+    
+    gestureDrag (layer, options = {}) {
+        return this.gesture(layer, {
+            down (t) {
+                if (t.isTouch) {
+                    var touch   = t.event.touches
+                    var fingerA = new vec(touch[0].clientX, touch[0].clientY)
+                    if (touch.length > 1) {
+                        var fingerB = new vec(touch[1].clientX, touch[1].clientY)
+                        t.down = fingerA.to(fingerB, .5)
+                    } else {
+                        t.down = fingerA
+                    }
+                } else {
+                    t.down = new vec(t.event.clientX, t.event.clientY)
+                }
+                options.down && options.down(t)
+            },
+            move (t) {
+                if (t.isTouch) {
+                    var touch   = t.event.touches
+                    var fingerA = new vec(touch[0].clientX, touch[0].clientY)
+                    if (touch.length > 1) {
+                        var fingerB = new vec(touch[1].clientX, touch[1].clientY)
+                        t.move = fingerA.to(fingerB, .5)
+                    } else {
+                        t.move = fingerA
+                    }
+                } else {
+                    t.move = new vec(t.event.clientX, t.event.clientY)
+                }
+                if (!t.recognized && t.move.sub(t.down).len() > 5) {
+                    t.recognized = true
+                    t.down = t.move.copy()
+                    layer.pop()
+                    layer.addClass('drag')
+                }
+                if (t.recognized) {
+                    var a = layer.props.pop.offset.position
+                    t.dist = t.move.sub(t.down)
+                    options.move && options.move(t)
+                    layer.translate = t.dist.add(a).unit('px')
+                }
+            },
+            up (t) {
+                if (t.isTouch) {
+                    var touch = t.event.touches
+                    if (touch.length > 0) return false
+                }
+                if (t.recognized) {
+                    options.up && options.up(t)
+                    layer.push()
+                    layer.deleteClass('drag')
+                }
+                return true
+            }
+        })
+    },
+    
+    gesturePinch (layer, options = {}) {
+        return this.gesture(layer, {
+            down (t) {
+                if (t.isTouch) {
+                    var touch   = t.event.touches
+                    var fingerA = new vec(touch[0].clientX, touch[0].clientY)
+                    var fingerB = new vec(touch[1].clientX, touch[1].clientY)
+                    t.downDist  = fingerA.sub(fingerB).len()
+                }
+                options.down && options.down(t)
+            },
+            move (t) {
+                if (t.isTouch) {
+                    var touch    = t.event.touches
+                    var fingerA  = new vec(touch[0].clientX, touch[0].clientY)
+                    var fingerB  = new vec(touch[1].clientX, touch[1].clientY)
+                    var moveDist = fingerA.sub(fingerB).len()
+                    var diff     = moveDist - t.downDist
+                    layer.scale = 1 + diff * .01
+                }
+                options.move && options.move(t)
+            },
+            up (t) {
+                options.up && options.up(t)
+                return true
+            }
+        })
+    },
 }
 
 

@@ -13,35 +13,52 @@ export default class Layer {
             scale     : new vec(1,1,1),
             rotate    : new vec(0,0,0)
         }
+        // listeners
+        this._events = {}
+        this._dom    = null
         // if options incoming
-        if (val.isObj(options)) {
+        if (val.isDom(options))
+            this.dom = options
+        else if (val.isObj(options)) {
             // create dom element
             if ('dom' in options) {
-                // element
-                if (val.isDom(options.dom))
-                    this.dom = options.dom
-                // string
-                else if (val.isStr(options.dom)) {
-                    // template
-                    if (options.dom.match(/<.*>.*<\/.*>/))
-                        this.dom = dom.fromString(options.dom)
-                    // create new element
-                    else this.dom = dom.create(options.dom)
-                } else 
-                    this.dom = dom.create('.layer')
+                this.dom = options.dom
                 delete options.dom
             // if no dom, create just div with .layer
             } else 
                 this.dom = dom.create('.layer')
             // if no parent parameter
-            if (!val.exists(options.parent)) 
+            if (!val.exists(options.parent))
                 document.body.appendChild(this.dom)
             // set other values
             this.set(options)
-        } else if (val.isDom(options)) 
-            this.dom = options
-        // link dom with object
-        this.dom.layer = this
+        }
+    }
+    
+    // event handlers
+    on (topic, fn, options) {
+        // check for standard dom events
+        if (topic in event.types) {
+            var type = event.types[topic]
+            this.dom.addEventListener(type, fn, options)
+            return {
+                on  : () => this.dom.addEventListener(type, fn, options),
+                off : () => this.dom.removeEventListener(type, fn, options)
+            }
+        // listen for dom changes
+        } else { 
+            if (!this._events[topic]) this._events[topic] = []
+            this._events[topic].push(fn)
+            return {
+                on  : () => this._events[topic].push(fn),
+                off : () => this._events.splice(this._events.indexOf(fn), 1)
+            }
+        }
+    }
+    
+    _emit (topic, payload) {
+        if (this._events[topic])
+            this._events[topic].forEach(fn => fn(payload))
     }
     
     // setter getters
@@ -56,32 +73,101 @@ export default class Layer {
                     this[key] = value
             // set standard css parameters
             else
-                this.dom.style[key] = value
+                this.setStyle(key, value)
         }
         return this
     }
     
-    get (key) {
+    setStyle (options, value) {
+        var set = (key, value) => {
+            this._emit(key, value)
+            this.dom.style[key] = value
+        }
+        if (val.isStr(options))
+            set(options, value)
+        else if (val.isObj(options))
+            for (var key in options)
+                set(key, options[key])
+    }
+    
+    getStyle (key) {
         return css.computed(this.dom, key)
     }
     
-    // Events
-    on (type, fn, flag) {
-        // tap, long tap, drag, zoom, rotate
-        var type = event.types[type]
-        this.dom.addEventListener(type, fn, flag)
-        return {
-            on  : () => this.dom.addEventListener(type, fn, flag),
-            off : () => this.dom.removeEventListener(type, fn, flag)
+    set dom (value) {
+        var old = this.dom && this.dom.parentNode? this.dom: null
+        // if dom
+        if (val.isDom(value))
+            this._dom = value
+        // string a string
+        else if (val.isStr(value))
+            // template
+            if (value.match(/<.*>.*<\/.*>/))
+                this._dom = dom.fromString(value)
+            // create new element
+            else
+                this._dom = dom.create(value)
+        // link dom with layer
+        this._dom.layer = this
+        this.addClass('layer')
+        // replace old dom
+        if (old) old.replaceWith(this.dom) 
+    }
+    
+    get dom () {
+        return this._dom
+    }
+    
+    /*
+        model.forEach(function (item) {
+            var layerA = new fw.Layer({
+                margin : 10
+            }).bind(item, {
+                content : {
+                    key : 'title', 
+                    set (layer, value) {
+                        layer.set({content: 'test ' + value})
+                    }
+                }
+            })
+        })
+    */
+    
+    bind (model, params) {
+        for (var key in params) {
+            var options   = params[key]
+            var modelKey  = val.isObj(options)? options.key: options 
+            var initValue = model[modelKey]
+            var curValue  = null
+            this.on(key, value => curValue = value)
+            var set = value => {
+                if (options.set)
+                    options.set(this, value)
+                else {
+                    var param  = {}
+                    param[key] = value
+                    this.set(param)
+                }
+            }
+            var get = () => {
+                return options.get? options.get(this): curValue
+            }
+            Object.defineProperty(model, modelKey, {set, get})
+            model[modelKey] = initValue
         }
+        return this
     }
     
     gesture (type, options) {
-        var dictionary = {drag: 'gestureDrag'}
+        var dictionary = {
+            drag  : 'gestureDrag',
+            pinch : 'gesturePinch'
+        }
         return event[dictionary[type]](this, options)
     }
     
     pop () {
+        this._emit('pop', this.props.pop)
         this.props.pop = {
             parent   : this.dom.parentNode,
             pos      : new vec(this.dom.style.left,  this.dom.style.top),
@@ -99,30 +185,37 @@ export default class Layer {
     }
     
     push () {
+        this._emit('push', this.props.pop)
         this.props.pop.parent.appendChild(this.dom)
         this.set({
             position  : null,
             pos       : this.props.pop.pos,
             size      : this.props.pop.size,
             translate : new vec(),
-            scale     : new vec(1, 1),
+            scale     : new vec(1, 1, 1),
             origin    : {x: 'center', y: 'center'}
         })
         delete this.props.pop
         return this
     }
     
-    animate (time, ease, next, end) {
-        animation.flow(this, time, ease, next, end)
+    animate (options, next, end) {
+        this._emit('animate', options)
+        animation.flow(this,
+            options.time  || 1,
+            options.ease  || 'linear',
+            options.delay || 0,
+            next, end
+        )
         return this
     }
     
-    clone () {
+    clone (options) {
         var clone = this.dom.cloneNode(true)
 		this.dom.parentNode.appendChild(clone)
         return new Layer({
             dom : clone
-        })
+        }).set(options)
     }
     
     collision (layer) {
@@ -144,6 +237,7 @@ export default class Layer {
     }
     
     set parent (value) {
+        this._emit('parent', value);
         (value instanceof Layer? value.dom: value).appendChild(this.dom)
     }
     
@@ -156,6 +250,7 @@ export default class Layer {
     }
     
     append (value) {
+        this._emit('append', value)
         var append = el => {this.dom.appendChild(el instanceof Layer? el.dom: el)}
         if (val.isArr(value))
             value.forEach(item => append(item))
@@ -164,14 +259,17 @@ export default class Layer {
     }
     
     prepend (value) {
+        this._emit('prepend', value)
         dom.prepend(this.dom, value instanceof Layer? value.dom: value)
     }
     
-    remove (value) {
+    detach (value) {
+        this._emit('detach', value)
         this.dom.removeChild(value instanceof Layer? value.dom: value)
     }
     
     set content (value) {
+        this._emit('content', value)
         this.dom.innerHTML = value
     }
     
@@ -181,6 +279,7 @@ export default class Layer {
     
     // classes
     toggleClass (value) {
+        this._emit('toggleClass', value)
         return this.dom.classList.toggle(value)
     }
     
@@ -189,12 +288,14 @@ export default class Layer {
     }
     
     addClass (value) {
+        this._emit('addClass', value)
         if (val.isArr(value)) 
             value.forEach(item => this.dom.classList.add(item))
         else this.dom.classList.add(value)
     }
     
     deleteClass (value) {
+        this._emit('deleteClass', value)
         if (val.isArr(value)) 
             value.forEach(item => this.dom.classList.remove(item))
         else this.dom.classList.remove(value)
@@ -202,8 +303,8 @@ export default class Layer {
     
     // css
     set move (value) {
-        if ('x' in value) this.dom.style.left = value.x
-        if ('y' in value) this.dom.style.top  = value.y
+        if ('x' in value) this.setStyle('left', value.x)
+        if ('y' in value) this.setStyle('top', value.y)
     }
     
     get move () {
@@ -211,8 +312,8 @@ export default class Layer {
     }
     
     set size (value) {
-        if ('x' in value) this.dom.style.width  = value.x
-        if ('y' in value) this.dom.style.height = value.y
+        if ('x' in value) this.setStyle('width', value.x)
+        if ('y' in value) this.setStyle('height', value.y)
     }
     
     get size () {
@@ -220,23 +321,25 @@ export default class Layer {
     }
     
     image (value) {
-        this.background({image: value})
+        this.bg({image: value})
     }
     
     set padding (value) {
-        if (val.isStr(value))
-            this.dom.style.padding = value
-        else if (val.isObj(value)) {
-            if ('x' in value && 'y' in value) 
-                this.dom.style.padding = `${value.y} ${value.x}`
-            else
-                if ('x' in value) this.dom.style.padding       = `0 ${value.x}`
-                if ('y' in value) this.dom.style.padding       = `${value.y} 0`
-                if ('l' in value) this.dom.style.paddingLeft   = value.l
-                if ('t' in value) this.dom.style.paddingTop    = value.t
-                if ('r' in value) this.dom.style.paddingRight  = value.r
-                if ('b' in value) this.dom.style.paddingBottom = value.b
-        }
+        if (val.isObj(value)) {
+            if ('x' in value && 'y' in value) {
+                this.setStyle('padding', `${value.y} ${value.x}`)
+            } else {
+                var params = {}
+                if ('x' in value) params.padding       = `0 ${value.x}`
+                if ('y' in value) params.padding       = `${value.y} 0`
+                if ('l' in value) params.paddingLeft   = value.l
+                if ('t' in value) params.paddingTop    = value.t
+                if ('r' in value) params.paddingRight  = value.r
+                if ('b' in value) params.paddingBottom = value.b
+                this.setStyle(params)
+            }
+        } else
+            this.setStyle('padding', value)
     }
     
     get padding () {
@@ -249,19 +352,21 @@ export default class Layer {
     }
     
     set margin (value) {
-        if (val.isStr(value))
-            this.dom.style.margin = value
-        else if (val.isObj(value)) {
-            if ('x' in value && 'y' in value) 
-                this.dom.style.margin = `${value.y} ${value.x}`
-            else
-                if ('x' in value) this.dom.style.margin       = `0 ${value.x}`
-                if ('y' in value) this.dom.style.margin       = `${value.y} 0`
-                if ('l' in value) this.dom.style.marginLeft   = value.l
-                if ('t' in value) this.dom.style.marginTop    = value.t
-                if ('r' in value) this.dom.style.marginRight  = value.r
-                if ('b' in value) this.dom.style.marginBottom = value.b
-        }
+        if (val.isObj(value)) {
+            if ('x' in value && 'y' in value) {
+                this.setStyle('margin', `${value.y} ${value.x}`)
+            } else {
+                var params = {}
+                if ('x' in value) params.margin       = `0 ${value.x}`
+                if ('y' in value) params.margin       = `${value.y} 0`
+                if ('l' in value) params.marginLeft   = value.l
+                if ('t' in value) params.marginTop    = value.t
+                if ('r' in value) params.marginRight  = value.r
+                if ('b' in value) params.marginBottom = value.b
+                this.setStyle(params)
+            }
+        } else
+            this.setStyle('margin', value)
     }
     
     get margin () {
@@ -273,35 +378,37 @@ export default class Layer {
         }
     }
     
-    background (value) {
+    bg (value) {
         if (val.isStr(value))
-            this.dom.style.background = value
+            this.setStyle('background', value)
         else if (val.isObj(value))
+            var params = {}
             if ('image' in value) 
-                this.dom.style.backgroundImage = 
+                params.backgroundImage = 
                     `url(${value.image})`
             if ('origin' in value)
-                this.dom.style.backgroundOrigin = val.isObj(value.origin)?
+                params.backgroundOrigin = val.isObj(value.origin)?
                     `${value.origin.x} ${value.origin.y}`: value.origin
             if ('position' in value)
-                this.dom.style.backgroundPosition = val.isObj(value.position)?
+                params.backgroundPosition = val.isObj(value.position)?
                     `${value.position.x} ${value.position.y}`: value.position
             if ('size' in value)
-                this.dom.style.backgroundSize = val.isObj(value.size)? 
+                params.backgroundSize = val.isObj(value.size)? 
                     `${value.size.x} ${value.size.y}`: value.size
             if ('repeat' in value)
-                this.dom.style.backgroundRepeat =
+                params.backgroundRepeat =
                     value.repeat == 'x'? 'repeat-x':
                     value.repeat == 'y'? 'repeat-y':
                     value.repeat == 'no'? 'no-repeat':
                     value.repeat == 'yes'? 'repeat': value.repeat
             if ('color' in value)
-                this.dom.style.backgroundColor = value.color
+                params.backgroundColor = value.color
+            this.setStyle(params)
     }
     
     text (value) {
         if (val.isStr(value))
-            this.dom.style.font = value
+            this.setStyle('font', value)
         else if (val.isObj(value)) {
             var props = {
                 style      : 'fontStyle', 
@@ -310,20 +417,19 @@ export default class Layer {
                 size       : 'fontSize', 
                 height     : 'fontHeight', 
                 family     : 'fontFamily',
-                color      : 'colorColor',
+                color      : 'color',
                 align      : 'textAlign', 
                 lineHeight : 'lineHeight',
                 shadow     : 'textShadow'
             }
             for (var key in props) 
-                if (key in value) 
-                    this.dom.style[props[key]] = value[key]
+                if (key in value) this.setStyle(props[key], value[key])
         }
     }
     
     border (value) {
         if (val.isStr(value))
-            this.dom.style.border = value
+            this.setStyle('border', value)
         else if (val.isObj(value)) {
             var set = (value, side) => {
                 var props = {
@@ -333,7 +439,8 @@ export default class Layer {
                     style  : 'Style'
                 }
                 for (var key in props)
-                    if (key in value) this.dom.style[`border${side}${props[key]}`] = value[key]
+                    if (key in value)
+                        this.setStyle(`border${side}${props[key]}`, value[key])
             }
             set(value, '')
             var props = {
@@ -354,9 +461,9 @@ export default class Layer {
     
     // transformation
     set origin (value) {
+        this._emit('origin', value);
         ['x', 'y', 'z'].forEach(axis => {
-            if (axis in value) 
-                this.props.origin[axis] = value[axis]
+            if (axis in value) this.props.origin[axis] = value[axis]
         })
         css.applyTransformation(this.dom, this.props, 'origin')
     }
@@ -366,9 +473,9 @@ export default class Layer {
     }
     
     set translate (value) {
+        this._emit('translate', value);
         ['x', 'y', 'z'].forEach(axis => {
-            if (axis in value)
-                this.props.translate[axis] = value[axis]
+            if (axis in value) this.props.translate[axis] = value[axis]
         })
         css.applyTransformation(this.dom, this.props)
     }
@@ -378,14 +485,14 @@ export default class Layer {
     }
     
     set scale (value) {
+        this._emit('scale', value);
         if (val.isNum(value)) {
             this.props.scale.x =
             this.props.scale.y =
             this.props.scale.z = value
         } else
             ['x', 'y', 'z'].forEach(axis => {
-                if (axis in value) 
-                    this.props.scale[axis] = value[axis]
+                if (axis in value) this.props.scale[axis] = value[axis]
             })
         css.applyTransformation(this.dom, this.props)
     }
@@ -395,12 +502,12 @@ export default class Layer {
     }
     
     set rotate (value) {
+        this._emit('rotate', value)
         if (val.isNum(value))
             this.props.rotate.z = value
         else
             ['x', 'y', 'z'].forEach(axis => {
-                if (axis in value) 
-                    this.props.rotate[axis] = value[axis]
+                if (axis in value) this.props.rotate[axis] = value[axis]
             })
         css.applyTransformation(this.dom, this.props)
     }
