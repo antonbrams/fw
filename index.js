@@ -380,7 +380,7 @@ var Layer = function () {
                     return curValue = value;
                 });
                 var set = function set(value) {
-                    if (options.set) options.set(_this3, value);else {
+                    if (options.set) options.set(value, _this3);else {
                         var param = {};
                         param[key] = value;
                         _this3.set(param);
@@ -393,6 +393,12 @@ var Layer = function () {
                 model[modelKey] = initValue;
             }
             return this;
+        }
+    }, {
+        key: 'destroy',
+        value: function destroy() {
+            this.dom.parentNode.removeChild(this.dom);
+            delete this;
         }
     }, {
         key: 'gesture',
@@ -1814,34 +1820,36 @@ var Expression = function Expression(options) {
 
 exports.default = {
 
-    // int ({type: 'all', from: 1})
-    // int ({type: 'count', from: 1})
-    // int ({type: 'random', min: 1, max: 10})
+    // int ({mode: 'all', from: 1})
+    // int ({mode: 'count', from: 1})
+    // int ({mode: 'random', min: 1, max: 10})
     int: function int(opt) {
-        return new Expression({ i: 0, method: 'int', type: opt.type, render: function render() {
-                return opt.type == 'forward' || opt.type == 'loop' ? opt.from + this.i++ : opt.type == 'random' ? Math.floor(_fw.math.to(Math.random(), opt.min, opt.max)) : this.i;
+        return { i: 0, method: 'int', mode: opt.mode, render: function render() {
+                return opt.mode == 'forward' || opt.mode == 'loop' ? opt.from + this.i++ : opt.mode == 'random' ? Math.floor(_fw.math.to(Math.random(), opt.min, opt.max)) : this.i;
             }
-        });
+        };
     },
 
 
-    // str ({type: 'text', count: 20})
-    // str ({type: 'text', min: 20, max 100})
-    str: function str(opt) {
-        return new Expression(function () {
-            var count = opt.count ? opt.count : Math.floor(_fw.math.to(Math.random(), opt.min, opt.max));
-            var capitalize = true;
-            var sentence = '';
-            for (var i = 0; i < count; i++) {
-                var randomWord = assets.words[Math.floor(Math.random() * assets.words.length)];
-                var signIndex = Math.floor(Math.pow(Math.random(), 20) * assets.signs.length);
-                var sign = assets.signs[_fw.math.min(signIndex, i < count - 1 ? 0 : 2)] + ' ';
-                var word = capitalize ? _fw.text.capitalize(randomWord) : randomWord;
-                sentence += word + sign;
-                capitalize = signIndex > 1;
+    // str ({mode: 'text', count: 20})
+    // str ({mode: 'text', min: 20, max 100})
+    string: function string(opt) {
+        return {
+            render: function render() {
+                var count = opt.count ? opt.count : Math.floor(_fw.math.to(Math.random(), opt.min, opt.max));
+                var capitalize = true;
+                var sentence = '';
+                for (var i = 0; i < count; i++) {
+                    var randomWord = assets.words[Math.floor(Math.random() * assets.words.length)];
+                    var signIndex = Math.floor(Math.pow(Math.random(), 20) * assets.signs.length);
+                    var sign = assets.signs[_fw.math.min(signIndex, i < count - 1 ? 0 : 2)] + ' ';
+                    var word = capitalize ? _fw.text.capitalize(randomWord) : randomWord;
+                    sentence += word + sign;
+                    capitalize = signIndex > 1;
+                }
+                return sentence.substring(0, sentence.length - 1);
             }
-            return sentence.substring(0, sentence.length - 1);
-        });
+        };
     },
     img: function img(opt) {
         var source = {
@@ -1852,43 +1860,84 @@ exports.default = {
                 return 'file:///Library/Desktop%20Pictures/' + escape(assets.image.mac[i % assets.image.mac.length]) + '.jpg';
             }
         };
-        return new Expression(function () {
-            return source[opt.source](_fw.math.randInt(0, 1000));
-        });
+        return {
+            render: function render() {
+                return source[opt.source](_fw.math.randInt(0, 1000));
+            }
+        };
     },
 
 
     // get(i => {return custom[i]})
     merge: function merge(callback) {
-        return new Expression({ i: 0, render: function render() {
+        return { type: 'expression', i: 0, render: function render() {
                 return callback(this.i++);
             }
-        });
+        };
     },
     put: function put(opt) {
         var _this = this;
 
         var cycle = _fw.val.isArr(opt.count);
-        return new Expression(function () {
-            var length = cycle ? opt.count[0] : opt.count || 1;
-            var get = null;
-            var items = [];
-            // modify values
-            for (var key in opt.item) {
-                // reset integer with count type
-                if (opt.item[key].method == 'int' && opt.item[key].type == 'loop') opt.item[key].i = 0;
-            } // render content
-            for (var i = 0; i < length; i++) {
-                items.push(_this.render(opt.item));
-            }if (cycle) opt.count.shift();
-            return items;
-        });
+        return { type: 'expression', render: function render() {
+                var length = cycle ? opt.count[0] : opt.count || 1;
+                var items = [];
+                // modify values
+                for (var key in opt.item) {
+                    // reset integer with count type
+                    if (opt.item[key].type == 'expression' && opt.item[key].expressions) opt.item[key].expressions.forEach(function (expression) {
+                        if (expression.method == 'int' && expression.mode == 'loop') expression.i = 0;
+                    });
+                } // render content
+                for (var i = 0; i < length; i++) {
+                    items.push(_this.render(opt.item));
+                } // cycle repeats
+                if (cycle) opt.count.push(opt.count.shift());
+                console.log(opt.count);
+                return items;
+            } };
     },
-    render: function render(object) {
+    render: function render(model) {
         var out = {};
-        for (var i in object) {
-            if (object[i] instanceof Expression) out[i] = object[i].render();else out[i] = object[i];
-        }return out;
+        for (var key in model) {
+            // init expression
+            if (_fw.val.isStr(model[key]) && model[key].match(/{.*?}/)) model[key] = this._parseExpressions(model[key]);
+            // render value if expression
+            if (model[key].type == 'expression') out[key] = model[key].render();
+            // transfer value
+            else out[key] = model[key];
+        }
+        return out;
+    },
+    _parseExpressions: function _parseExpressions(string) {
+        var _this2 = this;
+
+        var out = { type: 'expression', expressions: [] };
+        // find all the queries and replace them with functions
+        var string = string.replace(/{.*?}/g, function (match) {
+            var query = {};
+            // parse match
+            match.replace(/{| |}/g, '').split(',').forEach(function (p) {
+                p = p.split(':');
+                query[p[0]] = parseInt(p[1]) || p[1];
+            });
+            // find method of this and push generated expression
+            out.expressions.push(_this2[query.type](query));
+            // save index of array {1}
+            return '{' + (out.expressions.length - 1) + '}';
+        });
+        out.render = function () {
+            var _this3 = this;
+
+            // replace all {1} with expression result
+            var result = string.replace(/{.*?}/g, function (i) {
+                // bundle.expressions[{1}]
+                return _this3.expressions[i.match(/\d+/)[0]].render();
+            });
+            // convert to int if no characters
+            return result.match(/[^\d+]/) ? result : parseInt(result);
+        };
+        return out;
     }
 };
 

@@ -23,23 +23,23 @@ class Expression {
 
 export default {
     
-    // int ({type: 'all', from: 1})
-    // int ({type: 'count', from: 1})
-    // int ({type: 'random', min: 1, max: 10})
+    // int ({mode: 'all', from: 1})
+    // int ({mode: 'count', from: 1})
+    // int ({mode: 'random', min: 1, max: 10})
     int (opt) {
-        return new Expression({i: 0, method: 'int', type: opt.type, render () {
-            return opt.type == 'forward' || opt.type == 'loop'?
+        return {i: 0, method: 'int', mode: opt.mode, render () {
+            return opt.mode == 'forward' || opt.mode == 'loop'?
                 opt.from + this.i ++:
-            opt.type == 'random'?
+            opt.mode == 'random'?
                 Math.floor(math.to(Math.random(), opt.min, opt.max)):
                 this.i
-        }})
+        }}
     },
     
-    // str ({type: 'text', count: 20})
-    // str ({type: 'text', min: 20, max 100})
-    str (opt) {
-        return new Expression(() => {
+    // str ({mode: 'text', count: 20})
+    // str ({mode: 'text', min: 20, max 100})
+    string (opt) {
+        return {render () {
             var count = 
                 opt.count? opt.count:
                 Math.floor(math.to(Math.random(), opt.min, opt.max))
@@ -54,7 +54,7 @@ export default {
                 capitalize = signIndex > 1
             }
             return sentence.substring(0, sentence.length - 1)
-        })
+        }}
     },
     
     img (opt) {
@@ -63,46 +63,113 @@ export default {
             local  (i) {return `file:///Library/Desktop%20Pictures/${
                 escape(assets.image.mac[i % assets.image.mac.length])}.jpg`}
         }
-        return new Expression(() => {
+        return {render () {
             return source[opt.source](math.randInt(0, 1000))
-        })
+        }}
     },
     
     // get(i => {return custom[i]})
     merge (callback) {
-        return new Expression({i: 0, render () {
+        return {type: 'expression', i: 0, render () {
             return callback(this.i ++)
-        }})
+        }}
     },
     
     put (opt) {
         var cycle = val.isArr(opt.count)
-        return new Expression(() => {
+        return {type: 'expression', render: () => {
             var length = cycle? opt.count[0]: (opt.count || 1)
-            var get    = null
             var items  = []
             // modify values
             for (var key in opt.item)
                 // reset integer with count type
-                if (opt.item[key].method == 'int' && opt.item[key].type == 'loop')
-                    opt.item[key].i = 0
+                if (opt.item[key].type == 'expression' && opt.item[key].expressions)
+                    opt.item[key].expressions.forEach(expression => {
+                        if (expression.method == 'int' && expression.mode == 'loop')
+                            expression.i = 0
+                    })
             // render content
             for (var i = 0; i < length; i ++)
                 items.push(this.render(opt.item))
-            if (cycle) opt.count.shift()
+            // cycle repeats
+            if (cycle) opt.count.push(opt.count.shift())
+            console.log(opt.count)
             return items
-        })
+        }}
     },
     
-    render (object) {
+    render (model) {
         var out = {}
-        for (var i in object)
-            if (object[i] instanceof Expression)
-                out[i] = object[i].render()
+        for (var key in model) {
+            // init expression
+            if (val.isStr(model[key]) && model[key].match(/{.*?}/))
+                model[key] = this._parseExpressions(model[key])
+            // render value if expression
+            if (model[key].type == 'expression')
+                out[key] = model[key].render()
+            // transfer value
             else
-                out[i] = object[i]
+                out[key] = model[key]
+        }
         return out
     },
+    
+    _parseExpressions (string) {
+        var out = {type: 'expression', expressions: []}
+        // find all the queries and replace them with functions
+        var string = string.replace(/{.*?}/g, match => {
+            var query = {}
+            // parse match
+            match.replace(/{| |}/g, '').split(',').forEach(p => {
+                p = p.split(':')
+                query[p[0]] = parseInt(p[1]) || p[1]
+            })
+            // find method of this and push generated expression
+            out.expressions.push(this[query.type](query))
+            // save index of array {1}
+            return `{${out.expressions.length - 1}}`
+        })
+        out.render = function () {
+            // replace all {1} with expression result
+            var result = string.replace(/{.*?}/g, i => {
+                // bundle.expressions[{1}]
+                return this.expressions[i.match(/\d+/)[0]].render()
+            })
+            // convert to int if no characters
+            return result.match(/[^\d+]/)? result: parseInt(result)
+        }
+        return out
+    },
+    
+    // Model : class {
+    //     
+    //     constructor (model) {
+    //         this.model = model
+    //         this.factory  = null
+    //     }
+    //     
+    //     init (callback) {
+    //         this.factory = callback
+    //         this.model.forEach((item, i, array) => {
+    //             item.layer = callback(item, i, array)
+    //         })
+    //     }
+    //     
+    //     add (item) {
+    //         this.model.push(item)
+    //         item.layer = this.factory(item, this.model.length-1, this.model)
+    //     }
+    //     
+    //     remove (index) {
+    //         var object = null
+    //         for (var i = 0; i < this.model.length; i ++)
+    //             if (i == index) {
+    //                 object = this.model.splice(i, 1)
+    //                 break
+    //             }
+    //         return object
+    //     }
+    // }
     
 }
 

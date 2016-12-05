@@ -142,7 +142,7 @@ export default class Layer {
             this.on(key, value => curValue = value)
             var set = value => {
                 if (options.set)
-                    options.set(this, value)
+                    options.set(value, this)
                 else {
                     var param  = {}
                     param[key] = value
@@ -156,6 +156,11 @@ export default class Layer {
             model[modelKey] = initValue
         }
         return this
+    }
+    
+    destroy () {
+        this.dom.parentNode.removeChild(this.dom)
+        delete this
     }
     
     gesture (type, options) {
