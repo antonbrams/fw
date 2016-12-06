@@ -18,6 +18,7 @@ export {default as css}       from './css'
 export {default as text}      from './text'
 
 export {default as Layer}     from './Layer'
+export {default as Screen}    from './Screen'
 export {default as Scroller}  from './Scroller'
 export {default as model}     from './model'
 

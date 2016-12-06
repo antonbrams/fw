@@ -1,31 +1,27 @@
 
 
 
-import {val, text, math, etc} from './fw'
+import {val, text, math, etc, arr} from './fw'
 
 var assets = {
     signs : ['', ',', '.', '?', '!'],
     words : 'accusam aliquyam amet at clita consetetur diam dolor dolore dolores duo ea eirmod elitr eos erat est et gubergren invidunt ipsum justo kasd labore lorem magna no nonumy rebum sad sanctus sea sed sit stet takimata tempor ut vero voluptua'.split(' '),
     image : {
-        mac : ['Abstract', 'Antelope Canyon', 'Bahamas Aerial', 'Beach', 'Blue Pond', 'Bristle Grass', 'Brushes', 'Circles', 'Death Valley', 'Desert', 'Ducks on a Misty Pond', 'Eagle & Waterfall', 'Earth and Moon', 'Earth Horizon', 'El Capitan 2', 'El Capitan', 'Elephant', 'Flamingos', 'Floating Ice', 'Floating Leaves', 'Foggy Forest', 'Forest in Mist', 'Foxtail Barley', 'Frog', 'Galaxy', 'Grass Blades', 'Hawaiian Print', 'Isles', 'Lake', 'Lion', 'Milky Way', 'Moon', 'Mountain Range', 'Mt. Fuji', 'Pink Forest', 'Pink Lotus Flower', 'Poppies', 'Red Bells', 'Rice Paddy', 'Rolling Waves', 'Shapes', 'Sierra 2', 'Sierra', 'Sky', 'Snow', 'Underwater', 'Wave', 'Yosemite 2', 'Yosemite 3', 'Yosemite 4', 'Yosemite 5', 'Yosemite', 'Zebras']
+        mac : ['Abstract', 'Antelope Canyon', 'Bahamas Aerial', 'Beach', 'Blue Pond', 'Bristle Grass', 'Brushes', 'Circles', 'Death Valley', 'Desert', 'Ducks on a Misty Pond', 'Eagle & Waterfall', 'Earth and Moon', 'Earth Horizon', 'El Capitan 2', 'El Capitan', 'Elephant', 'Flamingos', 'Floating Ice', 'Floating Leaves', 'Foggy Forest', 'Forest in Mist', 'Foxtail Barley', 'Frog', 'Galaxy', 'Grass Blades', 'Hawaiian Print', 'Isles', 'Lake', 'Lion', 'Milky Way', 'Moon', 'Mountain Range', 'Mt. Fuji', 'Pink Forest', 'Pink Lotus Flower', 'Poppies', 'Red Bells', 'Rice Paddy', 'Rolling Waves', 'Shapes', 'Sierra 2', 'Sierra', 'Sky', 'Snow', 'Underwater', 'Wave', 'Yosemite 2', 'Yosemite 3', 'Yosemite 4', 'Yosemite 5', 'Yosemite', 'Zebras'],
+        windows : [
+            '...'
+        ],
+        linux : [
+            '...'
+        ]
     }
 }
 
-class Expression {
-    constructor (options) {
-        if (val.isFn(options))
-            this.render = options
-        else if (val.isObj(options))
-            for (var key in options)
-                this[key] = options[key]
-    }
-}
-
-export default {
+var expressions = {
     
-    // int ({mode: 'all', from: 1})
-    // int ({mode: 'count', from: 1})
-    // int ({mode: 'random', min: 1, max: 10})
+    // {type: int, mode: cycle, from: 1}
+    // {type: int, mode: forward, from: 1}
+    // {type: int, mode: random, min: 1, max: 10}
     int (opt) {
         return {i: 0, method: 'int', mode: opt.mode, render () {
             return opt.mode == 'forward' || opt.mode == 'loop'?
@@ -36,8 +32,8 @@ export default {
         }}
     },
     
-    // str ({mode: 'text', count: 20})
-    // str ({mode: 'text', min: 20, max 100})
+    // {type: string, mode: text, count: 20}
+    // {type: string, mode: text, min: 20, max 100}
     string (opt) {
         return {render () {
             var count = 
@@ -57,45 +53,100 @@ export default {
         }}
     },
     
-    img (opt) {
+    // {type: image, source: local}
+    image (opt) {
         var source = {
             remote (i) {return `https://unsplash.it/500?image=${i}`},
             local  (i) {return `file:///Library/Desktop%20Pictures/${
                 escape(assets.image.mac[i % assets.image.mac.length])}.jpg`}
         }
         return {render () {
-            return source[opt.source](math.randInt(0, 1000))
+            return source[opt.source || 'local'](math.randInt(0, 1000))
         }}
     },
     
     // get(i => {return custom[i]})
-    merge (callback) {
+    iterate (callback) {
         return {type: 'expression', i: 0, render () {
             return callback(this.i ++)
         }}
     },
+}
+
+export default {
     
+    init (model) {
+        var destroy = item => {item.layer.destroy()}
+        var make    = item => {/* no initial value */}
+        var methods = {
+            on (topic, callback) {
+                if (topic == 'make') {
+                    make = item => {
+                        var layer  = callback(item)
+                        layer.data = item
+                        Object.defineProperty(item, 'layer', {
+                            value      : layer, 
+                            enumerable : false
+                        })
+                    }
+                    model.forEach(make)
+                } else if (topic == 'destroy')
+                    destroy = callback
+                return model
+            },
+            push () {
+                make(arguments[0])
+                Array.prototype.push.apply(this, arguments)
+            },
+            splice () {
+                var deleted = Array.prototype.splice.apply(this, arguments)
+                deleted.forEach(destroy)
+                return deleted
+            },
+            find (query) {
+                return arr.find(model, query)
+            },
+            delete (query) {
+                return arr.delete(model, query)
+            },
+            filterMap (query) {
+                return arr.filterMap(model, query)
+            },
+        }
+        for (var key in methods)
+            Object.defineProperty(model, key,
+                {enumerable: false, value: methods[key]})
+        return model
+    },
+    
+    // put({count: 10, model: ...})
     put (opt) {
-        var cycle = val.isArr(opt.count)
-        return {type: 'expression', render: () => {
-            var length = cycle? opt.count[0]: (opt.count || 1)
-            var items  = []
-            // modify values
-            for (var key in opt.item)
-                // reset integer with count type
-                if (opt.item[key].type == 'expression' && opt.item[key].expressions)
-                    opt.item[key].expressions.forEach(expression => {
-                        if (expression.method == 'int' && expression.mode == 'loop')
-                            expression.i = 0
-                    })
-            // render content
-            for (var i = 0; i < length; i ++)
-                items.push(this.render(opt.item))
-            // cycle repeats
-            if (cycle) opt.count.push(opt.count.shift())
-            console.log(opt.count)
-            return items
-        }}
+        // modify values
+        for (var key in opt.model) {
+            var value = opt.model[key]
+            // reset integer with count type
+            if (value.type == 'expression' && value.expressions)
+                value.expressions.forEach(expression => {
+                    // reset int expression if loop
+                    if (expression.method == 'int' && expression.mode == 'loop')
+                        expression.i = 0
+                })
+        }
+        // render content
+        var model = []
+        for (var i = 0; i < (opt.count || 1); i ++) {
+            // copy raw model
+            var property = this.render(opt.model)
+            // make shuffle on model
+            if ('shuffle' in opt) {
+                var index = math.randInt(0, opt.shuffle.length)
+                Object.assign(property, this.render(opt.shuffle[index]))
+            }
+            // add rendered version of model to the output list
+            model.push(property)
+        }
+        // make watchable
+        return this.init(model)
     },
     
     render (model) {
@@ -125,7 +176,7 @@ export default {
                 query[p[0]] = parseInt(p[1]) || p[1]
             })
             // find method of this and push generated expression
-            out.expressions.push(this[query.type](query))
+            out.expressions.push(expressions[query.type](query))
             // save index of array {1}
             return `{${out.expressions.length - 1}}`
         })
@@ -140,36 +191,6 @@ export default {
         }
         return out
     },
-    
-    // Model : class {
-    //     
-    //     constructor (model) {
-    //         this.model = model
-    //         this.factory  = null
-    //     }
-    //     
-    //     init (callback) {
-    //         this.factory = callback
-    //         this.model.forEach((item, i, array) => {
-    //             item.layer = callback(item, i, array)
-    //         })
-    //     }
-    //     
-    //     add (item) {
-    //         this.model.push(item)
-    //         item.layer = this.factory(item, this.model.length-1, this.model)
-    //     }
-    //     
-    //     remove (index) {
-    //         var object = null
-    //         for (var i = 0; i < this.model.length; i ++)
-    //             if (i == index) {
-    //                 object = this.model.splice(i, 1)
-    //                 break
-    //             }
-    //         return object
-    //     }
-    // }
     
 }
 

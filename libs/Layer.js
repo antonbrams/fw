@@ -1,21 +1,23 @@
 
 
 
-import {dom, css, val, geo, vec, animation, event} from './fw'
+import {dom, css, val, geo, vec, animation, event, text} from './fw'
 
 export default class Layer {
     
     constructor (options) {
-        // props
-        this.props = {
-            origin    : new vec(0,0,0),
-            translate : new vec(0,0,0),
-            scale     : new vec(1,1,1),
-            rotate    : new vec(0,0,0)
-        }
-        // listeners
-        this._events = {}
         this._dom    = null
+        this._events = {}
+        this.data    = null
+        this.props   = {
+            transformation : {
+                origin    : new vec(0,0,0),
+                translate : new vec(0,0,0),
+                scale     : new vec(1,1,1),
+                rotate    : new vec(0,0,0)
+            },
+            pop : {}
+        }
         // if options incoming
         if (val.isDom(options))
             this.dom = options
@@ -25,8 +27,8 @@ export default class Layer {
                 this.dom = options.dom
                 delete options.dom
             // if no dom, create just div with .layer
-            } else 
-                this.dom = dom.create('.layer')
+            } else
+                this.dom = dom.create('.default')
             // if no parent parameter
             if (!val.exists(options.parent))
                 document.body.appendChild(this.dom)
@@ -37,6 +39,7 @@ export default class Layer {
     
     // event handlers
     on (topic, fn, options) {
+        
         // check for standard dom events
         if (topic in event.types) {
             var type = event.types[topic]
@@ -46,7 +49,9 @@ export default class Layer {
                 off : () => this.dom.removeEventListener(type, fn, options)
             }
         // listen for dom changes
-        } else { 
+        } else if (`gesture${text.capitalize(topic)}` in event) {
+            return event(this, fn)
+        } else {
             if (!this._events[topic]) this._events[topic] = []
             this._events[topic].push(fn)
             return {
@@ -73,12 +78,12 @@ export default class Layer {
                     this[key] = value
             // set standard css parameters
             else
-                this.setStyle(key, value)
+                this._setStyle(key, value)
         }
         return this
     }
     
-    setStyle (options, value) {
+    _setStyle (options, value) {
         var set = (key, value) => {
             this._emit(key, value)
             this.dom.style[key] = value
@@ -90,7 +95,7 @@ export default class Layer {
                 set(key, options[key])
     }
     
-    getStyle (key) {
+    _getStyle (key) {
         return css.computed(this.dom, key)
     }
     
@@ -123,10 +128,14 @@ export default class Layer {
             var layerA = new fw.Layer({
                 margin : 10
             }).bind(item, {
-                content : {
-                    key : 'title', 
-                    set (layer, value) {
+                image : {
+                    key  : 'title', 
+                    read : 'backgroundImage',
+                    set (value, layer) {
                         layer.set({content: 'test ' + value})
+                    },
+                    get (value, layer) {
+                        return value
                     }
                 }
             })
@@ -136,10 +145,10 @@ export default class Layer {
     bind (model, params) {
         for (var key in params) {
             var options   = params[key]
-            var modelKey  = val.isObj(options)? options.key: options 
+            var modelKey  = options.key || options
             var initValue = model[modelKey]
             var curValue  = null
-            this.on(key, value => curValue = value)
+            this.on(options.read || key, value => curValue = value)
             var set = value => {
                 if (options.set)
                     options.set(value, this)
@@ -150,7 +159,10 @@ export default class Layer {
                 }
             }
             var get = () => {
-                return options.get? options.get(this): curValue
+                if (options.get)
+                    return options.get(curValue, this)
+                else 
+                    return curValue
             }
             Object.defineProperty(model, modelKey, {set, get})
             model[modelKey] = initValue
@@ -161,14 +173,6 @@ export default class Layer {
     destroy () {
         this.dom.parentNode.removeChild(this.dom)
         delete this
-    }
-    
-    gesture (type, options) {
-        var dictionary = {
-            drag  : 'gestureDrag',
-            pinch : 'gesturePinch'
-        }
-        return event[dictionary[type]](this, options)
     }
     
     pop () {
@@ -200,15 +204,15 @@ export default class Layer {
             scale     : new vec(1, 1, 1),
             origin    : {x: 'center', y: 'center'}
         })
-        delete this.props.pop
+        this.props.pop = null
         return this
     }
     
     animate (options, next, end) {
         this._emit('animate', options)
         animation.flow(this,
-            options.time  || 1,
-            options.ease  || 'linear',
+            options.time  || .5,
+            options.ease  || 'ease-in-out',
             options.delay || 0,
             next, end
         )
@@ -243,7 +247,7 @@ export default class Layer {
     
     set parent (value) {
         this._emit('parent', value);
-        (value instanceof Layer? value.dom: value).appendChild(this.dom)
+        (value.dom || value).appendChild(this.dom)
     }
     
     get parent () {
@@ -308,8 +312,8 @@ export default class Layer {
     
     // css
     set move (value) {
-        if ('x' in value) this.setStyle('left', value.x)
-        if ('y' in value) this.setStyle('top', value.y)
+        if ('x' in value) this._setStyle('left', value.x)
+        if ('y' in value) this._setStyle('top', value.y)
     }
     
     get move () {
@@ -317,8 +321,8 @@ export default class Layer {
     }
     
     set size (value) {
-        if ('x' in value) this.setStyle('width', value.x)
-        if ('y' in value) this.setStyle('height', value.y)
+        if ('x' in value) this._setStyle('width', value.x)
+        if ('y' in value) this._setStyle('height', value.y)
     }
     
     get size () {
@@ -332,7 +336,7 @@ export default class Layer {
     set padding (value) {
         if (val.isObj(value)) {
             if ('x' in value && 'y' in value) {
-                this.setStyle('padding', `${value.y} ${value.x}`)
+                this._setStyle('padding', `${value.y} ${value.x}`)
             } else {
                 var params = {}
                 if ('x' in value) params.padding       = `0 ${value.x}`
@@ -341,10 +345,10 @@ export default class Layer {
                 if ('t' in value) params.paddingTop    = value.t
                 if ('r' in value) params.paddingRight  = value.r
                 if ('b' in value) params.paddingBottom = value.b
-                this.setStyle(params)
+                this._setStyle(params)
             }
         } else
-            this.setStyle('padding', value)
+            this._setStyle('padding', value)
     }
     
     get padding () {
@@ -359,7 +363,7 @@ export default class Layer {
     set margin (value) {
         if (val.isObj(value)) {
             if ('x' in value && 'y' in value) {
-                this.setStyle('margin', `${value.y} ${value.x}`)
+                this._setStyle('margin', `${value.y} ${value.x}`)
             } else {
                 var params = {}
                 if ('x' in value) params.margin       = `0 ${value.x}`
@@ -368,10 +372,10 @@ export default class Layer {
                 if ('t' in value) params.marginTop    = value.t
                 if ('r' in value) params.marginRight  = value.r
                 if ('b' in value) params.marginBottom = value.b
-                this.setStyle(params)
+                this._setStyle(params)
             }
         } else
-            this.setStyle('margin', value)
+            this._setStyle('margin', value)
     }
     
     get margin () {
@@ -385,7 +389,7 @@ export default class Layer {
     
     bg (value) {
         if (val.isStr(value))
-            this.setStyle('background', value)
+            this._setStyle('background', value)
         else if (val.isObj(value))
             var params = {}
             if ('image' in value) 
@@ -408,12 +412,12 @@ export default class Layer {
                     value.repeat == 'yes'? 'repeat': value.repeat
             if ('color' in value)
                 params.backgroundColor = value.color
-            this.setStyle(params)
+            this._setStyle(params)
     }
     
     text (value) {
         if (val.isStr(value))
-            this.setStyle('font', value)
+            this._setStyle('font', value)
         else if (val.isObj(value)) {
             var props = {
                 style      : 'fontStyle', 
@@ -428,13 +432,13 @@ export default class Layer {
                 shadow     : 'textShadow'
             }
             for (var key in props) 
-                if (key in value) this.setStyle(props[key], value[key])
+                if (key in value) this._setStyle(props[key], value[key])
         }
     }
     
     border (value) {
         if (val.isStr(value))
-            this.setStyle('border', value)
+            this._setStyle('border', value)
         else if (val.isObj(value)) {
             var set = (value, side) => {
                 var props = {
@@ -445,7 +449,7 @@ export default class Layer {
                 }
                 for (var key in props)
                     if (key in value)
-                        this.setStyle(`border${side}${props[key]}`, value[key])
+                        this._setStyle(`border${side}${props[key]}`, value[key])
             }
             set(value, '')
             var props = {
@@ -468,57 +472,61 @@ export default class Layer {
     set origin (value) {
         this._emit('origin', value);
         ['x', 'y', 'z'].forEach(axis => {
-            if (axis in value) this.props.origin[axis] = value[axis]
+            if (axis in value) 
+                this.props.transformation.origin[axis] = value[axis]
         })
-        css.applyTransformation(this.dom, this.props, 'origin')
+        css.applyTransformation(this.dom, this.props.transformation, 'origin')
     }
     
     get origin () {
-        return this.props.origin
+        return this.props.transformation.origin
     }
     
     set translate (value) {
         this._emit('translate', value);
         ['x', 'y', 'z'].forEach(axis => {
-            if (axis in value) this.props.translate[axis] = value[axis]
+            if (axis in value) 
+                this.props.transformation.translate[axis] = value[axis]
         })
-        css.applyTransformation(this.dom, this.props)
+        css.applyTransformation(this.dom, this.props.transformation)
     }
     
     get translate () {
-        return this.props.translate
+        return this.props.transformation.translate
     }
     
     set scale (value) {
         this._emit('scale', value);
         if (val.isNum(value)) {
-            this.props.scale.x =
-            this.props.scale.y =
-            this.props.scale.z = value
+            this.props.transformation.scale.x =
+            this.props.transformation.scale.y =
+            this.props.transformation.scale.z = value
         } else
             ['x', 'y', 'z'].forEach(axis => {
-                if (axis in value) this.props.scale[axis] = value[axis]
+                if (axis in value) 
+                    this.props.transformation.scale[axis] = value[axis]
             })
-        css.applyTransformation(this.dom, this.props)
+        css.applyTransformation(this.dom, this.props.transformation)
     }
     
     get scale () {
-        return this.props.scale
+        return this.props.transformation.scale
     }
     
     set rotate (value) {
         this._emit('rotate', value)
         if (val.isNum(value))
-            this.props.rotate.z = value
+            this.props.transformation.rotate.z = value
         else
             ['x', 'y', 'z'].forEach(axis => {
-                if (axis in value) this.props.rotate[axis] = value[axis]
+                if (axis in value) 
+                    this.props.transformation.rotate[axis] = value[axis]
             })
-        css.applyTransformation(this.dom, this.props)
+        css.applyTransformation(this.dom, this.transformation.props)
     }
     
     get rotate () {
-        return this.props.rotate
+        return this.props.transformation.rotate
     }
     
     // center

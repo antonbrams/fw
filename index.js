@@ -84,7 +84,7 @@ return /******/ (function(modules) { // webpackBootstrap
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.model = exports.Scroller = exports.Layer = exports.text = exports.css = exports.etc = exports.event = exports.dom = exports.color = exports.math = exports.vec = exports.arr = exports.geo = exports.val = exports.animation = exports.debug = undefined;
+exports.model = exports.Scroller = exports.Screen = exports.Layer = exports.text = exports.css = exports.etc = exports.event = exports.dom = exports.color = exports.math = exports.vec = exports.arr = exports.geo = exports.val = exports.animation = exports.debug = undefined;
 
 var _animation = __webpack_require__(3);
 
@@ -203,6 +203,15 @@ Object.defineProperty(exports, 'Layer', {
   }
 });
 
+var _Screen = __webpack_require__(20);
+
+Object.defineProperty(exports, 'Screen', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_Screen).default;
+  }
+});
+
 var _Scroller = __webpack_require__(2);
 
 Object.defineProperty(exports, 'Scroller', {
@@ -248,16 +257,18 @@ var Layer = function () {
     function Layer(options) {
         _classCallCheck(this, Layer);
 
-        // props
-        this.props = {
-            origin: new _fw.vec(0, 0, 0),
-            translate: new _fw.vec(0, 0, 0),
-            scale: new _fw.vec(1, 1, 1),
-            rotate: new _fw.vec(0, 0, 0)
-        };
-        // listeners
-        this._events = {};
         this._dom = null;
+        this._events = {};
+        this.data = null;
+        this.props = {
+            transformation: {
+                origin: new _fw.vec(0, 0, 0),
+                translate: new _fw.vec(0, 0, 0),
+                scale: new _fw.vec(1, 1, 1),
+                rotate: new _fw.vec(0, 0, 0)
+            },
+            pop: {}
+        };
         // if options incoming
         if (_fw.val.isDom(options)) this.dom = options;else if (_fw.val.isObj(options)) {
             // create dom element
@@ -265,7 +276,7 @@ var Layer = function () {
                 this.dom = options.dom;
                 delete options.dom;
                 // if no dom, create just div with .layer
-            } else this.dom = _fw.dom.create('.layer');
+            } else this.dom = _fw.dom.create('.default');
             // if no parent parameter
             if (!_fw.val.exists(options.parent)) document.body.appendChild(this.dom);
             // set other values
@@ -294,6 +305,8 @@ var Layer = function () {
                     }
                 };
                 // listen for dom changes
+            } else if ('gesture' + _fw.text.capitalize(topic) in _fw.event) {
+                return (0, _fw.event)(this, fn);
             } else {
                 if (!this._events[topic]) this._events[topic] = [];
                 this._events[topic].push(fn);
@@ -327,13 +340,13 @@ var Layer = function () {
                     if (_fw.val.isFn(this[key])) this[key](value);else this[key] = value;
                     // set standard css parameters
 
-                } else this.setStyle(key, value);
+                } else this._setStyle(key, value);
             }
             return this;
         }
     }, {
-        key: 'setStyle',
-        value: function setStyle(options, value) {
+        key: '_setStyle',
+        value: function _setStyle(options, value) {
             var _this2 = this;
 
             var set = function set(key, value) {
@@ -345,8 +358,8 @@ var Layer = function () {
             }
         }
     }, {
-        key: 'getStyle',
-        value: function getStyle(key) {
+        key: '_getStyle',
+        value: function _getStyle(key) {
             return _fw.css.computed(this.dom, key);
         }
     }, {
@@ -358,10 +371,14 @@ var Layer = function () {
                 var layerA = new fw.Layer({
                     margin : 10
                 }).bind(item, {
-                    content : {
-                        key : 'title', 
-                        set (layer, value) {
+                    image : {
+                        key  : 'title', 
+                        read : 'backgroundImage',
+                        set (value, layer) {
                             layer.set({content: 'test ' + value})
+                        },
+                        get (value, layer) {
+                            return value
                         }
                     }
                 })
@@ -373,10 +390,10 @@ var Layer = function () {
 
             for (var key in params) {
                 var options = params[key];
-                var modelKey = _fw.val.isObj(options) ? options.key : options;
+                var modelKey = options.key || options;
                 var initValue = model[modelKey];
                 var curValue = null;
-                this.on(key, function (value) {
+                this.on(options.read || key, function (value) {
                     return curValue = value;
                 });
                 var set = function set(value) {
@@ -387,7 +404,7 @@ var Layer = function () {
                     }
                 };
                 var get = function get() {
-                    return options.get ? options.get(_this3) : curValue;
+                    if (options.get) return options.get(curValue, _this3);else return curValue;
                 };
                 Object.defineProperty(model, modelKey, { set: set, get: get });
                 model[modelKey] = initValue;
@@ -399,15 +416,6 @@ var Layer = function () {
         value: function destroy() {
             this.dom.parentNode.removeChild(this.dom);
             delete this;
-        }
-    }, {
-        key: 'gesture',
-        value: function gesture(type, options) {
-            var dictionary = {
-                drag: 'gestureDrag',
-                pinch: 'gesturePinch'
-            };
-            return _fw.event[dictionary[type]](this, options);
         }
     }, {
         key: 'pop',
@@ -441,14 +449,14 @@ var Layer = function () {
                 scale: new _fw.vec(1, 1, 1),
                 origin: { x: 'center', y: 'center' }
             });
-            delete this.props.pop;
+            this.props.pop = null;
             return this;
         }
     }, {
         key: 'animate',
         value: function animate(options, next, end) {
             this._emit('animate', options);
-            _fw.animation.flow(this, options.time || 1, options.ease || 'linear', options.delay || 0, next, end);
+            _fw.animation.flow(this, options.time || .5, options.ease || 'ease-in-out', options.delay || 0, next, end);
             return this;
         }
     }, {
@@ -549,19 +557,19 @@ var Layer = function () {
     }, {
         key: 'bg',
         value: function bg(value) {
-            if (_fw.val.isStr(value)) this.setStyle('background', value);else if (_fw.val.isObj(value)) var params = {};
+            if (_fw.val.isStr(value)) this._setStyle('background', value);else if (_fw.val.isObj(value)) var params = {};
             if ('image' in value) params.backgroundImage = 'url(' + value.image + ')';
             if ('origin' in value) params.backgroundOrigin = _fw.val.isObj(value.origin) ? value.origin.x + ' ' + value.origin.y : value.origin;
             if ('position' in value) params.backgroundPosition = _fw.val.isObj(value.position) ? value.position.x + ' ' + value.position.y : value.position;
             if ('size' in value) params.backgroundSize = _fw.val.isObj(value.size) ? value.size.x + ' ' + value.size.y : value.size;
             if ('repeat' in value) params.backgroundRepeat = value.repeat == 'x' ? 'repeat-x' : value.repeat == 'y' ? 'repeat-y' : value.repeat == 'no' ? 'no-repeat' : value.repeat == 'yes' ? 'repeat' : value.repeat;
             if ('color' in value) params.backgroundColor = value.color;
-            this.setStyle(params);
+            this._setStyle(params);
         }
     }, {
         key: 'text',
         value: function text(value) {
-            if (_fw.val.isStr(value)) this.setStyle('font', value);else if (_fw.val.isObj(value)) {
+            if (_fw.val.isStr(value)) this._setStyle('font', value);else if (_fw.val.isObj(value)) {
                 var props = {
                     style: 'fontStyle',
                     variant: 'fontVariant',
@@ -575,7 +583,7 @@ var Layer = function () {
                     shadow: 'textShadow'
                 };
                 for (var key in props) {
-                    if (key in value) this.setStyle(props[key], value[key]);
+                    if (key in value) this._setStyle(props[key], value[key]);
                 }
             }
         }
@@ -584,7 +592,7 @@ var Layer = function () {
         value: function border(value) {
             var _this7 = this;
 
-            if (_fw.val.isStr(value)) this.setStyle('border', value);else if (_fw.val.isObj(value)) {
+            if (_fw.val.isStr(value)) this._setStyle('border', value);else if (_fw.val.isObj(value)) {
                 var set = function set(value, side) {
                     var props = {
                         color: 'Color',
@@ -593,7 +601,7 @@ var Layer = function () {
                         style: 'Style'
                     };
                     for (var key in props) {
-                        if (key in value) _this7.setStyle('border' + side + props[key], value[key]);
+                        if (key in value) _this7._setStyle('border' + side + props[key], value[key]);
                     }
                 };
                 set(value, '');
@@ -640,7 +648,7 @@ var Layer = function () {
         key: 'parent',
         set: function set(value) {
             this._emit('parent', value);
-            (value instanceof Layer ? value.dom : value).appendChild(this.dom);
+            (value.dom || value).appendChild(this.dom);
         },
         get: function get() {
             if (this.dom.parentNode) if (this.dom.parentNode.layer instanceof Layer) return this.dom.parentNode;else return new Layer(this.dom.parentNode);
@@ -657,8 +665,8 @@ var Layer = function () {
     }, {
         key: 'move',
         set: function set(value) {
-            if ('x' in value) this.setStyle('left', value.x);
-            if ('y' in value) this.setStyle('top', value.y);
+            if ('x' in value) this._setStyle('left', value.x);
+            if ('y' in value) this._setStyle('top', value.y);
         },
         get: function get() {
             return new _fw.vec(this.dom.offsetLeft, this.dom.offsetTop);
@@ -666,8 +674,8 @@ var Layer = function () {
     }, {
         key: 'size',
         set: function set(value) {
-            if ('x' in value) this.setStyle('width', value.x);
-            if ('y' in value) this.setStyle('height', value.y);
+            if ('x' in value) this._setStyle('width', value.x);
+            if ('y' in value) this._setStyle('height', value.y);
         },
         get: function get() {
             return new _fw.vec(this.dom.offsetWidth, this.dom.offsetHeight);
@@ -677,7 +685,7 @@ var Layer = function () {
         set: function set(value) {
             if (_fw.val.isObj(value)) {
                 if ('x' in value && 'y' in value) {
-                    this.setStyle('padding', value.y + ' ' + value.x);
+                    this._setStyle('padding', value.y + ' ' + value.x);
                 } else {
                     var params = {};
                     if ('x' in value) params.padding = '0 ' + value.x;
@@ -686,9 +694,9 @@ var Layer = function () {
                     if ('t' in value) params.paddingTop = value.t;
                     if ('r' in value) params.paddingRight = value.r;
                     if ('b' in value) params.paddingBottom = value.b;
-                    this.setStyle(params);
+                    this._setStyle(params);
                 }
-            } else this.setStyle('padding', value);
+            } else this._setStyle('padding', value);
         },
         get: function get() {
             return {
@@ -703,7 +711,7 @@ var Layer = function () {
         set: function set(value) {
             if (_fw.val.isObj(value)) {
                 if ('x' in value && 'y' in value) {
-                    this.setStyle('margin', value.y + ' ' + value.x);
+                    this._setStyle('margin', value.y + ' ' + value.x);
                 } else {
                     var params = {};
                     if ('x' in value) params.margin = '0 ' + value.x;
@@ -712,9 +720,9 @@ var Layer = function () {
                     if ('t' in value) params.marginTop = value.t;
                     if ('r' in value) params.marginRight = value.r;
                     if ('b' in value) params.marginBottom = value.b;
-                    this.setStyle(params);
+                    this._setStyle(params);
                 }
-            } else this.setStyle('margin', value);
+            } else this._setStyle('margin', value);
         },
         get: function get() {
             return {
@@ -731,12 +739,12 @@ var Layer = function () {
 
             this._emit('origin', value);
             ['x', 'y', 'z'].forEach(function (axis) {
-                if (axis in value) _this8.props.origin[axis] = value[axis];
+                if (axis in value) _this8.props.transformation.origin[axis] = value[axis];
             });
-            _fw.css.applyTransformation(this.dom, this.props, 'origin');
+            _fw.css.applyTransformation(this.dom, this.props.transformation, 'origin');
         },
         get: function get() {
-            return this.props.origin;
+            return this.props.transformation.origin;
         }
     }, {
         key: 'translate',
@@ -745,12 +753,12 @@ var Layer = function () {
 
             this._emit('translate', value);
             ['x', 'y', 'z'].forEach(function (axis) {
-                if (axis in value) _this9.props.translate[axis] = value[axis];
+                if (axis in value) _this9.props.transformation.translate[axis] = value[axis];
             });
-            _fw.css.applyTransformation(this.dom, this.props);
+            _fw.css.applyTransformation(this.dom, this.props.transformation);
         },
         get: function get() {
-            return this.props.translate;
+            return this.props.transformation.translate;
         }
     }, {
         key: 'scale',
@@ -759,14 +767,14 @@ var Layer = function () {
 
             this._emit('scale', value);
             if (_fw.val.isNum(value)) {
-                this.props.scale.x = this.props.scale.y = this.props.scale.z = value;
+                this.props.transformation.scale.x = this.props.transformation.scale.y = this.props.transformation.scale.z = value;
             } else ['x', 'y', 'z'].forEach(function (axis) {
-                if (axis in value) _this10.props.scale[axis] = value[axis];
+                if (axis in value) _this10.props.transformation.scale[axis] = value[axis];
             });
-            _fw.css.applyTransformation(this.dom, this.props);
+            _fw.css.applyTransformation(this.dom, this.props.transformation);
         },
         get: function get() {
-            return this.props.scale;
+            return this.props.transformation.scale;
         }
     }, {
         key: 'rotate',
@@ -774,13 +782,13 @@ var Layer = function () {
             var _this11 = this;
 
             this._emit('rotate', value);
-            if (_fw.val.isNum(value)) this.props.rotate.z = value;else ['x', 'y', 'z'].forEach(function (axis) {
-                if (axis in value) _this11.props.rotate[axis] = value[axis];
+            if (_fw.val.isNum(value)) this.props.transformation.rotate.z = value;else ['x', 'y', 'z'].forEach(function (axis) {
+                if (axis in value) _this11.props.transformation.rotate[axis] = value[axis];
             });
-            _fw.css.applyTransformation(this.dom, this.props);
+            _fw.css.applyTransformation(this.dom, this.transformation.props);
         },
         get: function get() {
-            return this.props.rotate;
+            return this.props.transformation.rotate;
         }
 
         // center
@@ -836,7 +844,7 @@ var Scroller = function (_Layer) {
         _classCallCheck(this, Scroller);
 
         // this.dom[this.dom.tagName === 'A'? 'href': 'src'] = value
-        options.dom = 'div .scroller .layer';
+        options.dom = 'div .scroller';
         return _possibleConstructorReturn(this, (Scroller.__proto__ || Object.getPrototypeOf(Scroller)).call(this, options));
     }
 
@@ -992,8 +1000,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 exports.default = {
 
-    // splitQuery('parent.child.element')
-    splitQuery: function splitQuery(query) {
+    // _splitQuery('parent.child.element')
+    _splitQuery: function _splitQuery(query) {
         var levels = query.split('.');
         return {
             level: levels,
@@ -1002,16 +1010,12 @@ exports.default = {
     },
 
 
-    // level({id: [10, 15]}, splitQuery('id.0'), 20); -> {id: [20, 15]}
-    level: function level(object, query, value) {
+    // level({id: [10, 15]}, _splitQuery('id.0'), 20); -> {id: [20, 15]}
+    _level: function _level(object, query, value) {
         var path = object;
         for (var n = 0; n < query.last; n++) {
             path = path[query.level[n]];
-        }if (value) {
-            path[query.level[query.last]] = value;
-        } else {
-            return path[query.level[query.last]];
-        }
+        }if (value) path[query.level[query.last]] = value;else return path[query.level[query.last]];
     },
 
 
@@ -1019,10 +1023,10 @@ exports.default = {
     map: function map(array, query) {
         var _this = this;
 
-        var levels = this.splitQuery(query);
+        var levels = this._splitQuery(query);
         return array.map(function (list) {
-            return _this.level(list, levels);
-        }.bind(this));
+            return _this._level(list, levels);
+        });
     },
 
 
@@ -1041,7 +1045,7 @@ exports.default = {
 
 
     // var deleted = del(workspaces, {'title.color': color});
-    del: function del(array, query) {
+    delete: function _delete(array, query) {
         var deleted = this.find(array, query);
         deleted.forEach(function (found) {
             return array.splice(array.indexOf(found), 1);
@@ -1056,13 +1060,11 @@ exports.default = {
 
         for (var i in query) {
             if (array.length == query[i].length) {
-                var levels = this.splitQuery(i);
+                var levels = this._splitQuery(i);
                 array.forEach(function (object, index) {
-                    return _this2.level(object, levels, query[i][index]);
-                }.bind(this));
-            } else {
-                console.log('different lenghtes');
-            }
+                    return _this2._level(object, levels, query[i][index]);
+                });
+            } else console.log('different lenghtes');
         }
     },
 
@@ -1212,17 +1214,17 @@ var _fw = __webpack_require__(0);
 exports.default = {
 
    // create ('div#id .class .class')
-   create: function create(query) {
-      var params = query.split(' ');
-      if (params[0].match(/./)) params.unshift('div');
-      var typeid = params[0].split('#');
-      // create from tag
-      var element = document.createElement(typeid[0]);
-      // set id
-      if (typeid[1]) element.id = typeid[1];
-      // set css class
-      params.slice(1).forEach(function (style) {
-         element.classList.add(style.slice(1));
+   create: function create() {
+      var query = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
+
+      var classes = query.replace(/ /g, '').split('.');
+      var tagAndId = [];
+      if (classes[0].length == 0) tagAndId = classes[0].split('#');
+      classes.shift();
+      var element = document.createElement(tagAndId[0] || 'div');
+      if (tagAndId.length > 1) element.id = tagAndId[1];
+      classes.forEach(function (style) {
+         return element.classList.add(style);
       });
       return element;
    },
@@ -1800,29 +1802,21 @@ Object.defineProperty(exports, "__esModule", {
 
 var _fw = __webpack_require__(0);
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 var assets = {
     signs: ['', ',', '.', '?', '!'],
     words: 'accusam aliquyam amet at clita consetetur diam dolor dolore dolores duo ea eirmod elitr eos erat est et gubergren invidunt ipsum justo kasd labore lorem magna no nonumy rebum sad sanctus sea sed sit stet takimata tempor ut vero voluptua'.split(' '),
     image: {
-        mac: ['Abstract', 'Antelope Canyon', 'Bahamas Aerial', 'Beach', 'Blue Pond', 'Bristle Grass', 'Brushes', 'Circles', 'Death Valley', 'Desert', 'Ducks on a Misty Pond', 'Eagle & Waterfall', 'Earth and Moon', 'Earth Horizon', 'El Capitan 2', 'El Capitan', 'Elephant', 'Flamingos', 'Floating Ice', 'Floating Leaves', 'Foggy Forest', 'Forest in Mist', 'Foxtail Barley', 'Frog', 'Galaxy', 'Grass Blades', 'Hawaiian Print', 'Isles', 'Lake', 'Lion', 'Milky Way', 'Moon', 'Mountain Range', 'Mt. Fuji', 'Pink Forest', 'Pink Lotus Flower', 'Poppies', 'Red Bells', 'Rice Paddy', 'Rolling Waves', 'Shapes', 'Sierra 2', 'Sierra', 'Sky', 'Snow', 'Underwater', 'Wave', 'Yosemite 2', 'Yosemite 3', 'Yosemite 4', 'Yosemite 5', 'Yosemite', 'Zebras']
+        mac: ['Abstract', 'Antelope Canyon', 'Bahamas Aerial', 'Beach', 'Blue Pond', 'Bristle Grass', 'Brushes', 'Circles', 'Death Valley', 'Desert', 'Ducks on a Misty Pond', 'Eagle & Waterfall', 'Earth and Moon', 'Earth Horizon', 'El Capitan 2', 'El Capitan', 'Elephant', 'Flamingos', 'Floating Ice', 'Floating Leaves', 'Foggy Forest', 'Forest in Mist', 'Foxtail Barley', 'Frog', 'Galaxy', 'Grass Blades', 'Hawaiian Print', 'Isles', 'Lake', 'Lion', 'Milky Way', 'Moon', 'Mountain Range', 'Mt. Fuji', 'Pink Forest', 'Pink Lotus Flower', 'Poppies', 'Red Bells', 'Rice Paddy', 'Rolling Waves', 'Shapes', 'Sierra 2', 'Sierra', 'Sky', 'Snow', 'Underwater', 'Wave', 'Yosemite 2', 'Yosemite 3', 'Yosemite 4', 'Yosemite 5', 'Yosemite', 'Zebras'],
+        windows: ['...'],
+        linux: ['...']
     }
 };
 
-var Expression = function Expression(options) {
-    _classCallCheck(this, Expression);
+var expressions = {
 
-    if (_fw.val.isFn(options)) this.render = options;else if (_fw.val.isObj(options)) for (var key in options) {
-        this[key] = options[key];
-    }
-};
-
-exports.default = {
-
-    // int ({mode: 'all', from: 1})
-    // int ({mode: 'count', from: 1})
-    // int ({mode: 'random', min: 1, max: 10})
+    // {type: int, mode: cycle, from: 1}
+    // {type: int, mode: forward, from: 1}
+    // {type: int, mode: random, min: 1, max: 10}
     int: function int(opt) {
         return { i: 0, method: 'int', mode: opt.mode, render: function render() {
                 return opt.mode == 'forward' || opt.mode == 'loop' ? opt.from + this.i++ : opt.mode == 'random' ? Math.floor(_fw.math.to(Math.random(), opt.min, opt.max)) : this.i;
@@ -1831,8 +1825,8 @@ exports.default = {
     },
 
 
-    // str ({mode: 'text', count: 20})
-    // str ({mode: 'text', min: 20, max 100})
+    // {type: string, mode: text, count: 20}
+    // {type: string, mode: text, min: 20, max 100}
     string: function string(opt) {
         return {
             render: function render() {
@@ -1851,7 +1845,10 @@ exports.default = {
             }
         };
     },
-    img: function img(opt) {
+
+
+    // {type: image, source: local}
+    image: function image(opt) {
         var source = {
             remote: function remote(i) {
                 return 'https://unsplash.it/500?image=' + i;
@@ -1862,40 +1859,93 @@ exports.default = {
         };
         return {
             render: function render() {
-                return source[opt.source](_fw.math.randInt(0, 1000));
+                return source[opt.source || 'local'](_fw.math.randInt(0, 1000));
             }
         };
     },
 
 
     // get(i => {return custom[i]})
-    merge: function merge(callback) {
+    iterate: function iterate(callback) {
         return { type: 'expression', i: 0, render: function render() {
                 return callback(this.i++);
             }
         };
-    },
-    put: function put(opt) {
-        var _this = this;
+    }
+};
 
-        var cycle = _fw.val.isArr(opt.count);
-        return { type: 'expression', render: function render() {
-                var length = cycle ? opt.count[0] : opt.count || 1;
-                var items = [];
-                // modify values
-                for (var key in opt.item) {
-                    // reset integer with count type
-                    if (opt.item[key].type == 'expression' && opt.item[key].expressions) opt.item[key].expressions.forEach(function (expression) {
-                        if (expression.method == 'int' && expression.mode == 'loop') expression.i = 0;
-                    });
-                } // render content
-                for (var i = 0; i < length; i++) {
-                    items.push(_this.render(opt.item));
-                } // cycle repeats
-                if (cycle) opt.count.push(opt.count.shift());
-                console.log(opt.count);
-                return items;
-            } };
+exports.default = {
+    init: function init(model) {
+        var destroy = function destroy(item) {
+            item.layer.destroy();
+        };
+        var make = function make(item) {/* no initial value */};
+        var methods = {
+            on: function on(topic, callback) {
+                if (topic == 'make') {
+                    make = function make(item) {
+                        var layer = callback(item);
+                        layer.data = item;
+                        Object.defineProperty(item, 'layer', {
+                            value: layer,
+                            enumerable: false
+                        });
+                    };
+                    model.forEach(make);
+                } else if (topic == 'destroy') destroy = callback;
+                return model;
+            },
+            push: function push() {
+                make(arguments[0]);
+                Array.prototype.push.apply(this, arguments);
+            },
+            splice: function splice() {
+                var deleted = Array.prototype.splice.apply(this, arguments);
+                deleted.forEach(destroy);
+                return deleted;
+            },
+            find: function find(query) {
+                return _fw.arr.find(model, query);
+            },
+            delete: function _delete(query) {
+                return _fw.arr.delete(model, query);
+            },
+            filterMap: function filterMap(query) {
+                return _fw.arr.filterMap(model, query);
+            }
+        };
+        for (var key in methods) {
+            Object.defineProperty(model, key, { enumerable: false, value: methods[key] });
+        }return model;
+    },
+
+
+    // put({count: 10, model: ...})
+    put: function put(opt) {
+        // modify values
+        for (var key in opt.model) {
+            var value = opt.model[key];
+            // reset integer with count type
+            if (value.type == 'expression' && value.expressions) value.expressions.forEach(function (expression) {
+                // reset int expression if loop
+                if (expression.method == 'int' && expression.mode == 'loop') expression.i = 0;
+            });
+        }
+        // render content
+        var model = [];
+        for (var i = 0; i < (opt.count || 1); i++) {
+            // copy raw model
+            var property = this.render(opt.model);
+            // make shuffle on model
+            if ('shuffle' in opt) {
+                var index = _fw.math.randInt(0, opt.shuffle.length);
+                Object.assign(property, this.render(opt.shuffle[index]));
+            }
+            // add rendered version of model to the output list
+            model.push(property);
+        }
+        // make watchable
+        return this.init(model);
     },
     render: function render(model) {
         var out = {};
@@ -1910,8 +1960,6 @@ exports.default = {
         return out;
     },
     _parseExpressions: function _parseExpressions(string) {
-        var _this2 = this;
-
         var out = { type: 'expression', expressions: [] };
         // find all the queries and replace them with functions
         var string = string.replace(/{.*?}/g, function (match) {
@@ -1922,17 +1970,17 @@ exports.default = {
                 query[p[0]] = parseInt(p[1]) || p[1];
             });
             // find method of this and push generated expression
-            out.expressions.push(_this2[query.type](query));
+            out.expressions.push(expressions[query.type](query));
             // save index of array {1}
             return '{' + (out.expressions.length - 1) + '}';
         });
         out.render = function () {
-            var _this3 = this;
+            var _this = this;
 
             // replace all {1} with expression result
             var result = string.replace(/{.*?}/g, function (i) {
                 // bundle.expressions[{1}]
-                return _this3.expressions[i.match(/\d+/)[0]].render();
+                return _this.expressions[i.match(/\d+/)[0]].render();
             });
             // convert to int if no characters
             return result.match(/[^\d+]/) ? result : parseInt(result);
@@ -2252,7 +2300,7 @@ exports = module.exports = __webpack_require__(18)();
 
 
 // module
-exports.push([module.i, "* {\n  margin: 0;\n  box-sizing: border-box; }\n\nbody {\n  background-color: #1f2428; }\n\n.layer {\n  display: inline-block;\n  width: 100;\n  height: 100;\n  font-family: 'arial';\n  font-size: 13;\n  background-color: rgba(255, 255, 255, 0.7);\n  background-size: cover;\n  transition: box-shadow .2s; }\n  .layer.drag {\n    box-shadow: 0 0 50px 0 rgba(0, 0, 0, 0.5); }\n\n.scroller {\n  width: 100%;\n  height: 100%;\n  -webkit-scroll-snap-type: mandatory;\n  -webkit-scroll-snap-destination: 50% 50%; }\n  .scroller > .layer {\n    width: 100%;\n    height: 100%;\n    -webkit-scroll-snap-coordinate: 50% 50%; }\n  .scroller.x {\n    overflow-y: hidden;\n    white-space: nowrap; }\n    .scroller.x > .layer {\n      display: inline-block;\n      white-space: normal; }\n  .scroller.y {\n    overflow-x: hidden; }\n", ""]);
+exports.push([module.i, "* {\n  margin: 0;\n  box-sizing: border-box; }\n\nbody {\n  background-color: #1f2428; }\n\n.layer {\n  font-family: 'arial';\n  font-size: 13;\n  transition: box-shadow .2s; }\n  .layer.default {\n    display: inline-block;\n    width: 100;\n    height: 100;\n    background-color: rgba(255, 255, 255, 0.7);\n    background-size: cover; }\n  .layer.drag {\n    box-shadow: 0 0 50px 0 rgba(0, 0, 0, 0.5); }\n\n.scroller {\n  width: 100%;\n  height: 100%;\n  -webkit-scroll-snap-type: mandatory;\n  -webkit-scroll-snap-destination: 50% 50%; }\n  .scroller > .layer {\n    width: 100%;\n    height: 100%;\n    -webkit-scroll-snap-coordinate: 50% 50%; }\n  .scroller.x {\n    overflow-y: hidden;\n    white-space: nowrap; }\n    .scroller.x > .layer {\n      display: inline-block;\n      white-space: normal; }\n  .scroller.y {\n    overflow-x: hidden; }\n", ""]);
 
 // exports
 
@@ -2564,6 +2612,53 @@ function updateLink(linkElement, obj) {
 		URL.revokeObjectURL(oldSrc);
 }
 
+
+/***/ },
+/* 20 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _fw = __webpack_require__(0);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Screen = function (_Layer) {
+    _inherits(Screen, _Layer);
+
+    function Screen() {
+        _classCallCheck(this, Screen);
+
+        return _possibleConstructorReturn(this, (Screen.__proto__ || Object.getPrototypeOf(Screen)).call(this, document.body));
+    }
+
+    _createClass(Screen, [{
+        key: 'size',
+        get: function get() {
+            return new _fw.vec(window.innerWidth, window.innerHeight);
+        }
+    }, {
+        key: 'center',
+        get: function get() {
+            return this.size.scale(.5);
+        }
+    }]);
+
+    return Screen;
+}(_fw.Layer);
+
+exports.default = new Screen();
 
 /***/ }
 /******/ ])

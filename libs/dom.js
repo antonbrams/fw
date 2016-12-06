@@ -1,23 +1,19 @@
 
 
 
-import {css} from './fw'
+import {css, val} from './fw'
 
 export default {
     
     // create ('div#id .class .class')
-    create (query) {
-        var params = query.split(' ')
-        if (params[0].match(/./)) params.unshift('div')
-        var typeid = params[0].split('#')
-        // create from tag
-        var element = document.createElement(typeid[0])
-        // set id
-        if (typeid[1]) element.id = typeid[1]
-        // set css class
-        params.slice(1).forEach(style => {
-            element.classList.add(style.slice(1))
-        })
+    create (query = '') {
+        var classes  = query.replace(/ /g, '').split('.')
+        var tagAndId = []
+        if (classes[0].length == 0) tagAndId = classes[0].split('#')
+        classes.shift()
+        var element = document.createElement(tagAndId[0] || 'div')
+        if (tagAndId.length > 1) element.id = tagAndId[1]
+        classes.forEach(style => element.classList.add(style))
         return element
     },
     
