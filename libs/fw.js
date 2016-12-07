@@ -5,7 +5,7 @@ import './style.sass'
 export var debug = {enable: false}
 
 export {default as animation} from './animation'
-export {default as val}       from './val'
+export {default as val}       from './value'
 export {default as geo}       from './geometry'
 export {default as arr}       from './array'
 export {default as vec}       from './vector'

@@ -60,8 +60,9 @@ var expressions = {
             local  (i) {return `file:///Library/Desktop%20Pictures/${
                 escape(assets.image.mac[i % assets.image.mac.length])}.jpg`}
         }
-        return {render () {
-            return source[opt.source || 'local'](math.randInt(0, 1000))
+        var seed = math.randInt(0, 1000)
+        return {i: 0, render () {
+            return source[opt.source || 'local'](seed + this.i ++)
         }}
     },
     
@@ -74,6 +75,25 @@ var expressions = {
 }
 
 export default {
+    
+    /*
+        model.on('make', item => {
+            return new fw.Layer({
+                parent : scroller,
+                size   : new fw.vec(100, 100),
+                margin : 10
+            })
+        })
+        
+        model.on('destroy', item => {
+            item.layer.animate({}, {
+                margin : {x: -item.layer.size.x / 2},
+                scale  : {x: 0}
+            },{
+                destroy : true
+            })
+        })
+    */
     
     init (model) {
         var destroy = item => {item.layer.destroy()}
@@ -119,7 +139,22 @@ export default {
         return model
     },
     
-    // put({count: 10, model: ...})
+    /*
+        var boxes = fw.model.put({
+            count : 10,
+            model : {
+                album  : fw.model.iterate(i => {return custom[i].album}),
+                id     : '{type: int, mode: forward, from: 1}',
+            },
+            shuffle : [{
+                someParam : 'testest'
+            },{
+                others : '{type: int, mode: random, min: 1, max: 10}',
+                image  : '{type: image, source: local}' 
+            }]
+        })
+    */
+    
     put (opt) {
         // modify values
         for (var key in opt.model) {

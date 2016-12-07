@@ -4,6 +4,8 @@
 <html>
 <head>
     <title>fw</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no">
 </head>
 <body>
 
@@ -11,252 +13,110 @@
 
 <script src="../index.js"></script>
 <script>
-    
-    // var body = new fw.Layer({
-    //     dom : document.body
-    // })
-    // 
-    // var layerA = new fw.Layer({
-    //     dom             : '<div id ="id"></div>',
-    //     content         : 'jesus christ',
-    //     display         : 'inline-block',
-    //     backgroundColor : 'red',
-    //     parent          : body
-    // })
-    // 
-    // var layerB = new fw.Layer({
-    //     content         : 'some test',
-    //     backgroundColor : 'green',
-    //     width           : 100
-    // }).animate(1, 'ease', {
-    //     marginTop : 100
-    // }, () => {
-    //     layerA.set({
-    //         backgroundColor : 'yellow'
-    //     })
-    // })
-    // 
-    // body.set({
-    //     prepend : layerB
-    // })
-    
-    // 
-    // var customContainerData = [
-    //     {l: 4, t: 0, w: 2, h: 2},
-    // ]
-    // 
-    // var container = {
-    //     type1 : {
-    //         id       : 'model.int()', 
-    //         position : 'customContainerData', 
-    //         type     : 'notes', 
-    //         visible  : 'true', 
-    //         text     : 'fish'
-    //     },
-    //     type2 : {
-    //         id             : '11', 
-    //         position       : 'customContainerData', 
-    //         type           : 'image', 
-    //         visible        : 'true', 
-    //         text           : 'fish', 
-    //         preview        : 'img()', 
-    //         embed          : './graphic/dummy/12_original.jpeg', 
-    //         resolution     : '1920x1080', 
-    //         textVisibility : 'false'
-    //     },
-    // }
-    // 
-    // var album = {
-    //     type1 : {
-    //         id         : '10',
-    //         position   : '{o: 0, w: 32, m: 8}',
-    //         title      : 'As i Combine',
-    //         containers : '[]'
-    //     },
-    // }
 
-    // var custom = [
-    //     {album: 1, position: {l: 11, t: 0, w: 0, h: 10}},
-    //     {album: 1, position: {l: 12, t: 1, w: 1, h: 20}},
-    //     {album: 1, position: {l: 13, t: 2, w: 0, h: 30}},
-    //     {album: 2, position: {l: 14, t: 3, w: 1, h: 40}},
-    //     {album: 2, position: {l: 15, t: 4, w: 0, h: 50}},
-    //     {album: 2, position: {l: 16, t: 5, w: 1, h: 60}},
-    //     {album: 3, position: {l: 17, t: 6, w: 0, h: 70}},
-    //     {album: 3, position: {l: 18, t: 7, w: 1, h: 80}},
-    //     {album: 3, position: {l: 19, t: 8, w: 0, h: 90}},
-    //     {album: 3, position: {l: 20, t: 9, w: 6, h: 20}},
-    // ]
-    // 
-    // var wall = fw.model.put({count: 1, model: {
-    //     id     : 1,
-    //     title  : '{type: string, mode: text, min: 1, max: 3}',
-    // }}).render()
-    // 
-    // var albums = fw.model.put({count: 3, model: {
-    //     id    : '{type: int, mode: forward, from: 1}',
-    //     title : '{type: string, mode: text, min: 1, max: 3}',
-    //     notes : '{type: string, mode: text, count: 5}',
-    // }}).render()
-    // 
-    // var boxes = fw.model.put({count: 10, model: {
-    //     album  : fw.model.iterate(i => {return custom[i].album}),
-    //     id     : '{type: int, mode: forward, from: 1}',
-    //     title  : '{type: string, mode: text, min: 1, max: 3}',
-    //     notes  : '{type: string, mode: text, count: 5}',
-    //     position : fw.model.iterate(i => {return custom[i].position}),
-    //     image  : '{type: image}'
-    // }, shuffle : [{
-    //     // empty
-    // },{
-    //     someParam : 'testest'
-    // },{
-    //     others : '{type: int, mode: random, min: 1, max: 10}',
-    //     image  : '{type: image, source: local}' 
-    // }]}).render()
-    // 
-    // console.log(wall, albums, boxes)
-    
-    
-        
+
+    // fw.Screen.bg({color: 'rgb(222, 86, 152)'})
     
     var scroller = new fw.Scroller({
-        flow         : 'x',
+        flow         : 'y',
         position     : 'absolute',
-        size         : new fw.vec(300, 300),
+        size         : new fw.vec(280, 280),
+        addClass     : 'default',
+        padding      : 10,
         borderRadius : 5,
-        boxShadow    : '0 25px 50px 0 rgba(0,0,0, .5)',
+        boxShadow    : '0 2px 10px 0 rgba(0,0,0, .2)',
         center       : fw.Screen.center
     })
     
-    var model = fw.model.put({count: 5, model: {
-        id    : '{type: int, mode: forward, from: 1}',
-        image : '{type: image}'
-    }})
-    
-    model.on('make', item => {
-        var layerB = new fw.Layer({
-            parent : scroller
-        }).bind(item, {
-            image : {
-                key  : 'image',
-                read : 'backgroundImage',
-                set (value, layer) {
-                    fw.etc.compressImage(value, .1, url => {
-                        layer.image(url)
-                    })
-                }}
-        })
-        return layerB
-    })
-    
-    model.on('destroy', item => {
-        item.layer.animate({}, {
-            margin : {x: -item.layer.size.x / 2},
-            scale  : {x: 0}
-        },{
-            destroy : true
-        })
-    })
-    
-    document.body.onclick = function () {
-        model.delete({id: 2})
-    }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    // var containerA = new fw.Layer({
-    //     position : 'absolute',
-    //     move     : new fw.vec(100, 100),
-    //     size     : new fw.vec(200, 200),
-    //     // content  : 'A',
-    //     text     : {
-    //         align : 'center',
-    //     },
-    //     padding : '10'
-    // })
+    // var model = fw.model.put({count: 1, model: {
+    //     id    : '{type: int, mode: forward, from: 1}',
+    //     image : '{type: image}'
+    // }})
     // 
-    // var containerB = containerA.clone({
-    //     move    : new fw.vec(400, 100),
-    //     content : 'B'
-    // })
-    // 
-    // var object = new fw.Layer({
-    //     parent : containerA
-    // })
-    // 
-    // var drag = object.gesture('pinch')
-    // 
-    // var tap = object.on('tap', e => {
-    //     alert('niger')
-    // })
-    // 
-    // var drag = object.gesture('drag')
-    
-    
-    
-    // for (var i = 0; i < 3; i ++) 
-    //     new fw.Layer({
-    //         position : 'absolute',
-    //         content  : i,
-    //         width    : 100,
-    //         height   : 100,
-    //         opacity  : 0,
-    //         left     : 110 * i + 10,
-    //         top      : 10,
-    //         scale    : 0.8
-    //     }).animate({
-    //         time  : .3,
-    //         delay : 0.1 * i,
-    //         type  : 'ease'
-    //     }, {
-    //         opacity : 1,
-    //         scale   : 1
-    //     })
-    
-    // 
-    // var model = [
-    //     {title : '1'},
-    //     {title : '2'},
-    //     {title : '3'},
-    // ]
-    // 
-    // model.forEach(function (item) {
-    //     var layerA = new fw.Layer({
-    //         margin : 10
+    // model.on('make', item => {
+    //     var layerB = new fw.Layer({
+    //         parent  : scroller,
+    //         size    : new fw.vec(100, 100),
+    //         margin  : 10
     //     }).bind(item, {
-    //         content : {
-    //             key : 'title', 
+    //         image : {
+    //             key  : 'image',
+    //             read : 'backgroundImage',
     //             set (value, layer) {
-    //                 layer.set({content: 'test ' + value})
-    //             }
-    //         }
+    //                 fw.etc.compressImage(value, .1, url => {
+    //                     layer.image(url)
+    //                 })
+    //             }}
     //     })
+    //     return layerB
     // })
-    // 
-    // document.body.onclick = function () {
-    //     model[1].title = 'test test'
-    //     console.log(model);
-    // }
+        
+    // var print = new fw.Layer({
+    //     dom     : 'div',
+    //     display : 'inline-block',
+    //     bg      : {color: 'white'},
+    //     padding : {x: 10, y: 5},
+    //     margin  : 10
+    // })
     
-    // push
-    // remove
-    // replace
+    var onDown   = null
+    var rotation = 0
+    var scale    = 0
+    var current  = null
     
+    var up = scroller.on(fw.event.types.down, e => {
+        if (!onDown) {
+            onDown = new fw.vec(e.pageX, e.pageY)
+            scroller.addClass('drag')
+            move.on()
+            up.on()
+            scroller.origin = onDown.sub(scroller.rect.position)
+        } else {
+            // onDown = onDown.sub(current.sub(new fw.vec(e.targetTouches[0].pageX, e.targetTouches[0].pageY)))
+        }
+        e.preventDefault()
+    }, true).on()
     
+    var move = scroller.on(fw.event.types.move, e => {
+        current = new fw.vec(e.pageX, e.pageY)
+        scroller.translate = current.sub(onDown).unit('px')
+        if (fw.event.types.isTouch && e.targetTouches.length > 1) {
+            scroller.set({
+                rotate    : e.rotation + rotation,
+                scale     : e.scale    + scale
+            })
+        }
+        e.preventDefault()
+    }, true)
     
-    
+    var up = scroller.on(fw.event.types.up, e => {
+        if (fw.event.types.isTouch && e.targetTouches.length == 1) {
+            rotation = scroller.rotate.z
+            scale    = scroller.scale.x - 1
+            // onDown   = onDown.sub(current.sub(new fw.vec(e.targetTouches[0].pageX, e.targetTouches[0].pageY)))
+        }
+        if (fw.event.types.isTouch && e.targetTouches.length == 0 
+        || !fw.event.types.isTouch
+        ){
+            if (fw.event.types.isTouch) {
+                scroller.animate({time: .2}, {
+                    rotate : 0,
+                    scale  : 1
+                })
+                rotation = 0
+                scale    = 0
+            }
+            scroller.animate({time: .2, ease: 'cubic-bezier(.1, .5, .1, 1.5)'}, {
+                translate : new fw.vec()
+            })
+            onDown = null
+            scroller.removeClass('drag')
+            move.off()
+            up.off()
+        }
+        e.preventDefault()
+    }, true)
 
-    
-    
-    
-    
     
 </script>
 </html>

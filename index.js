@@ -86,7 +86,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.model = exports.Scroller = exports.Screen = exports.Layer = exports.text = exports.css = exports.etc = exports.event = exports.dom = exports.color = exports.math = exports.vec = exports.arr = exports.geo = exports.val = exports.animation = exports.debug = undefined;
 
-var _animation = __webpack_require__(3);
+var _animation = __webpack_require__(4);
 
 Object.defineProperty(exports, 'animation', {
   enumerable: true,
@@ -95,16 +95,16 @@ Object.defineProperty(exports, 'animation', {
   }
 });
 
-var _val = __webpack_require__(14);
+var _value = __webpack_require__(15);
 
 Object.defineProperty(exports, 'val', {
   enumerable: true,
   get: function get() {
-    return _interopRequireDefault(_val).default;
+    return _interopRequireDefault(_value).default;
   }
 });
 
-var _geometry = __webpack_require__(10);
+var _geometry = __webpack_require__(11);
 
 Object.defineProperty(exports, 'geo', {
   enumerable: true,
@@ -113,7 +113,7 @@ Object.defineProperty(exports, 'geo', {
   }
 });
 
-var _array = __webpack_require__(4);
+var _array = __webpack_require__(5);
 
 Object.defineProperty(exports, 'arr', {
   enumerable: true,
@@ -122,7 +122,7 @@ Object.defineProperty(exports, 'arr', {
   }
 });
 
-var _vector = __webpack_require__(15);
+var _vector = __webpack_require__(16);
 
 Object.defineProperty(exports, 'vec', {
   enumerable: true,
@@ -131,7 +131,7 @@ Object.defineProperty(exports, 'vec', {
   }
 });
 
-var _math = __webpack_require__(11);
+var _math = __webpack_require__(12);
 
 Object.defineProperty(exports, 'math', {
   enumerable: true,
@@ -140,7 +140,7 @@ Object.defineProperty(exports, 'math', {
   }
 });
 
-var _color = __webpack_require__(5);
+var _color = __webpack_require__(6);
 
 Object.defineProperty(exports, 'color', {
   enumerable: true,
@@ -149,7 +149,7 @@ Object.defineProperty(exports, 'color', {
   }
 });
 
-var _dom = __webpack_require__(7);
+var _dom = __webpack_require__(8);
 
 Object.defineProperty(exports, 'dom', {
   enumerable: true,
@@ -158,7 +158,7 @@ Object.defineProperty(exports, 'dom', {
   }
 });
 
-var _event = __webpack_require__(9);
+var _event = __webpack_require__(10);
 
 Object.defineProperty(exports, 'event', {
   enumerable: true,
@@ -167,7 +167,7 @@ Object.defineProperty(exports, 'event', {
   }
 });
 
-var _etc = __webpack_require__(8);
+var _etc = __webpack_require__(9);
 
 Object.defineProperty(exports, 'etc', {
   enumerable: true,
@@ -176,7 +176,7 @@ Object.defineProperty(exports, 'etc', {
   }
 });
 
-var _css = __webpack_require__(6);
+var _css = __webpack_require__(7);
 
 Object.defineProperty(exports, 'css', {
   enumerable: true,
@@ -185,7 +185,7 @@ Object.defineProperty(exports, 'css', {
   }
 });
 
-var _text = __webpack_require__(13);
+var _text = __webpack_require__(14);
 
 Object.defineProperty(exports, 'text', {
   enumerable: true,
@@ -203,7 +203,7 @@ Object.defineProperty(exports, 'Layer', {
   }
 });
 
-var _Screen = __webpack_require__(20);
+var _Screen = __webpack_require__(2);
 
 Object.defineProperty(exports, 'Screen', {
   enumerable: true,
@@ -212,7 +212,7 @@ Object.defineProperty(exports, 'Screen', {
   }
 });
 
-var _Scroller = __webpack_require__(2);
+var _Scroller = __webpack_require__(3);
 
 Object.defineProperty(exports, 'Scroller', {
   enumerable: true,
@@ -221,7 +221,7 @@ Object.defineProperty(exports, 'Scroller', {
   }
 });
 
-var _model = __webpack_require__(12);
+var _model = __webpack_require__(13);
 
 Object.defineProperty(exports, 'model', {
   enumerable: true,
@@ -230,7 +230,7 @@ Object.defineProperty(exports, 'model', {
   }
 });
 
-__webpack_require__(16);
+__webpack_require__(17);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -257,9 +257,9 @@ var Layer = function () {
     function Layer(options) {
         _classCallCheck(this, Layer);
 
-        this._dom = null;
-        this._events = {};
+        this.event = new _fw.event.Machine('Layer');
         this.data = null;
+        this._dom = null;
         this.props = {
             transformation: {
                 origin: new _fw.vec(0, 0, 0),
@@ -269,63 +269,36 @@ var Layer = function () {
             },
             pop: {}
         };
-        // if options incoming
-        if (_fw.val.isDom(options)) this.dom = options;else if (_fw.val.isObj(options)) {
-            // create dom element
+        // if no options
+        if (!_fw.val.exists(options)) this.dom = _fw.dom.create('.default');else if (_fw.val.isObj(options)) {
+            // apply dom element
             if ('dom' in options) {
                 this.dom = options.dom;
                 delete options.dom;
                 // if no dom, create just div with .layer
             } else this.dom = _fw.dom.create('.default');
-            // if no parent parameter
-            if (!_fw.val.exists(options.parent)) document.body.appendChild(this.dom);
-            // set other values
-            this.set(options);
-        }
+            // if dom is a single parameter
+        } else this.dom = options;
+        // append dom
+        if (_fw.val.exists(options) && options.parent !== null || !_fw.val.exists(options)) document.body.appendChild(this.dom);
+        // delete options.parent
+        if (_fw.val.exists(options) && 'parent' in options) delete options.parent;
+        // set other options
+        if (_fw.val.exists(options)) this.set(options);
     }
 
-    // event handlers
+    // external event interface
 
 
     _createClass(Layer, [{
         key: 'on',
         value: function on(topic, fn, options) {
-            var _this = this;
-
-            // check for standard dom events
-            if (topic in _fw.event.types) {
-                var type = _fw.event.types[topic];
-                this.dom.addEventListener(type, fn, options);
-                return {
-                    on: function on() {
-                        return _this.dom.addEventListener(type, fn, options);
-                    },
-                    off: function off() {
-                        return _this.dom.removeEventListener(type, fn, options);
-                    }
-                };
-                // listen for dom changes
-            } else if ('gesture' + _fw.text.capitalize(topic) in _fw.event) {
-                return (0, _fw.event)(this, fn);
-            } else {
-                if (!this._events[topic]) this._events[topic] = [];
-                this._events[topic].push(fn);
-                return {
-                    on: function on() {
-                        return _this._events[topic].push(fn);
-                    },
-                    off: function off() {
-                        return _this._events.splice(_this._events.indexOf(fn), 1);
-                    }
-                };
-            }
-        }
-    }, {
-        key: '_emit',
-        value: function _emit(topic, payload) {
-            if (this._events[topic]) this._events[topic].forEach(function (fn) {
-                return fn(payload);
-            });
+            // dom events
+            if (_fw.event.support(this.dom, topic)) return _fw.event.listener(this.dom, topic, fn, options);
+            // gestures
+            else if (topic in _fw.event) return _fw.event[topic](this, fn);
+                // dom css
+                else return this.event.on(topic, fn);
         }
 
         // setter getters
@@ -347,11 +320,11 @@ var Layer = function () {
     }, {
         key: '_setStyle',
         value: function _setStyle(options, value) {
-            var _this2 = this;
+            var _this = this;
 
             var set = function set(key, value) {
-                _this2._emit(key, value);
-                _this2.dom.style[key] = value;
+                _this.event.emit(key, value);
+                _this.dom.style[key] = value;
             };
             if (_fw.val.isStr(options)) set(options, value);else if (_fw.val.isObj(options)) for (var key in options) {
                 set(key, options[key]);
@@ -386,7 +359,7 @@ var Layer = function () {
         */
 
         value: function bind(model, params) {
-            var _this3 = this;
+            var _this2 = this;
 
             for (var key in params) {
                 var options = params[key];
@@ -397,14 +370,14 @@ var Layer = function () {
                     return curValue = value;
                 });
                 var set = function set(value) {
-                    if (options.set) options.set(value, _this3);else {
+                    if (options.set) options.set(value, _this2);else {
                         var param = {};
                         param[key] = value;
-                        _this3.set(param);
+                        _this2.set(param);
                     }
                 };
                 var get = function get() {
-                    if (options.get) return options.get(curValue, _this3);else return curValue;
+                    if (options.get) return options.get(curValue, _this2);else return curValue;
                 };
                 Object.defineProperty(model, modelKey, { set: set, get: get });
                 model[modelKey] = initValue;
@@ -420,7 +393,7 @@ var Layer = function () {
     }, {
         key: 'pop',
         value: function pop() {
-            this._emit('pop', this.props.pop);
+            this.event.emit('pop', this.props.pop);
             this.props.pop = {
                 parent: this.dom.parentNode,
                 pos: new _fw.vec(this.dom.style.left, this.dom.style.top),
@@ -439,7 +412,7 @@ var Layer = function () {
     }, {
         key: 'push',
         value: function push() {
-            this._emit('push', this.props.pop);
+            this.event.emit('push', this.props.pop);
             this.props.pop.parent.appendChild(this.dom);
             this.set({
                 position: null,
@@ -455,7 +428,7 @@ var Layer = function () {
     }, {
         key: 'animate',
         value: function animate(options, next, end) {
-            this._emit('animate', options);
+            this.event.emit('animate', options);
             _fw.animation.flow(this, options.time || .5, options.ease || 'ease-in-out', options.delay || 0, next, end);
             return this;
         }
@@ -490,11 +463,11 @@ var Layer = function () {
     }, {
         key: 'append',
         value: function append(value) {
-            var _this4 = this;
+            var _this3 = this;
 
-            this._emit('append', value);
+            this.event.emit('append', value);
             var append = function append(el) {
-                _this4.dom.appendChild(el instanceof Layer ? el.dom : el);
+                _this3.dom.appendChild(el instanceof Layer ? el.dom : el);
             };
             if (_fw.val.isArr(value)) value.forEach(function (item) {
                 return append(item);
@@ -503,13 +476,13 @@ var Layer = function () {
     }, {
         key: 'prepend',
         value: function prepend(value) {
-            this._emit('prepend', value);
+            this.event.emit('prepend', value);
             _fw.dom.prepend(this.dom, value instanceof Layer ? value.dom : value);
         }
     }, {
         key: 'detach',
         value: function detach(value) {
-            this._emit('detach', value);
+            this.event.emit('detach', value);
             this.dom.removeChild(value instanceof Layer ? value.dom : value);
         }
     }, {
@@ -518,7 +491,7 @@ var Layer = function () {
 
         // classes
         value: function toggleClass(value) {
-            this._emit('toggleClass', value);
+            this.event.emit('toggleClass', value);
             return this.dom.classList.toggle(value);
         }
     }, {
@@ -529,21 +502,21 @@ var Layer = function () {
     }, {
         key: 'addClass',
         value: function addClass(value) {
-            var _this5 = this;
+            var _this4 = this;
 
-            this._emit('addClass', value);
+            this.event.emit('addClass', value);
             if (_fw.val.isArr(value)) value.forEach(function (item) {
-                return _this5.dom.classList.add(item);
+                return _this4.dom.classList.add(item);
             });else this.dom.classList.add(value);
         }
     }, {
-        key: 'deleteClass',
-        value: function deleteClass(value) {
-            var _this6 = this;
+        key: 'removeClass',
+        value: function removeClass(value) {
+            var _this5 = this;
 
-            this._emit('deleteClass', value);
+            this.event.emit('deleteClass', value);
             if (_fw.val.isArr(value)) value.forEach(function (item) {
-                return _this6.dom.classList.remove(item);
+                return _this5.dom.classList.remove(item);
             });else this.dom.classList.remove(value);
         }
 
@@ -557,14 +530,16 @@ var Layer = function () {
     }, {
         key: 'bg',
         value: function bg(value) {
-            if (_fw.val.isStr(value)) this._setStyle('background', value);else if (_fw.val.isObj(value)) var params = {};
-            if ('image' in value) params.backgroundImage = 'url(' + value.image + ')';
-            if ('origin' in value) params.backgroundOrigin = _fw.val.isObj(value.origin) ? value.origin.x + ' ' + value.origin.y : value.origin;
-            if ('position' in value) params.backgroundPosition = _fw.val.isObj(value.position) ? value.position.x + ' ' + value.position.y : value.position;
-            if ('size' in value) params.backgroundSize = _fw.val.isObj(value.size) ? value.size.x + ' ' + value.size.y : value.size;
-            if ('repeat' in value) params.backgroundRepeat = value.repeat == 'x' ? 'repeat-x' : value.repeat == 'y' ? 'repeat-y' : value.repeat == 'no' ? 'no-repeat' : value.repeat == 'yes' ? 'repeat' : value.repeat;
-            if ('color' in value) params.backgroundColor = value.color;
-            this._setStyle(params);
+            if (_fw.val.isStr(value)) this._setStyle('background', value);else if (_fw.val.isObj(value)) {
+                var params = {};
+                if ('image' in value) params.backgroundImage = 'url(' + value.image + ')';
+                if ('origin' in value) params.backgroundOrigin = _fw.val.isObj(value.origin) ? value.origin.x + ' ' + value.origin.y : value.origin;
+                if ('position' in value) params.backgroundPosition = _fw.val.isObj(value.position) ? value.position.x + ' ' + value.position.y : value.position;
+                if ('size' in value) params.backgroundSize = _fw.val.isObj(value.size) ? value.size.x + ' ' + value.size.y : value.size;
+                if ('repeat' in value) params.backgroundRepeat = value.repeat == 'x' ? 'repeat-x' : value.repeat == 'y' ? 'repeat-y' : value.repeat == 'no' ? 'no-repeat' : value.repeat == 'yes' ? 'repeat' : value.repeat;
+                if ('color' in value) params.backgroundColor = value.color;
+                this._setStyle(params);
+            }
         }
     }, {
         key: 'text',
@@ -590,7 +565,7 @@ var Layer = function () {
     }, {
         key: 'border',
         value: function border(value) {
-            var _this7 = this;
+            var _this6 = this;
 
             if (_fw.val.isStr(value)) this._setStyle('border', value);else if (_fw.val.isObj(value)) {
                 var set = function set(value, side) {
@@ -601,7 +576,7 @@ var Layer = function () {
                         style: 'Style'
                     };
                     for (var key in props) {
-                        if (key in value) _this7._setStyle('border' + side + props[key], value[key]);
+                        if (key in value) _this6._setStyle('border' + side + props[key], value[key]);
                     }
                 };
                 set(value, '');
@@ -647,7 +622,7 @@ var Layer = function () {
     }, {
         key: 'parent',
         set: function set(value) {
-            this._emit('parent', value);
+            this.event.emit('parent', value);
             (value.dom || value).appendChild(this.dom);
         },
         get: function get() {
@@ -656,7 +631,7 @@ var Layer = function () {
     }, {
         key: 'content',
         set: function set(value) {
-            this._emit('content', value);
+            this.event.emit('content', value);
             this.dom.innerHTML = value;
         },
         get: function get() {
@@ -735,11 +710,11 @@ var Layer = function () {
     }, {
         key: 'origin',
         set: function set(value) {
-            var _this8 = this;
+            var _this7 = this;
 
-            this._emit('origin', value);
+            this.event.emit('origin', value);
             ['x', 'y', 'z'].forEach(function (axis) {
-                if (axis in value) _this8.props.transformation.origin[axis] = value[axis];
+                if (axis in value) _this7.props.transformation.origin[axis] = value[axis];
             });
             _fw.css.applyTransformation(this.dom, this.props.transformation, 'origin');
         },
@@ -749,11 +724,11 @@ var Layer = function () {
     }, {
         key: 'translate',
         set: function set(value) {
-            var _this9 = this;
+            var _this8 = this;
 
-            this._emit('translate', value);
+            this.event.emit('translate', value);
             ['x', 'y', 'z'].forEach(function (axis) {
-                if (axis in value) _this9.props.transformation.translate[axis] = value[axis];
+                if (axis in value) _this8.props.transformation.translate[axis] = value[axis];
             });
             _fw.css.applyTransformation(this.dom, this.props.transformation);
         },
@@ -763,13 +738,13 @@ var Layer = function () {
     }, {
         key: 'scale',
         set: function set(value) {
-            var _this10 = this;
+            var _this9 = this;
 
-            this._emit('scale', value);
+            this.event.emit('scale', value);
             if (_fw.val.isNum(value)) {
                 this.props.transformation.scale.x = this.props.transformation.scale.y = this.props.transformation.scale.z = value;
             } else ['x', 'y', 'z'].forEach(function (axis) {
-                if (axis in value) _this10.props.transformation.scale[axis] = value[axis];
+                if (axis in value) _this9.props.transformation.scale[axis] = value[axis];
             });
             _fw.css.applyTransformation(this.dom, this.props.transformation);
         },
@@ -779,13 +754,13 @@ var Layer = function () {
     }, {
         key: 'rotate',
         set: function set(value) {
-            var _this11 = this;
+            var _this10 = this;
 
-            this._emit('rotate', value);
+            this.event.emit('rotate', value);
             if (_fw.val.isNum(value)) this.props.transformation.rotate.z = value;else ['x', 'y', 'z'].forEach(function (axis) {
-                if (axis in value) _this11.props.transformation.rotate[axis] = value[axis];
+                if (axis in value) _this10.props.transformation.rotate[axis] = value[axis];
             });
-            _fw.css.applyTransformation(this.dom, this.transformation.props);
+            _fw.css.applyTransformation(this.dom, this.props.transformation);
         },
         get: function get() {
             return this.props.transformation.rotate;
@@ -837,6 +812,69 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+var Screen = function (_Layer) {
+    _inherits(Screen, _Layer);
+
+    function Screen() {
+        _classCallCheck(this, Screen);
+
+        return _possibleConstructorReturn(this, (Screen.__proto__ || Object.getPrototypeOf(Screen)).call(this, {
+            dom: document.body,
+            parent: null
+        }));
+    }
+
+    // external event interface
+
+
+    _createClass(Screen, [{
+        key: 'on',
+        value: function on(topic, fn, options) {
+            // dom events
+            if (_fw.event.support(document, topic)) return _fw.event.listener(document, topic, fn, options);
+            // gestures
+            else if (topic in _fw.event) return _fw.event[topic](this, fn);
+                // dom css
+                else return this.event.on(topic, fn);
+        }
+    }, {
+        key: 'size',
+        get: function get() {
+            return new _fw.vec(window.innerWidth, window.innerHeight);
+        }
+    }, {
+        key: 'center',
+        get: function get() {
+            return this.size.scale(.5);
+        }
+    }]);
+
+    return Screen;
+}(_fw.Layer);
+
+exports.default = new Screen();
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _fw = __webpack_require__(0);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 var Scroller = function (_Layer) {
     _inherits(Scroller, _Layer);
 
@@ -844,7 +882,7 @@ var Scroller = function (_Layer) {
         _classCallCheck(this, Scroller);
 
         // this.dom[this.dom.tagName === 'A'? 'href': 'src'] = value
-        options.dom = 'div .scroller';
+        options.dom = '.scroller';
         return _possibleConstructorReturn(this, (Scroller.__proto__ || Object.getPrototypeOf(Scroller)).call(this, options));
     }
 
@@ -861,7 +899,7 @@ var Scroller = function (_Layer) {
 exports.default = Scroller;
 
 /***/ },
-/* 3 */
+/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -984,7 +1022,7 @@ exports.default = {
 };
 
 /***/ },
-/* 4 */
+/* 5 */
 /***/ function(module, exports) {
 
 "use strict";
@@ -1109,7 +1147,7 @@ exports.default = {
 };
 
 /***/ },
-/* 5 */
+/* 6 */
 /***/ function(module, exports) {
 
 "use strict";
@@ -1155,7 +1193,7 @@ exports.default = {
 };
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1199,7 +1237,7 @@ exports.default = {
 };
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1254,7 +1292,7 @@ exports.default = {
 };
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1421,7 +1459,7 @@ exports.default = {
 };
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1437,68 +1475,69 @@ var _fw = __webpack_require__(0);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var topics = {};
-
 exports.default = {
 
-    // event engine
-    on: function on(topic, bang) {
-        if (!topics[topic]) topics[topic] = [];
-        topics[topic].push(bang);
-    },
-    emit: function emit(topic, transport) {
-        if (_fw.debug.enable) console.log('[event] fired:', topic);
-        if (topics[topic]) topics[topic].forEach(function (bang) {
-            return bang(transport);
-        });
-    },
+    Machine: function () {
+        function Machine() {
+            var namespace = arguments.length <= 0 || arguments[0] === undefined ? 'event' : arguments[0];
+            var debug = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
 
+            _classCallCheck(this, Machine);
 
-    // on resize debouncer
-    windowResize: function () {
-        function windowResize(onDragStart, onDragUpdate, onDragRelease) {
-            _classCallCheck(this, windowResize);
-
-            this.timeout = null;
-            this.onDragStartFlag = null;
-            this.onDragStart = onDragStart;
-            this.onDragUpdate = onDragUpdate;
-            this.onDragRelease = onDragRelease;
+            this.namespace = '[' + namespace + ']';
+            this.debug = debug;
+            this.topics = {};
         }
 
-        _createClass(windowResize, [{
-            key: 'call',
-            value: function call() {
-                this.checkStart();
-                if (this.onDragUpdate) this.onDragUpdate();
-                clearTimeout(this.timeout);
-                this.timeout = setTimeout(this.onEnd.bind(this), 200);
+        _createClass(Machine, [{
+            key: 'on',
+            value: function on(topic, fn) {
+                if (this.debug) console.log(this.namespace + ' subscribed to', topic);
+                if (!this.topics[topic]) this.topics[topic] = [];
+                this.topics[topic].push(fn);
+                return this;
             }
         }, {
-            key: 'checkStart',
-            value: function checkStart() {
-                if (!this.onDragStartFlag) {
-                    this.onDragStartFlag = true;
-                    if (this.onDragStart) this.onDragStart();
-                }
-            }
-        }, {
-            key: 'onEnd',
-            value: function onEnd() {
-                if (this.onDragStartFlag) {
-                    this.onDragStartFlag = false;
-                    if (this.onDragRelease) this.onDragRelease();
-                }
+            key: 'emit',
+            value: function emit(topic, t) {
+                if (this.debug) console.log(this.namespace + ' fired', topic);
+                if (this.topics[topic]) this.topics[topic].forEach(function (fn) {
+                    return fn(t);
+                });
+                return this;
             }
         }]);
 
-        return windowResize;
+        return Machine;
     }(),
 
-    // event types
+    listener: function listener(dom, type, callback, flag) {
+        var out = {
+            on: function on() {
+                dom.addEventListener(type, callback, flag);
+                return out;
+            },
+            off: function off() {
+                dom.removeEventListener(type, callback, flag);
+                return out;
+            }
+        };
+        return out;
+    },
+    support: function support(element, type) {
+        var supported = 'on' + type in element;
+        if (!supported) {
+            // TODO: check this one: element[type]
+            element.setAttribute(type, null);
+            supported = typeof element[type] === 'function';
+        }
+        return supported;
+    },
+
+
     types: function () {
         if (_fw.val.exists(window)) {
-            var isTouch = 'ontouchstart' in window;
+            var isTouch = 'ontouchstart' in window; // window.PointerEvent
             return {
                 isTouch: isTouch,
                 tap: 'click',
@@ -1512,143 +1551,12 @@ exports.default = {
                 change: 'change'
             };
         }
-    }(),
+    }()
 
-    gesture: function gesture(layer, options) {
-        var _this = this;
-
-        var t = {};
-        var down = function down(e) {
-            t.event = e;
-            t.isTouch = _this.types.isTouch;
-            document.addEventListener(_this.types.move, move, true);
-            document.addEventListener(_this.types.up, up, true);
-            options.down(t);
-            e.preventDefault();
-        };
-        var move = function move(e) {
-            t.event = e;
-            t.isTouch = _this.types.isTouch;
-            options.move(t);
-            e.preventDefault();
-        };
-        var up = function up(e) {
-            t.event = e;
-            t.isTouch = _this.types.isTouch;
-            if (!options.up(t)) return false;
-            document.removeEventListener(_this.types.move, move, true);
-            document.removeEventListener(_this.types.up, up, true);
-            t = {};
-            e.preventDefault();
-        };
-        layer.dom.addEventListener(this.types.down, down, true);
-        var out = {
-            on: function on() {
-                layer.dom.addEventListener(_this.types.down, down, true);
-                return out;
-            },
-            off: function off() {
-                layer.dom.removeEventListener(_this.types.down, down, true);
-                document.removeEventListener(_this.types.move, move, true);
-                document.removeEventListener(_this.types.up, up, true);
-                return out;
-            }
-        };
-        return out;
-    },
-    gestureDrag: function gestureDrag(layer) {
-        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-        return this.gesture(layer, {
-            down: function down(t) {
-                if (t.isTouch) {
-                    var touch = t.event.touches;
-                    var fingerA = new _fw.vec(touch[0].clientX, touch[0].clientY);
-                    if (touch.length > 1) {
-                        var fingerB = new _fw.vec(touch[1].clientX, touch[1].clientY);
-                        t.down = fingerA.to(fingerB, .5);
-                    } else {
-                        t.down = fingerA;
-                    }
-                } else {
-                    t.down = new _fw.vec(t.event.clientX, t.event.clientY);
-                }
-                options.down && options.down(t);
-            },
-            move: function move(t) {
-                if (t.isTouch) {
-                    var touch = t.event.touches;
-                    var fingerA = new _fw.vec(touch[0].clientX, touch[0].clientY);
-                    if (touch.length > 1) {
-                        var fingerB = new _fw.vec(touch[1].clientX, touch[1].clientY);
-                        t.move = fingerA.to(fingerB, .5);
-                    } else {
-                        t.move = fingerA;
-                    }
-                } else {
-                    t.move = new _fw.vec(t.event.clientX, t.event.clientY);
-                }
-                if (!t.recognized && t.move.sub(t.down).len() > 5) {
-                    t.recognized = true;
-                    t.down = t.move.copy();
-                    layer.pop();
-                    layer.addClass('drag');
-                }
-                if (t.recognized) {
-                    var a = layer.props.pop.offset.position;
-                    t.dist = t.move.sub(t.down);
-                    options.move && options.move(t);
-                    layer.translate = t.dist.add(a).unit('px');
-                }
-            },
-            up: function up(t) {
-                if (t.isTouch) {
-                    var touch = t.event.touches;
-                    if (touch.length > 0) return false;
-                }
-                if (t.recognized) {
-                    options.up && options.up(t);
-                    layer.push();
-                    layer.deleteClass('drag');
-                }
-                return true;
-            }
-        });
-    },
-    gesturePinch: function gesturePinch(layer) {
-        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-        return this.gesture(layer, {
-            down: function down(t) {
-                if (t.isTouch) {
-                    var touch = t.event.touches;
-                    var fingerA = new _fw.vec(touch[0].clientX, touch[0].clientY);
-                    var fingerB = new _fw.vec(touch[1].clientX, touch[1].clientY);
-                    t.downDist = fingerA.sub(fingerB).len();
-                }
-                options.down && options.down(t);
-            },
-            move: function move(t) {
-                if (t.isTouch) {
-                    var touch = t.event.touches;
-                    var fingerA = new _fw.vec(touch[0].clientX, touch[0].clientY);
-                    var fingerB = new _fw.vec(touch[1].clientX, touch[1].clientY);
-                    var moveDist = fingerA.sub(fingerB).len();
-                    var diff = moveDist - t.downDist;
-                    layer.scale = 1 + diff * .01;
-                }
-                options.move && options.move(t);
-            },
-            up: function up(t) {
-                options.up && options.up(t);
-                return true;
-            }
-        });
-    }
 };
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1705,7 +1613,7 @@ exports.default = {
 };
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1790,7 +1698,7 @@ exports.default = {
 };
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1857,9 +1765,9 @@ var expressions = {
                 return 'file:///Library/Desktop%20Pictures/' + escape(assets.image.mac[i % assets.image.mac.length]) + '.jpg';
             }
         };
-        return {
-            render: function render() {
-                return source[opt.source || 'local'](_fw.math.randInt(0, 1000));
+        var seed = _fw.math.randInt(0, 1000);
+        return { i: 0, render: function render() {
+                return source[opt.source || 'local'](seed + this.i++);
             }
         };
     },
@@ -1875,6 +1783,26 @@ var expressions = {
 };
 
 exports.default = {
+
+    /*
+        model.on('make', item => {
+            return new fw.Layer({
+                parent : scroller,
+                size   : new fw.vec(100, 100),
+                margin : 10
+            })
+        })
+        
+        model.on('destroy', item => {
+            item.layer.animate({}, {
+                margin : {x: -item.layer.size.x / 2},
+                scale  : {x: 0}
+            },{
+                destroy : true
+            })
+        })
+    */
+
     init: function init(model) {
         var destroy = function destroy(item) {
             item.layer.destroy();
@@ -1920,7 +1848,22 @@ exports.default = {
     },
 
 
-    // put({count: 10, model: ...})
+    /*
+        var boxes = fw.model.put({
+            count : 10,
+            model : {
+                album  : fw.model.iterate(i => {return custom[i].album}),
+                id     : '{type: int, mode: forward, from: 1}',
+            },
+            shuffle : [{
+                someParam : 'testest'
+            },{
+                others : '{type: int, mode: random, min: 1, max: 10}',
+                image  : '{type: image, source: local}' 
+            }]
+        })
+    */
+
     put: function put(opt) {
         // modify values
         for (var key in opt.model) {
@@ -1990,7 +1933,7 @@ exports.default = {
 };
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2058,7 +2001,7 @@ exports.default = {
 };
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports) {
 
 "use strict";
@@ -2104,7 +2047,7 @@ exports.default = {
 };
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2266,16 +2209,16 @@ var Vec = function () {
 exports.default = Vec;
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(17);
+var content = __webpack_require__(18);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(19)(content, {});
+var update = __webpack_require__(20)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -2292,21 +2235,21 @@ if(false) {
 }
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(18)();
+exports = module.exports = __webpack_require__(19)();
 // imports
 
 
 // module
-exports.push([module.i, "* {\n  margin: 0;\n  box-sizing: border-box; }\n\nbody {\n  background-color: #1f2428; }\n\n.layer {\n  font-family: 'arial';\n  font-size: 13;\n  transition: box-shadow .2s; }\n  .layer.default {\n    display: inline-block;\n    width: 100;\n    height: 100;\n    background-color: rgba(255, 255, 255, 0.7);\n    background-size: cover; }\n  .layer.drag {\n    box-shadow: 0 0 50px 0 rgba(0, 0, 0, 0.5); }\n\n.scroller {\n  width: 100%;\n  height: 100%;\n  -webkit-scroll-snap-type: mandatory;\n  -webkit-scroll-snap-destination: 50% 50%; }\n  .scroller > .layer {\n    width: 100%;\n    height: 100%;\n    -webkit-scroll-snap-coordinate: 50% 50%; }\n  .scroller.x {\n    overflow-y: hidden;\n    white-space: nowrap; }\n    .scroller.x > .layer {\n      display: inline-block;\n      white-space: normal; }\n  .scroller.y {\n    overflow-x: hidden; }\n", ""]);
+exports.push([module.i, "* {\n  margin: 0;\n  box-sizing: border-box; }\n\nbody {\n  background-color: #1f2428; }\n\n.layer {\n  font-family: 'arial';\n  font-size: 13;\n  transition: box-shadow .2s; }\n  .layer.default {\n    display: inline-block;\n    width: 100;\n    height: 100;\n    background-color: rgba(255, 255, 255, 0.7);\n    background-size: cover; }\n  .layer.drag {\n    box-shadow: 0 0 100px 0 rgba(0, 0, 0, 0.5) !important; }\n\n.scroller {\n  width: 100%;\n  height: 100%;\n  -webkit-scroll-snap-type: mandatory;\n  -webkit-scroll-snap-destination: 50% 50%; }\n  .scroller > .layer {\n    width: 100%;\n    height: 100%;\n    -webkit-scroll-snap-coordinate: 50% 50%; }\n  .scroller.x {\n    overflow-y: hidden;\n    white-space: nowrap; }\n    .scroller.x > .layer {\n      display: inline-block;\n      white-space: normal; }\n  .scroller.y {\n    overflow-x: hidden; }\n", ""]);
 
 // exports
 
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports) {
 
 /*
@@ -2362,7 +2305,7 @@ module.exports = function() {
 
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports) {
 
 /*
@@ -2612,53 +2555,6 @@ function updateLink(linkElement, obj) {
 		URL.revokeObjectURL(oldSrc);
 }
 
-
-/***/ },
-/* 20 */
-/***/ function(module, exports, __webpack_require__) {
-
-"use strict";
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _fw = __webpack_require__(0);
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Screen = function (_Layer) {
-    _inherits(Screen, _Layer);
-
-    function Screen() {
-        _classCallCheck(this, Screen);
-
-        return _possibleConstructorReturn(this, (Screen.__proto__ || Object.getPrototypeOf(Screen)).call(this, document.body));
-    }
-
-    _createClass(Screen, [{
-        key: 'size',
-        get: function get() {
-            return new _fw.vec(window.innerWidth, window.innerHeight);
-        }
-    }, {
-        key: 'center',
-        get: function get() {
-            return this.size.scale(.5);
-        }
-    }]);
-
-    return Screen;
-}(_fw.Layer);
-
-exports.default = new Screen();
 
 /***/ }
 /******/ ])

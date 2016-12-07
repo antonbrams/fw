@@ -1,12 +1,28 @@
 
 
 
-import {val, vec, Layer} from './fw'
+import {vec, event, Layer} from './fw'
 
 class Screen extends Layer {
     
     constructor () {
-        super(document.body)
+        super({
+            dom    : document.body,
+            parent : null
+        })
+    }
+    
+    // external event interface
+    on (topic, fn, options) {
+        // dom events
+        if (event.support(document, topic))
+            return event.listener(document, topic, fn, options)
+        // gestures
+        else if (topic in event)
+            return event[topic](this, fn)
+        // dom css
+        else
+            return this.event.on(topic, fn)
     }
     
     get size () {
