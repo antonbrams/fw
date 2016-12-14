@@ -84,7 +84,7 @@ return /******/ (function(modules) { // webpackBootstrap
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.model = exports.Scroller = exports.Screen = exports.Layer = exports.text = exports.css = exports.etc = exports.event = exports.dom = exports.color = exports.math = exports.vec = exports.arr = exports.geo = exports.val = exports.animation = exports.debug = undefined;
+exports.gesture = exports.model = exports.Scroller = exports.Screen = exports.Layer = exports.text = exports.css = exports.etc = exports.event = exports.dom = exports.color = exports.math = exports.matrix = exports.vec = exports.arr = exports.geo = exports.val = exports.animation = exports.debug = undefined;
 
 var _animation = __webpack_require__(4);
 
@@ -128,6 +128,15 @@ Object.defineProperty(exports, 'vec', {
   enumerable: true,
   get: function get() {
     return _interopRequireDefault(_vector).default;
+  }
+});
+
+var _matrix = __webpack_require__(22);
+
+Object.defineProperty(exports, 'matrix', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_matrix).default;
   }
 });
 
@@ -230,6 +239,15 @@ Object.defineProperty(exports, 'model', {
   }
 });
 
+var _gesture = __webpack_require__(21);
+
+Object.defineProperty(exports, 'gesture', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_gesture).default;
+  }
+});
+
 __webpack_require__(17);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -257,15 +275,16 @@ var Layer = function () {
     function Layer(options) {
         _classCallCheck(this, Layer);
 
+        this.identifier = new Date().getTime();
         this.event = new _fw.event.Machine('Layer');
         this.data = null;
         this._dom = null;
         this.props = {
             transformation: {
-                origin: new _fw.vec(0, 0, 0),
-                translate: new _fw.vec(0, 0, 0),
-                scale: new _fw.vec(1, 1, 1),
-                rotate: new _fw.vec(0, 0, 0)
+                origin: new _fw.vec(),
+                translate: new _fw.vec(),
+                scale: new _fw.vec().fill(1),
+                rotate: new _fw.vec()
             },
             pop: {}
         };
@@ -293,10 +312,10 @@ var Layer = function () {
     _createClass(Layer, [{
         key: 'on',
         value: function on(topic, fn, options) {
-            // dom events
-            if (_fw.event.support(this.dom, topic)) return _fw.event.listener(this.dom, topic, fn, options);
             // gestures
-            else if (topic in _fw.event) return _fw.event[topic](this, fn);
+            if (topic in _fw.gesture) return _fw.gesture[topic](this, fn);
+            // dom events
+            else if (_fw.event.support(this.dom, topic)) return _fw.event.listener(this.dom, topic, fn, options);
                 // dom css
                 else return this.event.on(topic, fn);
         }
@@ -313,13 +332,13 @@ var Layer = function () {
                     if (_fw.val.isFn(this[key])) this[key](value);else this[key] = value;
                     // set standard css parameters
 
-                } else this._setStyle(key, value);
+                } else this._setCss(key, value);
             }
             return this;
         }
     }, {
-        key: '_setStyle',
-        value: function _setStyle(options, value) {
+        key: '_setCss',
+        value: function _setCss(options, value) {
             var _this = this;
 
             var set = function set(key, value) {
@@ -331,8 +350,8 @@ var Layer = function () {
             }
         }
     }, {
-        key: '_getStyle',
-        value: function _getStyle(key) {
+        key: '_getCss',
+        value: function _getCss(key) {
             return _fw.css.computed(this.dom, key);
         }
     }, {
@@ -471,7 +490,7 @@ var Layer = function () {
             };
             if (_fw.val.isArr(value)) value.forEach(function (item) {
                 return append(item);
-            });else append(item);
+            });else append(value);
         }
     }, {
         key: 'prepend',
@@ -530,7 +549,7 @@ var Layer = function () {
     }, {
         key: 'bg',
         value: function bg(value) {
-            if (_fw.val.isStr(value)) this._setStyle('background', value);else if (_fw.val.isObj(value)) {
+            if (_fw.val.isStr(value)) this._setCss('background', value);else if (_fw.val.isObj(value)) {
                 var params = {};
                 if ('image' in value) params.backgroundImage = 'url(' + value.image + ')';
                 if ('origin' in value) params.backgroundOrigin = _fw.val.isObj(value.origin) ? value.origin.x + ' ' + value.origin.y : value.origin;
@@ -538,13 +557,13 @@ var Layer = function () {
                 if ('size' in value) params.backgroundSize = _fw.val.isObj(value.size) ? value.size.x + ' ' + value.size.y : value.size;
                 if ('repeat' in value) params.backgroundRepeat = value.repeat == 'x' ? 'repeat-x' : value.repeat == 'y' ? 'repeat-y' : value.repeat == 'no' ? 'no-repeat' : value.repeat == 'yes' ? 'repeat' : value.repeat;
                 if ('color' in value) params.backgroundColor = value.color;
-                this._setStyle(params);
+                this._setCss(params);
             }
         }
     }, {
         key: 'text',
         value: function text(value) {
-            if (_fw.val.isStr(value)) this._setStyle('font', value);else if (_fw.val.isObj(value)) {
+            if (_fw.val.isStr(value)) this._setCss('font', value);else if (_fw.val.isObj(value)) {
                 var props = {
                     style: 'fontStyle',
                     variant: 'fontVariant',
@@ -558,7 +577,7 @@ var Layer = function () {
                     shadow: 'textShadow'
                 };
                 for (var key in props) {
-                    if (key in value) this._setStyle(props[key], value[key]);
+                    if (key in value) this._setCss(props[key], value[key]);
                 }
             }
         }
@@ -567,7 +586,7 @@ var Layer = function () {
         value: function border(value) {
             var _this6 = this;
 
-            if (_fw.val.isStr(value)) this._setStyle('border', value);else if (_fw.val.isObj(value)) {
+            if (_fw.val.isStr(value)) this._setCss('border', value);else if (_fw.val.isObj(value)) {
                 var set = function set(value, side) {
                     var props = {
                         color: 'Color',
@@ -576,7 +595,7 @@ var Layer = function () {
                         style: 'Style'
                     };
                     for (var key in props) {
-                        if (key in value) _this6._setStyle('border' + side + props[key], value[key]);
+                        if (key in value) _this6._setCss('border' + side + props[key], value[key]);
                     }
                 };
                 set(value, '');
@@ -640,8 +659,8 @@ var Layer = function () {
     }, {
         key: 'move',
         set: function set(value) {
-            if ('x' in value) this._setStyle('left', value.x);
-            if ('y' in value) this._setStyle('top', value.y);
+            if ('x' in value) this._setCss('left', value.x);
+            if ('y' in value) this._setCss('top', value.y);
         },
         get: function get() {
             return new _fw.vec(this.dom.offsetLeft, this.dom.offsetTop);
@@ -649,8 +668,8 @@ var Layer = function () {
     }, {
         key: 'size',
         set: function set(value) {
-            if ('x' in value) this._setStyle('width', value.x);
-            if ('y' in value) this._setStyle('height', value.y);
+            if ('x' in value) this._setCss('width', value.x);
+            if ('y' in value) this._setCss('height', value.y);
         },
         get: function get() {
             return new _fw.vec(this.dom.offsetWidth, this.dom.offsetHeight);
@@ -660,7 +679,7 @@ var Layer = function () {
         set: function set(value) {
             if (_fw.val.isObj(value)) {
                 if ('x' in value && 'y' in value) {
-                    this._setStyle('padding', value.y + ' ' + value.x);
+                    this._setCss('padding', value.y + ' ' + value.x);
                 } else {
                     var params = {};
                     if ('x' in value) params.padding = '0 ' + value.x;
@@ -669,9 +688,9 @@ var Layer = function () {
                     if ('t' in value) params.paddingTop = value.t;
                     if ('r' in value) params.paddingRight = value.r;
                     if ('b' in value) params.paddingBottom = value.b;
-                    this._setStyle(params);
+                    this._setCss(params);
                 }
-            } else this._setStyle('padding', value);
+            } else this._setCss('padding', value);
         },
         get: function get() {
             return {
@@ -686,7 +705,7 @@ var Layer = function () {
         set: function set(value) {
             if (_fw.val.isObj(value)) {
                 if ('x' in value && 'y' in value) {
-                    this._setStyle('margin', value.y + ' ' + value.x);
+                    this._setCss('margin', value.y + ' ' + value.x);
                 } else {
                     var params = {};
                     if ('x' in value) params.margin = '0 ' + value.x;
@@ -695,9 +714,9 @@ var Layer = function () {
                     if ('t' in value) params.marginTop = value.t;
                     if ('r' in value) params.marginRight = value.r;
                     if ('b' in value) params.marginBottom = value.b;
-                    this._setStyle(params);
+                    this._setCss(params);
                 }
-            } else this._setStyle('margin', value);
+            } else this._setCss('margin', value);
         },
         get: function get() {
             return {
@@ -757,7 +776,9 @@ var Layer = function () {
             var _this10 = this;
 
             this.event.emit('rotate', value);
-            if (_fw.val.isNum(value)) this.props.transformation.rotate.z = value;else ['x', 'y', 'z'].forEach(function (axis) {
+            if (_fw.val.isNum(value)) {
+                this.props.transformation.rotate.z = value + 'deg';
+            } else if (_fw.val.isStr(value)) this.props.transformation.rotate.z = value;else ['x', 'y', 'z'].forEach(function (axis) {
                 if (axis in value) _this10.props.transformation.rotate[axis] = value[axis];
             });
             _fw.css.applyTransformation(this.dom, this.props.transformation);
@@ -771,7 +792,9 @@ var Layer = function () {
     }, {
         key: 'center',
         set: function set(value) {
-            this.move = value.sub(this.size.scale(.5));
+            var size = this.size.scale(.5);
+            if (_fw.val.exists(value.x)) this._setCss('left', value.x - size.x);
+            if (_fw.val.exists(value.y)) this._setCss('top', value.y - size.y);
         },
         get: function get() {
             return _fw.geo.center(_fw.geo.vpo(this.dom));
@@ -783,6 +806,14 @@ var Layer = function () {
         key: 'rect',
         get: function get() {
             return _fw.geo.vpo(this.dom);
+        }
+
+        // tilt
+
+    }, {
+        key: 'tilt',
+        set: function set(value) {
+            this.rotate = new fw.vec(-value.y, value.x);
         }
     }]);
 
@@ -830,10 +861,10 @@ var Screen = function (_Layer) {
     _createClass(Screen, [{
         key: 'on',
         value: function on(topic, fn, options) {
-            // dom events
-            if (_fw.event.support(document, topic)) return _fw.event.listener(document, topic, fn, options);
             // gestures
-            else if (topic in _fw.event) return _fw.event[topic](this, fn);
+            if (topic in _fw.event) return _fw.gesture[topic](this, fn);
+            // dom events
+            else if (_fw.event.support(document, topic)) return _fw.event.listener(document, topic, fn, options);
                 // dom css
                 else return this.event.on(topic, fn);
         }
@@ -911,19 +942,37 @@ Object.defineProperty(exports, "__esModule", {
 
 var _fw = __webpack_require__(0);
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 exports.default = {
 
 	/*
+ 	fw.animation.request.on('move', () => {
+ 		scroller.translate = pointer
+ 	})
+ 	fw.animation.request.draw()
+ */
+
+	draw: function () {
+		var thread = true;
+		var jobs = {};
+		return function (key, fn) {
+			jobs[key] = fn;
+			if (thread) {
+				thread = false;
+				window.requestAnimationFrame(function () {
+					thread = true;
+					for (var i in jobs) {
+						jobs[i]();delete jobs[i];
+					}
+				});
+			}
+		};
+	}(),
+
+	/*
  	dom.set({
- 		opacity    : 0.5,
  		translate  : new fw.vec(0, -100),
- 		background : 'green'
- 	}).flow(1.5, 'ease', {
- 		opacity    : 0.5,
+ 	}).flow(1.5, 'ease', 1, {
  		translate  : new fw.vec(0, 53.5),
- 		background : 'red'
  	}, function () {
  		console.log('done')
  	})
@@ -947,6 +996,28 @@ exports.default = {
 	},
 
 
+	jobs: function () {
+		var fps = 60;
+		var active = false;
+		var jobs = {};
+		return function (id, job) {
+			var running = id in jobs;
+			jobs[id] = job;
+			if (!active) {
+				active = true;
+				var loop = setInterval(function () {
+					for (var i in jobs) {
+						if (jobs[i]()) delete jobs[i];
+					}if (Object.keys(jobs).length == 0) {
+						active = false;
+						clearTimeout(loop);
+					}
+				}, 1000 / fps);
+			}
+			return running;
+		};
+	}(),
+
 	// Other Functions
 	getSinus: function getSinus(from, to, speed) {
 		var time = new Date().getTime() * 0.001;
@@ -955,69 +1026,80 @@ exports.default = {
 	},
 
 
-	easing: {
-		linear: function linear(t) {
-			return t;
-		},
-		easeOutExpo: function easeOutExpo(t) {
-			return 1 - Math.pow(2, -10 * t);
-		},
-		easeInQuad: function easeInQuad(t) {
-			return Math.sin(t * (Math.PI / 2));
-		},
-		easeOutQuad: function easeOutQuad(t) {
-			return t * (2 - t);
-		},
-		easeInOutQuint: function easeInOutQuint(t) {
-			return t < 0.5 ? 16 * Math.pow(t, 5) : --t * 16 * Math.pow(t, 4) + 1;
-		},
-		easeOutElastic: function easeOutElastic(t) {
-			var p = 0.8;
-			return Math.pow(2, -10 * t) * Math.sin((t - p / 4) * (2 * Math.PI) / p) + 1;
-		},
-		easeOutBounce: function easeOutBounce(t) {
-			if (t < 1.0 / 2.75) return 7.5625 * t * t;else if (t < 2.0 / 2.75) return 7.5625 * t * (t -= 1.500 / 2.75) + 0.750000;else if (t < 2.5 / 2.75) return 7.5625 * t * (t -= 2.250 / 2.75) + 0.937500;else return 7.5625 * t * (t -= 2.625 / 2.75) + 0.984375;
-		}
-	},
-
 	/*
- 	animation.play(0.5, 'linear', t => {
- 		element.style.opacity = 1-t
- 	}, () => {
- 		obj.style.display = 'none'	
- 	})
+ 	var tilt = fw.animation.decay(velocity => {
+         fw.animation.draw(`${layer2.identifier}: velocity`, () => {
+             layer2.tilt = velocity.scale(5)
+         })
+     }).on('end', e => {
+         console.log('test')
+     })
  */
 
-	jobs: [],
-	active: false,
+	decay: function decay(callback) {
+		var _this = this;
 
-	Job: function Job(time, easing, loop, end) {
-		_classCallCheck(this, Job);
+		var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-		this.end = end || function () {};
-		var start = new Date();
-		loop(.0);
-		this.run = function () {
-			var clock = (new Date() - start) / 1000 / time;
-			loop(clock < 1. ? easing(clock) : 1.);
-			return clock < 1. ? clock : 1.;
+		var id = window.performance.now();
+		var job, _stop;
+		var e = new _fw.event.Machine('Decay', true);
+		var types = {
+			vec: {
+				calculate: function calculate(a, b, c) {
+					return a.add(b.sub(a).scale(c), 1);
+				},
+				isEqual: function isEqual(a, b, c) {
+					return _fw.math.isEqual(b.sub(a).len(), 0);
+				}
+			},
+			num: {
+				calculate: function calculate(a, b, c) {
+					return a += (b - a) * c;
+				},
+				isEqual: function isEqual(a, b, c) {
+					return _fw.math.isEqual(a, set);
+				}
+			}
 		};
-	},
-
-	loop: function loop() {
-		var jobs = [];
-		this.jobs.forEach(function (job) {
-			if (job.run() == 1.) job.end();else jobs.push(job);
-		});
-		this.jobs = jobs;
-		if (this.jobs.length > 0) window.requestAnimationFrame(this.loop.bind(this));else this.active = null;
-	},
-	play: function play(time, type, loop, end) {
-		this.jobs.push(new this.Job(time, this.easing[type], loop, end));
-		if (!this.active) {
-			this.active = true;
-			window.requestAnimationFrame(this.loop.bind(this));
-		}
+		var out = {
+			set: function set(value) {
+				console.log(_stop);
+				if (_fw.val.exists(job)) {
+					_this.jobs(id, function () {
+						if (!_stop) {
+							job.type.calculate(job.value, value, options.speed || .1);
+							callback(job.value);
+							if (job.type.isEqual(job.value, value)) {
+								job = undefined;
+								_stop = true;
+								e.emit('end');
+							}
+						}
+						var stopped = _stop;
+						_stop = false;
+						return stopped;
+					});
+				} else {
+					job = {
+						value: value,
+						type: types[value instanceof _fw.vec ? 'vec' : 'num']
+					};
+					_stop = false;
+					e.emit('start');
+				}
+			},
+			stop: function stop() {
+				_stop = true;
+				e.emit('stop');
+				return out;
+			},
+			on: function on(topic, fn) {
+				e.on(topic, fn);
+				return out;
+			}
+		};
+		return out;
 	}
 };
 
@@ -1031,11 +1113,6 @@ exports.default = {
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 exports.default = {
 
     // _splitQuery('parent.child.element')
@@ -1117,33 +1194,7 @@ exports.default = {
             }output.push(object);
         });
         return output;
-    },
-
-
-    // var buffer = new Buffer(10) then var value = buffer.get(23.445) 
-    buffer: function () {
-        function buffer(size) {
-            _classCallCheck(this, buffer);
-
-            this.array = new Array();
-            this.size = size;
-        }
-
-        _createClass(buffer, [{
-            key: 'get',
-            value: function get(value) {
-                var sum = 0;
-                var length = this.array.length;
-                if (length > this.size) this.array.shift();
-                this.array.push(value);
-                for (var i = 0; i < length; i++) {
-                    if (isFinite(this.array[i])) sum += parseFloat(this.array[i]);
-                }return sum / length;
-            }
-        }]);
-
-        return buffer;
-    }()
+    }
 };
 
 /***/ },
@@ -1211,7 +1262,7 @@ exports.default = {
         if (type == 'origin') {
             element.style[this.vendor.transformOrigin] = data.origin.x + ' \n                 ' + data.origin.y;
             element.style[this.vendor.perspectiveOrigin] = '' + data.origin.z;
-        } else element.style[this.vendor.transform] = 'translate3d(\n                    ' + data.translate.x + ',\n                    ' + data.translate.y + ',\n                    ' + data.translate.z + ') \n                rotateX(' + data.rotate.x + 'deg)\n                rotateY(' + data.rotate.y + 'deg)\n                rotateZ(' + data.rotate.z + 'deg) \n                scale3d(\n                    ' + data.scale.x + ', \n                    ' + data.scale.y + ', \n                    ' + data.scale.z + ')';
+        } else element.style[this.vendor.transform] = 'translate3d(\n                    ' + data.translate.x + ',\n                    ' + data.translate.y + ',\n                    ' + data.translate.z + '\n                )\n                rotateX(' + data.rotate.x + ')\n                rotateY(' + data.rotate.y + ')\n                rotateZ(' + data.rotate.z + ')\n                scale3d(\n                    ' + data.scale.x + ',\n                    ' + data.scale.y + ',\n                    ' + data.scale.z + '\n                )';
     },
     computed: function computed(element, prop) {
         return parseInt(document.defaultView.getComputedStyle(element, null).getPropertyValue(prop));
@@ -1512,14 +1563,25 @@ exports.default = {
     }(),
 
     listener: function listener(dom, type, callback, flag) {
+        var toggle = false;
         var out = {
             on: function on() {
-                dom.addEventListener(type, callback, flag);
+                if (!toggle) {
+                    toggle = true;
+                    dom.addEventListener(type, callback, flag);
+                }
                 return out;
             },
             off: function off() {
-                dom.removeEventListener(type, callback, flag);
+                if (toggle) {
+                    toggle = false;
+                    dom.removeEventListener(type, callback, flag);
+                }
                 return out;
+            },
+
+            get active() {
+                return toggle;
             }
         };
         return out;
@@ -1623,7 +1685,11 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _fw = __webpack_require__(0);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 exports.default = {
 	to: function to(t, a, b) {
@@ -1644,6 +1710,12 @@ exports.default = {
 	},
 	randInt: function randInt(min, max) {
 		return Math.floor(this.to(Math.random(), min, max));
+	},
+	isEqual: function isEqual(a, b) {
+		var tolerance = arguments.length <= 2 || arguments[2] === undefined ? 1 : arguments[2];
+
+		var shit = Math.pow(10, -tolerance);
+		return a - shit < b && b < a + shit;
 	},
 	binarySearch: function binarySearch(length, check) {
 		var i = Math.floor(.5 * length); // result
@@ -1671,30 +1743,56 @@ exports.default = {
 		} // Return
 		return params;
 	},
-	getValueBySize: function getValueBySize(value, list) {
+	getValueFromDictionary: function getValueFromDictionary(value, list) {
 		var out;
 		for (var i = 0; i < list.length; i++) {
 			if (value >= list[i][0]) out = list[i][1];
 		}return out;
 	},
-	rubberEffect: function rubberEffect(value, min, max, threshold, state) {
+	rubberRange: function rubberRange(value, min, max, range, state) {
 		// https://www.desmos.com/calculator
 		// Based on 1-pow(1+x,-1)
 		var factor = 1.3;
-		var maxTrue = _fw.val.exists(max);
-		var minTrue = _fw.val.exists(min);
-		if (maxTrue || minTrue) {
-			var direction = value < max;
-			var threshold = (direction ? 1 : -1) * threshold;
-			var range = direction ? max : min;
-			var x = (range - value) / threshold;
-			var y = range - threshold * (1 - Math.pow(1 + x, -factor));
+		var isMax = _fw.val.exists(max);
+		var isMin = _fw.val.exists(min);
+		if (isMax || isMin) {
+			var dir = value < max;
+			var range = (dir ? 1 : -1) * range;
+			var len = dir ? max : min;
+			var x = (len - value) / range;
+			var y = len - range * (1 - Math.pow(1 + x, -factor));
 		}
-		var maxState = maxTrue && value < max;
-		var minState = minTrue && value > min;
+		var maxState = isMax && value < max;
+		var minState = isMin && value > min;
 		if (state) state(maxState ? 'max' : minState ? 'min' : null);
 		return maxState || minState ? y : value;
-	}
+	},
+
+
+	// var buffer = new Buffer(10) then var value = buffer.get(23.445) 
+	buffer: function () {
+		function buffer(size) {
+			_classCallCheck(this, buffer);
+
+			this.array = [];
+			this.size = size;
+		}
+
+		_createClass(buffer, [{
+			key: 'get',
+			value: function get(value) {
+				var sum = 0;
+				var length = this.array.length;
+				if (length > this.size) this.array.shift();
+				this.array.push(value);
+				for (var i = 0; i < length; i++) {
+					if (isFinite(this.array[i])) sum += parseFloat(this.array[i]);
+				}return sum / length;
+			}
+		}]);
+
+		return buffer;
+	}()
 };
 
 /***/ },
@@ -2182,6 +2280,22 @@ var Vec = function () {
             return data;
         }
     }, {
+        key: 'ununit',
+        value: function ununit() {
+            if (_fw.val.exists(this.x)) this.x = parseFloat(this.x);
+            if (_fw.val.exists(this.y)) this.y = parseFloat(this.y);
+            if (_fw.val.exists(this.z)) this.z = parseFloat(this.z);
+            return this;
+        }
+    }, {
+        key: 'reset',
+        value: function reset() {
+            if (_fw.val.exists(this.x)) this.x = 0;
+            if (_fw.val.exists(this.y)) this.y = 0;
+            if (_fw.val.exists(this.z)) this.z = 0;
+            return this;
+        }
+    }, {
         key: 'log',
         value: function log(name) {
             var data = { x: this.x };
@@ -2199,7 +2313,23 @@ var Vec = function () {
     }, {
         key: 'apply',
         value: function apply(fn) {
-            return new Vec(fn(this.x), fn(this.y));
+            return new Vec(fn({ dimension: 'x', value: this.x }), fn({ dimension: 'y', value: this.y }), fn({ dimension: 'z', value: this.z }));
+        }
+    }, {
+        key: 'fill',
+        value: function fill(value) {
+            this.x = value;
+            this.y = value;
+            this.z = value;
+            return this;
+        }
+    }, {
+        key: 'mix',
+        value: function mix(array) {
+            var sum = new Vec();
+            for (var i = 0; i < array.length; i++) {
+                sum.add(array[i], true);
+            }return sum.div(new Vec().fill(array.length));
         }
     }]);
 
@@ -2243,7 +2373,7 @@ exports = module.exports = __webpack_require__(19)();
 
 
 // module
-exports.push([module.i, "* {\n  margin: 0;\n  box-sizing: border-box; }\n\nbody {\n  background-color: #1f2428; }\n\n.layer {\n  font-family: 'arial';\n  font-size: 13;\n  transition: box-shadow .2s; }\n  .layer.default {\n    display: inline-block;\n    width: 100;\n    height: 100;\n    background-color: rgba(255, 255, 255, 0.7);\n    background-size: cover; }\n  .layer.drag {\n    box-shadow: 0 0 100px 0 rgba(0, 0, 0, 0.5) !important; }\n\n.scroller {\n  width: 100%;\n  height: 100%;\n  -webkit-scroll-snap-type: mandatory;\n  -webkit-scroll-snap-destination: 50% 50%; }\n  .scroller > .layer {\n    width: 100%;\n    height: 100%;\n    -webkit-scroll-snap-coordinate: 50% 50%; }\n  .scroller.x {\n    overflow-y: hidden;\n    white-space: nowrap; }\n    .scroller.x > .layer {\n      display: inline-block;\n      white-space: normal; }\n  .scroller.y {\n    overflow-x: hidden; }\n", ""]);
+exports.push([module.i, "* {\n  margin: 0;\n  box-sizing: border-box; }\n\nbody {\n  background-color: #1f2428;\n  perspective: 500; }\n\n.layer {\n  font-family: 'arial';\n  font-size: 13;\n  transition: box-shadow .2s; }\n  .layer.default {\n    position: relative;\n    display: inline-block;\n    width: 100;\n    height: 100;\n    background-color: rgba(255, 255, 255, 0.7);\n    background-size: cover; }\n  .layer.drag {\n    box-shadow: 0 0 100px 0 rgba(0, 0, 0, 0.5) !important; }\n\n.scroller {\n  width: 100%;\n  height: 100%;\n  -webkit-scroll-snap-type: mandatory;\n  -webkit-scroll-snap-destination: 50% 50%; }\n  .scroller > .layer {\n    width: 100%;\n    height: 100%;\n    -webkit-scroll-snap-coordinate: 50% 50%; }\n  .scroller.x {\n    overflow-y: hidden;\n    white-space: nowrap; }\n    .scroller.x > .layer {\n      display: inline-block;\n      white-space: normal; }\n  .scroller.y {\n    overflow-x: hidden; }\n", ""]);
 
 // exports
 
@@ -2555,6 +2685,232 @@ function updateLink(linkElement, obj) {
 		URL.revokeObjectURL(oldSrc);
 }
 
+
+/***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _fw = __webpack_require__(0);
+
+var offset = new _fw.vec();
+
+exports.default = {
+    dragTouch: function dragTouch(layer, params) {
+        var transport = {};
+        var touches = {};
+        var position = new _fw.vec();
+        var down = layer.on('touchstart', function (e) {
+            if (!move.active) move.on();
+            if (!up.active) up.on();
+            params.down();
+            e.preventDefault();
+        }, true).on();
+        var move = layer.on('touchmove', function (e) {
+            var diff = new _fw.vec();
+            var length = e.targetTouches.length;
+            for (var i = 0; i < length; i++) {
+                var touch = e.targetTouches[i];
+                var pointer = new _fw.vec(touch.clientX, touch.clientY);
+                if (!touches[touch.identifier]) touches[touch.identifier] = pointer;
+                diff.add(pointer, true).sub(touches[touch.identifier], true);
+                touches[touch.identifier] = pointer;
+            }
+            diff.div({ x: length, y: length }, true);
+            params.move(position.add(diff, true));
+            e.preventDefault();
+        }, true);
+        var up = layer.on('touchend', function (e) {
+            for (var i = 0; i < e.changedTouches.length; i++) {
+                delete touches[e.changedTouches[i].identifier];
+            }if (e.targetTouches.length == 0) cancel();
+            e.preventDefault();
+        }, true);
+        var cancel = function cancel(e) {
+            move.off();
+            up.off();
+            params.up(transport);
+            transport = {};
+            touches = {};
+            position.reset();
+        };
+        layer.on('touchcancel', cancel, true).on();
+        return { down: down, cancel: cancel };
+    },
+    dragMouse: function dragMouse(layer, params) {
+        var transport = {};
+        var downPosition = new _fw.vec();
+        var down = layer.on('mousedown', function (e) {
+            downPosition = new _fw.vec(e.clientX, e.clientY);
+            move.on();
+            up.on();
+            e.preventDefault();
+        }, true).on();
+        var move = _fw.Screen.on('mousemove', function (e) {
+            var movePosition = new _fw.vec(e.clientX, e.clientY);
+            params.move(movePosition.sub(downPosition));
+            e.preventDefault();
+        }, true);
+        var up = _fw.Screen.on('mouseup', function (e) {
+            cancel();
+            e.preventDefault();
+        }, true);
+        var cancel = function cancel(e) {
+            move.off();
+            up.off();
+            params.up(transport);
+            transport = {};
+        };
+        return { down: down, cancel: cancel };
+    },
+    drag: function drag(layer) {
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+        var dragType = _fw.event.types.isTouch ? 'dragTouch' : 'dragMouse';
+        var t = {
+            dragInit: null,
+            velocity: new _fw.vec()
+        };
+        var lastFramePosition = new _fw.vec();
+        // var offset = new vec()
+        var controls = this[dragType](layer, {
+            down: function down() {
+                // offset = layer.translate.copy().ununit()
+                if (options.down) options.down();
+            },
+            move: function move(translate) {
+                if (!t.dragInit) {
+                    if (translate.len() > 5) {
+                        t.dragInit = translate.copy();
+                        if (options.init) options.init();
+                    }
+                } else {
+                    t.translation = translate.sub(t.dragInit);
+                    // velocity calculation
+                    t.velocity = t.translation.sub(lastFramePosition);
+                    lastFramePosition = t.translation;
+                    // math.rubberRange(value, min, max, range, state)
+                    if (options.move) options.move(t);else
+                        // animation.draw(`${layer.identifier}: drag`, () => {
+                        layer.translate = t.translation.add(offset).unit('px');
+                    // })
+                }
+            },
+            up: function up() {
+                if (options.up) options.up();else
+                    // animation.draw(`${layer.identifier}: drag`, () => {
+                    layer.animate({ time: .2, ease: 'cubic-bezier(.1, .5, .1, 1.5)' }, {
+                        translate: new _fw.vec()
+                    });
+                // })
+                lastFramePosition.reset();
+                // offset.reset()
+                t = {};
+            }
+        });
+        return {
+            on: function on() {
+                controls.down.on();
+                return layer;
+            },
+            off: function off() {
+                controls.down.off();
+                return layer;
+            },
+            cancel: function cancel() {
+                controls.cancel();
+                return layer;
+            }
+        };
+    },
+    zoom: function zoom(layer) {
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+        var value = 1;
+        var scale = 1;
+        var updateOrigin = function updateOrigin(e) {
+            var fingers = [];
+            for (var i = 0; i < e.targetTouches.length; i++) {
+                fingers.push(new _fw.vec(e.targetTouches[i].clientX, e.targetTouches[i].clientY));
+            }var rect = layer.rect;
+            var origin = _fw.vec.prototype.mix(fingers).sub(rect.position).scale(1 / scale);
+            layer.child('.layer')[0].move = origin.unit('px');
+            var a = origin.sub(rect.size.scale(.5)).scale(scale - 1);
+            var b = a.sub(offset);
+            offset = a;
+            layer.set({
+                origin: origin,
+                translate: layer.translate.ununit().add(b).unit('px')
+            });
+        };
+        var down = layer.on('touchstart', function (e) {
+            updateOrigin(e);
+            if (!move.active) move.on();
+            if (!up.active) up.on();
+            e.preventDefault();
+        }, true).on();
+        var move = layer.on('touchmove', function (e) {
+            // animation.draw(`${layer.identifier}: zoom`, () => {
+            scale = value + e.scale - 1;
+            layer.scale = scale;
+            // })
+            e.preventDefault();
+        }, true);
+        var up = layer.on('touchend', function (e) {
+            var length = e.targetTouches.length;
+            if (length == 0) cancel();else if (length == 1) value += e.scale - 1;
+            e.preventDefault();
+        }, true);
+        var cancel = function cancel() {
+            move.off();
+            up.off();
+            // animation.draw(`${layer.identifier}: zoom`, () => {
+            layer.animate({ time: .2, ease: 'cubic-bezier(.1, .5, .1, 1.5)' }, {
+                scale: new _fw.vec().fill(1)
+            });
+            // })
+            value = 1;
+            scale = 1;
+            offset.reset();
+        };
+        return {
+            on: function on() {
+                down.on();
+                return layer;
+            },
+            off: function off() {
+                down.off();
+                return layer;
+            },
+            cancel: function (_cancel) {
+                function cancel() {
+                    return _cancel.apply(this, arguments);
+                }
+
+                cancel.toString = function () {
+                    return _cancel.toString();
+                };
+
+                return cancel;
+            }(function () {
+                cancel();
+                return layer;
+            })
+        };
+    }
+};
+
+/***/ },
+/* 22 */
+/***/ function(module, exports) {
+
+throw new Error("Module build failed: SyntaxError: Unexpected token, expected ; (4:22)\n\n\u001b[0m \u001b[90m 2 | \u001b[39m\n \u001b[90m 3 | \u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 4 | \u001b[39m\u001b[36mexport\u001b[39m \u001b[36mdefault\u001b[39m \u001b[33mMatrix\u001b[39m {\n \u001b[90m   | \u001b[39m                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 5 | \u001b[39m    \n \u001b[90m 6 | \u001b[39m    constructor (value) {\n \u001b[90m 7 | \u001b[39m        \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mvector \u001b[33m=\u001b[39m value \u001b[33m||\u001b[39m [\u001b[35m0\u001b[39m\u001b[33m,\u001b[39m \u001b[35m0\u001b[39m\u001b[33m,\u001b[39m \u001b[35m0\u001b[39m\u001b[33m,\u001b[39m \u001b[35m1\u001b[39m]\u001b[0m\n");
 
 /***/ }
 /******/ ])

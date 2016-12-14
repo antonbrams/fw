@@ -135,6 +135,20 @@ export default class Vec {
         if (val.exists(this.z)) data.z = this.z + unit
     	return data
     }
+    
+    ununit() {
+        if (val.exists(this.x)) this.x = parseFloat(this.x)
+        if (val.exists(this.y)) this.y = parseFloat(this.y)
+        if (val.exists(this.z)) this.z = parseFloat(this.z)
+    	return this
+    }
+    
+    reset () {
+        if (val.exists(this.x)) this.x = 0
+        if (val.exists(this.y)) this.y = 0
+        if (val.exists(this.z)) this.z = 0
+    	return this
+    }
 
     log (name) {
         var data = {x: this.x}
@@ -153,9 +167,23 @@ export default class Vec {
     
     apply (fn) {
         return new Vec(
-            fn(this.x),
-            fn(this.y),
+            fn({dimension: 'x', value: this.x}),
+            fn({dimension: 'y', value: this.y}),
+            fn({dimension: 'z', value: this.z})
         )
+    }
+    
+    fill (value) {
+        this.x = value
+        this.y = value
+        this.z = value
+        return this
+    }
+    
+    mix (array) {
+        var sum = new Vec()
+        for (var i = 0; i < array.length; i ++) sum.add(array[i], true)
+        return sum.div(new Vec().fill(array.length))
     }
 }
 

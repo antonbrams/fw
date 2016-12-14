@@ -18,16 +18,18 @@ export default {
                 `translate3d(
                     ${data.translate.x},
                     ${data.translate.y},
-                    ${data.translate.z}) 
-                rotateX(${data.rotate.x}deg)
-                rotateY(${data.rotate.y}deg)
-                rotateZ(${data.rotate.z}deg) 
+                    ${data.translate.z}
+                )
+                rotateX(${data.rotate.x})
+                rotateY(${data.rotate.y})
+                rotateZ(${data.rotate.z})
                 scale3d(
-                    ${data.scale.x}, 
-                    ${data.scale.y}, 
-                    ${data.scale.z})`
+                    ${data.scale.x},
+                    ${data.scale.y},
+                    ${data.scale.z}
+                )`
     },
-
+    
     computed (element, prop) {
 	    return parseInt(
 	    	document.defaultView

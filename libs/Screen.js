@@ -1,7 +1,7 @@
 
 
 
-import {vec, event, Layer} from './fw'
+import {vec, event, gesture, Layer} from './fw'
 
 class Screen extends Layer {
     
@@ -14,12 +14,12 @@ class Screen extends Layer {
     
     // external event interface
     on (topic, fn, options) {
-        // dom events
-        if (event.support(document, topic))
-            return event.listener(document, topic, fn, options)
         // gestures
-        else if (topic in event)
-            return event[topic](this, fn)
+        if (topic in event)
+           return gesture[topic](this, fn)
+       // dom events
+        else if (event.support(document, topic))
+            return event.listener(document, topic, fn, options)
         // dom css
         else
             return this.event.on(topic, fn)

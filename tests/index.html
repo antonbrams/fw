@@ -13,20 +13,63 @@
 
 <script src="../index.js"></script>
 <script>
-
-
+    
     // fw.Screen.bg({color: 'rgb(222, 86, 152)'})
     
-    var scroller = new fw.Scroller({
-        flow         : 'y',
-        position     : 'absolute',
-        size         : new fw.vec(280, 280),
-        addClass     : 'default',
-        padding      : 10,
-        borderRadius : 5,
-        boxShadow    : '0 2px 10px 0 rgba(0,0,0, .2)',
-        center       : fw.Screen.center
+    // var scroller = new fw.Scroller({
+    //     flow         : 'y',
+    //     position     : 'absolute',
+    //     size         : new fw.vec(280, 280),
+    //     addClass     : 'default',
+    //     padding      : 10,
+    //     borderRadius : 5,
+    //     boxShadow    : '0 2px 10px 0 rgba(0,0,0, .2)',
+    //     center       : fw.Screen.center
+    // })
+    
+    // var layer1 = new fw.Layer({
+    //     position : 'absolute',
+    //     size     : new fw.vec(300, 300),
+    //     center   : fw.Screen.center
+    // })
+    // layer1.append(new fw.Layer({
+    //     position : 'absolute',
+    //     size     : new fw.vec(10, 10),
+    //     border   : {radius: 10},
+    //     bg       : {color: 'red'}
+    // }))
+    // layer1.on('drag')
+    // layer1.on('zoom')
+    
+    var scale = 1.5
+    
+    var layer2 = new fw.Layer({
+        position: 'absolute',
+        size   : new fw.vec(300, 300),
+        center : fw.Screen.center,
+        opacity : 0.2
     })
+    
+    var layer1 = new fw.Layer({
+        size   : new fw.vec(300, 300),
+        center : fw.Screen.center,
+        rotate : 20,
+        // scale  : scale,
+        append : new fw.Layer({
+            position : 'absolute',
+            size     : new fw.vec(10, 10),
+            border   : {radius: 10},
+            bg       : {color: 'red'}
+        })
+    })
+    
+    layer1.on('mousemove', e => {
+        var pointer = new fw.vec(e.clientX, e.clientY).sub(layer2.rect.position)
+        layer1.origin = pointer
+        // layer1.translate = layer1.size.scale(.5).sub(pointer).unit('px')
+        layer1.child('.layer')[0].move = pointer
+    }).on()
+    
     
     // var model = fw.model.put({count: 1, model: {
     //     id    : '{type: int, mode: forward, from: 1}',
@@ -58,65 +101,6 @@
     //     padding : {x: 10, y: 5},
     //     margin  : 10
     // })
-    
-    var onDown   = null
-    var rotation = 0
-    var scale    = 0
-    var current  = null
-    
-    var up = scroller.on(fw.event.types.down, e => {
-        if (!onDown) {
-            onDown = new fw.vec(e.pageX, e.pageY)
-            scroller.addClass('drag')
-            move.on()
-            up.on()
-            scroller.origin = onDown.sub(scroller.rect.position)
-        } else {
-            // onDown = onDown.sub(current.sub(new fw.vec(e.targetTouches[0].pageX, e.targetTouches[0].pageY)))
-        }
-        e.preventDefault()
-    }, true).on()
-    
-    var move = scroller.on(fw.event.types.move, e => {
-        current = new fw.vec(e.pageX, e.pageY)
-        scroller.translate = current.sub(onDown).unit('px')
-        if (fw.event.types.isTouch && e.targetTouches.length > 1) {
-            scroller.set({
-                rotate    : e.rotation + rotation,
-                scale     : e.scale    + scale
-            })
-        }
-        e.preventDefault()
-    }, true)
-    
-    var up = scroller.on(fw.event.types.up, e => {
-        if (fw.event.types.isTouch && e.targetTouches.length == 1) {
-            rotation = scroller.rotate.z
-            scale    = scroller.scale.x - 1
-            // onDown   = onDown.sub(current.sub(new fw.vec(e.targetTouches[0].pageX, e.targetTouches[0].pageY)))
-        }
-        if (fw.event.types.isTouch && e.targetTouches.length == 0 
-        || !fw.event.types.isTouch
-        ){
-            if (fw.event.types.isTouch) {
-                scroller.animate({time: .2}, {
-                    rotate : 0,
-                    scale  : 1
-                })
-                rotation = 0
-                scale    = 0
-            }
-            scroller.animate({time: .2, ease: 'cubic-bezier(.1, .5, .1, 1.5)'}, {
-                translate : new fw.vec()
-            })
-            onDown = null
-            scroller.removeClass('drag')
-            move.off()
-            up.off()
-        }
-        e.preventDefault()
-    }, true)
-
     
 </script>
 </html>

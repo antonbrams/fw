@@ -71,26 +71,6 @@ export default {
     	})
     	return output
     },
-	
-	// var buffer = new Buffer(10) then var value = buffer.get(23.445) 
-    buffer : class {
-
-		constructor (size) {
-        	this.array  = new Array ();
-        	this.size   = size;
-        }
-
-        get (value) {
-            var sum    = 0
-            var length = this.array.length
-            if (length > this.size) this.array.shift()
-            this.array.push(value)
-            for (var i = 0; i < length; i ++) 
-            	if (isFinite(this.array[i])) 
-                    sum += parseFloat(this.array[i])
-            return sum / length
-        }
-    }
 }
 
 

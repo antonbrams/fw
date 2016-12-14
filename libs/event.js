@@ -3,8 +3,6 @@
 
 import {arr, val, vec, debug, Layer} from './fw'
 
-
-
 export default {
     
     Machine : class {
@@ -34,14 +32,24 @@ export default {
     },
     
     listener (dom, type, callback, flag) {
+        var toggle = false
         var out = {
-            on  : () => {
-                dom.addEventListener(type, callback, flag)
+            on () {
+                if (!toggle) {
+                    toggle = true
+                    dom.addEventListener(type, callback, flag)
+                }
                 return out
             },
-            off : () => {
-                dom.removeEventListener(type, callback, flag)
+            off () {
+                if (toggle) {
+                    toggle = false
+                    dom.removeEventListener(type, callback, flag)
+                }
                 return out
+            },
+            get active () {
+                return toggle
             }
         }
         return out

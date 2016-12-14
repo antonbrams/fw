@@ -36,6 +36,11 @@ export default {
 		return Math.floor(this.to(Math.random(), min, max))
 	},
 	
+	isEqual (a, b, tolerance = 1) {
+		var shit = Math.pow(10, -tolerance)
+		return a - shit < b && b < a + shit
+	},
+	
 	binarySearch (length, check) {
         var i =  Math.floor(.5 * length) // result
 		var h = i // pointer
@@ -64,31 +69,51 @@ export default {
 		return params
 	},
 
-	getValueBySize (value, list) {
+	getValueFromDictionary (value, list) {
 		var out
 		for (var i = 0; i < list.length; i ++)
 			if 	(value >= list[i][0]) out = list[i][1]
 		return out
 	},
 
-	rubberEffect (value, min, max, threshold, state) {
+	rubberRange (value, min, max, range, state) {
         // https://www.desmos.com/calculator
         // Based on 1-pow(1+x,-1)
-		var factor 	= 1.3
-		var maxTrue = val.exists(max)
-		var minTrue = val.exists(min)
-		if (maxTrue || minTrue) {
-			var direction = value < max
-			var threshold = (direction? 1: -1) * threshold
-			var range     = direction? max: min
-			var x = (range - value) / threshold
-			var y = range - threshold * (1 - Math.pow(1 + x, -factor))
+		var factor = 1.3
+		var isMax  = val.exists(max)
+		var isMin  = val.exists(min)
+		if (isMax || isMin) {
+			var dir   = value < max
+			var range = (dir? 1: -1) * range
+			var len   = dir? max: min
+			var x     = (len - value) / range
+			var y     = len - range * (1 - Math.pow(1 + x, -factor))
 		}
-		var maxState = maxTrue && value < max
-		var minState = minTrue && value > min
+		var maxState = isMax && value < max
+		var minState = isMin && value > min
 		if (state) state(maxState? 'max': minState? 'min': null)
 		return (maxState || minState? y: value)
 	},
+	
+	// var buffer = new Buffer(10) then var value = buffer.get(23.445) 
+    buffer : class {
+		
+		constructor (size) {
+        	this.array = []
+        	this.size  = size
+        }
+		
+        get (value) {
+            var sum    = 0
+            var length = this.array.length
+            if (length > this.size) this.array.shift()
+            this.array.push(value)
+            for (var i = 0; i < length; i ++) 
+            	if (isFinite(this.array[i])) 
+                    sum += parseFloat(this.array[i])
+            return sum / length
+        }
+    },
 }
 
 
