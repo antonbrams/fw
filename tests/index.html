@@ -41,34 +41,62 @@
     // layer1.on('drag')
     // layer1.on('zoom')
     
-    var scale = 1.5
-    
-    var layer2 = new fw.Layer({
-        position: 'absolute',
-        size   : new fw.vec(300, 300),
-        center : fw.Screen.center,
-        opacity : 0.2
-    })
+    var matrix = new fw.matrix()
     
     var layer1 = new fw.Layer({
-        size   : new fw.vec(300, 300),
-        center : fw.Screen.center,
-        rotate : 20,
-        // scale  : scale,
-        append : new fw.Layer({
-            position : 'absolute',
-            size     : new fw.vec(10, 10),
-            border   : {radius: 10},
-            bg       : {color: 'red'}
-        })
+        size      : new fw.vec(300, 300),
+        center    : fw.Screen.center,
+        opacity   : .3
     })
     
-    layer1.on('mousemove', e => {
-        var pointer = new fw.vec(e.clientX, e.clientY).sub(layer2.rect.position)
-        layer1.origin = pointer
-        // layer1.translate = layer1.size.scale(.5).sub(pointer).unit('px')
-        layer1.child('.layer')[0].move = pointer
+    var layer = new fw.Layer({
+        position  : 'absolute',
+        size      : new fw.vec(300, 300),
+        center    : fw.Screen.center,
+            append : new fw.Layer({
+                position : 'absolute',
+                size     : new fw.vec(10, 10),
+                border   : {radius: 10},
+                bg       : {color: 'red'}
+            })
+    })
+    
+    fw.Screen.on('mousemove', e => {
+        var angle = e.pageX / fw.Screen.size.x * 360
+        layer.matrix = matrix.rotate(angle).translate(new fw.vec(150, 150, 0))
+        console.log(layer.matrix.getTranslation())
     }).on()
+    
+    
+    
+    // var scale = 1.5
+    // 
+    // var layer2 = new fw.Layer({
+    //     position: 'absolute',
+    //     size   : new fw.vec(300, 300),
+    //     center : fw.Screen.center,
+    //     opacity : 0.2
+    // })
+    // 
+    // var layer1 = new fw.Layer({
+    //     size   : new fw.vec(300, 300),
+    //     center : fw.Screen.center,
+    //     rotate : 20,
+    //     // scale  : scale,
+    //     append : new fw.Layer({
+    //         position : 'absolute',
+    //         size     : new fw.vec(10, 10),
+    //         border   : {radius: 10},
+    //         bg       : {color: 'red'}
+    //     })
+    // })
+    // 
+    // layer1.on('mousemove', e => {
+    //     var pointer = new fw.vec(e.clientX, e.clientY).sub(layer2.rect.position)
+    //     layer1.origin = pointer
+    //     // layer1.translate = layer1.size.scale(.5).sub(pointer).unit('px')
+    //     layer1.child('.layer')[0].move = pointer
+    // }).on()
     
     
     // var model = fw.model.put({count: 1, model: {

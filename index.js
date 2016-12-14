@@ -815,6 +815,17 @@ var Layer = function () {
         set: function set(value) {
             this.rotate = new fw.vec(-value.y, value.x);
         }
+
+        // matrix
+
+    }, {
+        key: 'matrix',
+        set: function set(value) {
+            this._setCss(_fw.css.vendor.transform, value.toString());
+        },
+        get: function get() {
+            return new _fw.matrix(this.dom.style[_fw.css.vendor.transform]);
+        }
     }]);
 
     return Layer;
@@ -2908,9 +2919,133 @@ exports.default = {
 
 /***/ },
 /* 22 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
-throw new Error("Module build failed: SyntaxError: Unexpected token, expected ; (4:22)\n\n\u001b[0m \u001b[90m 2 | \u001b[39m\n \u001b[90m 3 | \u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 4 | \u001b[39m\u001b[36mexport\u001b[39m \u001b[36mdefault\u001b[39m \u001b[33mMatrix\u001b[39m {\n \u001b[90m   | \u001b[39m                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 5 | \u001b[39m    \n \u001b[90m 6 | \u001b[39m    constructor (value) {\n \u001b[90m 7 | \u001b[39m        \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mvector \u001b[33m=\u001b[39m value \u001b[33m||\u001b[39m [\u001b[35m0\u001b[39m\u001b[33m,\u001b[39m \u001b[35m0\u001b[39m\u001b[33m,\u001b[39m \u001b[35m0\u001b[39m\u001b[33m,\u001b[39m \u001b[35m1\u001b[39m]\u001b[0m\n");
+"use strict";
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _fw = __webpack_require__(0);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/*
+    // TODO: http://franklinta.com/2014/09/08/computing-css-matrix3d-transforms/
+    http://stackoverflow.com/questions/10592823/how-to-reverse-engineer-a-webkit-matrix3d-transform
+    http://www.alanzucconi.com/2016/02/10/tranfsormation-matrix/
+    https://github.com/infamous/boxer/blob/master/src/math/Quaternion.js
+    http://jsfiddle.net/dFrHS/1/
+*/
+
+var Matrix = function () {
+    function Matrix(value) {
+        _classCallCheck(this, Matrix);
+
+        this.init = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+        this.value = !_fw.val.exists(value) ? this.init : _fw.val.isStr(value) ? this.fromString(value) : value;
+    }
+
+    _createClass(Matrix, [{
+        key: 'multiply',
+        value: function multiply(b, set) {
+            var a = this.value;
+            var result = [b[0] * a[0] + b[1] * a[4] + b[2] * a[8] + b[3] * a[12], b[0] * a[1] + b[1] * a[5] + b[2] * a[9] + b[3] * a[13], b[0] * a[2] + b[1] * a[6] + b[2] * a[10] + b[3] * a[14], b[0] * a[3] + b[1] * a[7] + b[2] * a[11] + b[3] * a[15], b[4] * a[0] + b[5] * a[4] + b[6] * a[8] + b[7] * a[12], b[4] * a[1] + b[5] * a[5] + b[6] * a[9] + b[7] * a[13], b[4] * a[2] + b[5] * a[6] + b[6] * a[10] + b[7] * a[14], b[4] * a[3] + b[5] * a[7] + b[6] * a[11] + b[7] * a[15], b[8] * a[0] + b[9] * a[4] + b[10] * a[8] + b[11] * a[12], b[8] * a[1] + b[9] * a[5] + b[10] * a[9] + b[11] * a[13], b[8] * a[2] + b[9] * a[6] + b[10] * a[10] + b[11] * a[14], b[8] * a[3] + b[9] * a[7] + b[10] * a[11] + b[11] * a[15], b[12] * a[0] + b[13] * a[4] + b[14] * a[8] + b[15] * a[12], b[12] * a[1] + b[13] * a[5] + b[14] * a[9] + b[15] * a[13], b[12] * a[2] + b[13] * a[6] + b[14] * a[10] + b[15] * a[14], b[12] * a[3] + b[13] * a[7] + b[14] * a[11] + b[15] * a[15]];
+            if (set) this.value = result;else return new Matrix(result);
+        }
+    }, {
+        key: 'toString',
+        value: function toString() {
+            return 'matrix3d(' + this.value.join(',') + ')';
+        }
+    }, {
+        key: 'fromString',
+        value: function fromString(string) {
+            return string.replace(/matrix3d\(|\)/g, '').split(',').map(parseFloat);
+        }
+    }, {
+        key: 'translate',
+        value: function translate(v, set) {
+            var x = v.x;
+            var y = v.y;
+            var z = v.z;
+            return this.multiply([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1], set);
+        }
+    }, {
+        key: 'getTranslation',
+        value: function getTranslation() {
+            return new _fw.vec(this.value[12], this.value[13], this.value[14]);
+        }
+    }, {
+        key: 'rotateX',
+        value: function rotateX(angle, set) {
+            return this._rotate(angle, function (c, s) {
+                return [1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1];
+            }, set);
+        }
+    }, {
+        key: 'rotateY',
+        value: function rotateY(angle, set) {
+            return this._rotate(angle, function (c, s) {
+                return [c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1];
+            }, set);
+        }
+    }, {
+        key: 'rotateZ',
+        value: function rotateZ(angle, set) {
+            return this._rotate(angle, function (c, s) {
+                return [c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+            }, set);
+        }
+    }, {
+        key: '_rotate',
+        value: function _rotate(deg, template, set) {
+            var rad = -deg * Math.PI / 180;
+            return this.multiply(template(Math.cos(rad), Math.sin(rad)), set);
+        }
+    }, {
+        key: 'rotate',
+        value: function rotate(v, set) {
+            if (_fw.val.isNum(v)) return this.rotateZ(v, set);else return this.rotateX(v.x, set).rotateY(v.y, set).rotateZ(v.z, set);
+        }
+    }, {
+        key: 'getRotation',
+        value: function getRotation() {
+            return new _fw.vec(Math.atan2(this.value[9], this.value[10]), Math.asin(-this.value[8]), Math.atan2(this.value[4], this.value[0])).apply(function (axis) {
+                return -axis.value * 180 / Math.PI;
+            });
+        }
+    }, {
+        key: 'scale',
+        value: function scale(v, set) {
+            if (_fw.val.isNum(v)) return this.scale(new _fw.vec(v, v, v), set);else {
+                var x = v.x;
+                var y = v.y;
+                var z = v.z;
+                return this.multiply([x, 0, 0, 0, 0, y, 0, 0, 0, 0, z, 0, 0, 0, 0, 1], set);
+            }
+        }
+    }, {
+        key: 'getScale',
+        value: function getScale() {
+            return new _fw.vec(this.value[0], this.value[5], this.value[10]);
+        }
+    }, {
+        key: 'reset',
+        value: function reset() {
+            this.value = this.init;
+            return this;
+        }
+    }]);
+
+    return Matrix;
+}();
+
+exports.default = Matrix;
 
 /***/ }
 /******/ ])

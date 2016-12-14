@@ -2,7 +2,7 @@
 
 
 import {
-    dom, css, val, geo, vec, 
+    dom, css, val, geo, vec, matrix,
     animation, event, text, gesture
 } from './fw'
 
@@ -547,6 +547,15 @@ export default class Layer {
     // tilt
     set tilt (value) {
         this.rotate = new fw.vec(-value.y, value.x)
+    }
+    
+    // matrix
+    set matrix (value) {
+        this._setCss(css.vendor.transform, value.toString())
+    }
+    
+    get matrix () {
+        return new matrix(this.dom.style[css.vendor.transform])
     }
     
 }
