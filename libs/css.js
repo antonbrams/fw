@@ -18,16 +18,15 @@ export default {
                 `translate3d(
                     ${data.translate.x},
                     ${data.translate.y},
-                    ${data.translate.z}
-                )
+                    ${data.translate.z})
                 rotateX(${data.rotate.x})
                 rotateY(${data.rotate.y})
                 rotateZ(${data.rotate.z})
                 scale3d(
                     ${data.scale.x},
                     ${data.scale.y},
-                    ${data.scale.z}
-                )`
+                    ${data.scale.z})
+                ${data.matrix3d}`
     },
     
     computed (element, prop) {

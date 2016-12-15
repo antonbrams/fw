@@ -41,8 +41,6 @@
     // layer1.on('drag')
     // layer1.on('zoom')
     
-    var matrix = new fw.matrix()
-    
     var layer1 = new fw.Layer({
         size      : new fw.vec(300, 300),
         center    : fw.Screen.center,
@@ -50,20 +48,24 @@
     })
     
     var layer = new fw.Layer({
-        position  : 'absolute',
-        size      : new fw.vec(300, 300),
-        center    : fw.Screen.center,
-            append : new fw.Layer({
-                position : 'absolute',
-                size     : new fw.vec(10, 10),
-                border   : {radius: 10},
-                bg       : {color: 'red'}
-            })
+        position : 'absolute',
+        size     : new fw.vec(300, 300),
+        center   : fw.Screen.center,
+        append   : new fw.Layer({
+            position : 'absolute',
+            size     : new fw.vec(10, 10),
+            border   : {radius: 10},
+            bg       : {color: 'red'}
+        })
     })
     
     fw.Screen.on('mousemove', e => {
         var angle = e.pageX / fw.Screen.size.x * 360
-        layer.matrix = matrix.rotate(angle).translate(new fw.vec(150, 150, 0))
+        var origin = new fw.vec(150, 150)
+        layer.matrix = new fw.matrix()
+            .translate(origin)
+            .rotate(angle)
+            .translate(origin.scale(-1))
         console.log(layer.matrix.getTranslation())
     }).on()
     

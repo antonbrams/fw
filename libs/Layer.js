@@ -18,7 +18,8 @@ export default class Layer {
                 origin    : new vec(),
                 translate : new vec(),
                 scale     : new vec().fill(1),
-                rotate    : new vec()
+                rotate    : new vec(),
+                matrix3d  : ''
             },
             pop : {}
         }
@@ -528,11 +529,26 @@ export default class Layer {
         return this.props.transformation.rotate
     }
     
+    set matrix (value) {
+        this.event.emit('matrix', value)
+        this.props.transformation.matrix3d = value.toString()
+        css.applyTransformation(this.dom, this.props.transformation)
+    }
+    
+    get matrix() {
+        return new matrix(this.props.transformation.matrix3d)
+    }
+    
     // center
     set center (value) {
-        var size = this.size.scale(.5)
-        if (val.exists(value.x)) this._setCss('left', value.x - size.x)
-        if (val.exists(value.y)) this._setCss('top', value.y - size.y)
+        if (val.exists(value.x)) {
+            this._setCss('left', value.x)
+            this.translate = {x: '-50%'}
+        }
+        if (val.exists(value.y)) {
+            this._setCss('top', value.y)
+            this.translate = {y: '-50%'}
+        }
     }
     
     get center () {
@@ -547,15 +563,6 @@ export default class Layer {
     // tilt
     set tilt (value) {
         this.rotate = new fw.vec(-value.y, value.x)
-    }
-    
-    // matrix
-    set matrix (value) {
-        this._setCss(css.vendor.transform, value.toString())
-    }
-    
-    get matrix () {
-        return new matrix(this.dom.style[css.vendor.transform])
     }
     
 }

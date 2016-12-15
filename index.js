@@ -284,7 +284,8 @@ var Layer = function () {
                 origin: new _fw.vec(),
                 translate: new _fw.vec(),
                 scale: new _fw.vec().fill(1),
-                rotate: new _fw.vec()
+                rotate: new _fw.vec(),
+                matrix3d: ''
             },
             pop: {}
         };
@@ -786,15 +787,30 @@ var Layer = function () {
         get: function get() {
             return this.props.transformation.rotate;
         }
+    }, {
+        key: 'matrix',
+        set: function set(value) {
+            this.event.emit('matrix', value);
+            this.props.transformation.matrix3d = value.toString();
+            _fw.css.applyTransformation(this.dom, this.props.transformation);
+        },
+        get: function get() {
+            return new _fw.matrix(this.props.transformation.matrix3d);
+        }
 
         // center
 
     }, {
         key: 'center',
         set: function set(value) {
-            var size = this.size.scale(.5);
-            if (_fw.val.exists(value.x)) this._setCss('left', value.x - size.x);
-            if (_fw.val.exists(value.y)) this._setCss('top', value.y - size.y);
+            if (_fw.val.exists(value.x)) {
+                this._setCss('left', value.x);
+                this.translate = { x: '-50%' };
+            }
+            if (_fw.val.exists(value.y)) {
+                this._setCss('top', value.y);
+                this.translate = { y: '-50%' };
+            }
         },
         get: function get() {
             return _fw.geo.center(_fw.geo.vpo(this.dom));
@@ -814,17 +830,6 @@ var Layer = function () {
         key: 'tilt',
         set: function set(value) {
             this.rotate = new fw.vec(-value.y, value.x);
-        }
-
-        // matrix
-
-    }, {
-        key: 'matrix',
-        set: function set(value) {
-            this._setCss(_fw.css.vendor.transform, value.toString());
-        },
-        get: function get() {
-            return new _fw.matrix(this.dom.style[_fw.css.vendor.transform]);
         }
     }]);
 
@@ -1273,7 +1278,7 @@ exports.default = {
         if (type == 'origin') {
             element.style[this.vendor.transformOrigin] = data.origin.x + ' \n                 ' + data.origin.y;
             element.style[this.vendor.perspectiveOrigin] = '' + data.origin.z;
-        } else element.style[this.vendor.transform] = 'translate3d(\n                    ' + data.translate.x + ',\n                    ' + data.translate.y + ',\n                    ' + data.translate.z + '\n                )\n                rotateX(' + data.rotate.x + ')\n                rotateY(' + data.rotate.y + ')\n                rotateZ(' + data.rotate.z + ')\n                scale3d(\n                    ' + data.scale.x + ',\n                    ' + data.scale.y + ',\n                    ' + data.scale.z + '\n                )';
+        } else element.style[this.vendor.transform] = 'translate3d(\n                    ' + data.translate.x + ',\n                    ' + data.translate.y + ',\n                    ' + data.translate.z + ')\n                rotateX(' + data.rotate.x + ')\n                rotateY(' + data.rotate.y + ')\n                rotateZ(' + data.rotate.z + ')\n                scale3d(\n                    ' + data.scale.x + ',\n                    ' + data.scale.y + ',\n                    ' + data.scale.z + ')\n                ' + data.matrix3d;
     },
     computed: function computed(element, prop) {
         return parseInt(document.defaultView.getComputedStyle(element, null).getPropertyValue(prop));
@@ -2940,6 +2945,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     http://www.alanzucconi.com/2016/02/10/tranfsormation-matrix/
     https://github.com/infamous/boxer/blob/master/src/math/Quaternion.js
     http://jsfiddle.net/dFrHS/1/
+    http://keithclark.co.uk/articles/calculating-element-vertex-data-from-css-transforms/
 */
 
 var Matrix = function () {

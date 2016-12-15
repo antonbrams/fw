@@ -9,6 +9,7 @@ import {val, vec} from './fw'
     http://www.alanzucconi.com/2016/02/10/tranfsormation-matrix/
     https://github.com/infamous/boxer/blob/master/src/math/Quaternion.js
     http://jsfiddle.net/dFrHS/1/
+    http://keithclark.co.uk/articles/calculating-element-vertex-data-from-css-transforms/
 */
 
 export default class Matrix {
