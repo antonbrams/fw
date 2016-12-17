@@ -1,36 +1,24 @@
 
 
 
-import {animation, geo, vec, val} from './fw'
+import {val, text} from './fw'
 
 export default {
     
-    applyTransformation (element, data, type) {
-        // create data
+    applyTransformation (element, p, type) {
         if (type == 'origin') {
-            element.style[this.vendor.transformOrigin] = 
-                `${data.origin.x} 
-                 ${data.origin.y}`
-             element.style[this.vendor.perspectiveOrigin] = 
-                 `${data.origin.z}`
+            element.style[this.vendor.transformOrigin]   = `${p.origin.x} ${p.origin.y}`
+            element.style[this.vendor.perspectiveOrigin] = `${p.origin.z}`
         } else 
             element.style[this.vendor.transform] = 
-                `translate3d(
-                    ${data.translate.x},
-                    ${data.translate.y},
-                    ${data.translate.z})
-                rotateX(${data.rotate.x})
-                rotateY(${data.rotate.y})
-                rotateZ(${data.rotate.z})
-                scale3d(
-                    ${data.scale.x},
-                    ${data.scale.y},
-                    ${data.scale.z})
-                ${data.matrix3d}`
+               `translate(${p.translate.x}, ${p.translate.y})
+                rotate(${p.rotate})
+                scale(${p.scale.x}, ${p.scale.y})
+                matrix3d(${p.matrix3d.toString()})`
     },
     
     computed (element, prop) {
-	    return parseInt(
+	    return parseFloat(
 	    	document.defaultView
 	    	.getComputedStyle(element, null)
 	    	.getPropertyValue(prop)
@@ -39,13 +27,13 @@ export default {
     
     vendor : (props => {
         var out = {}
-        if (typeof document === "undefined") return out
-        var prefix	= [null, 'ms', 'webkit', 'moz', 'o']
-        var div     = document.createElement('div')
+        if (!val.exists(document)) return out
+        var prefix = [null, 'ms', 'webkit', 'moz', 'o']
+        var div    = document.createElement('div')
         props.forEach(prop => {
             for (var i = 0; i < prefix.length; i ++) {
-                var p = prefix[i] + prefix[i]? prop.charAt(0).toUpperCase() + prop.slice(1): prop
-                if (typeof div.style[p] !== 'undefined'){out[prop] = p; break}
+                var p = prefix[i] + prefix[i]? text.capitalize(prop): prop
+                if (val.exists(div.style[p])) {out[prop] = p; break}
             }
         })
         return out

@@ -1,7 +1,7 @@
 
 
 
-import {animation, vec, event, math, Screen} from './fw'
+import {animation, vec, event, math, Screen, matrix, Layer} from './fw'
 
 var offset = new vec()
 
@@ -83,10 +83,8 @@ export default {
             velocity : new vec()
         }
         var lastFramePosition = new vec()
-        // var offset = new vec()
         var controls = this[dragType](layer, {
             down () {
-                // offset = layer.translate.copy().ununit()
                 if (options.down) options.down()
             },
             move (translate) {
@@ -105,7 +103,7 @@ export default {
                         options.move(t)
                     else
                         // animation.draw(`${layer.identifier}: drag`, () => {
-                            layer.translate = t.translation.add(offset).unit('px')
+                            layer.matrix = new matrix().translate(t.translation.add(offset))
                         // })
                 }
             },
@@ -115,11 +113,10 @@ export default {
                 else
                     // animation.draw(`${layer.identifier}: drag`, () => {
                         layer.animate({time: .2, ease: 'cubic-bezier(.1, .5, .1, 1.5)'}, {
-                            translate : new vec()
+                            matrix : new matrix()
                         })
                     // })
                 lastFramePosition.reset()
-                // offset.reset()
                 t = {}
             }
         })
@@ -139,59 +136,80 @@ export default {
         }
     },
     
-    zoom (layer, options = {}) {
-        var value = 1
-        var scale = 1
-        var updateOrigin = e => {
-            var fingers = []
-            for (var i = 0; i < e.targetTouches.length; i ++)
-                fingers.push(new vec(
-                    e.targetTouches[i].clientX,
-                    e.targetTouches[i].clientY
-                ))
-            var rect = layer.rect
-            var origin = vec.prototype.mix(fingers).sub(rect.position).scale(1/scale)
-            layer.child('.layer')[0].move = origin.unit('px')
-            var a = origin.sub(rect.size.scale(.5)).scale(scale-1)
-            var b = a.sub(offset)
-            offset = a
-            layer.set({
-                origin    : origin,
-                translate : layer.translate.ununit().add(b).unit('px')
-            })
+    _iterateTouches (touches, callback) {
+        for (var i = 0; i < touches.length; i ++) {
+            var t = touches[i]
+            callback(
+                new vec(t.clientX, t.clientY), 
+                t, touches.length, touches
+            )
         }
+    },
+    
+    zoom (layer, options = {}) {
+        var touches      = {}
+        var scale_rotate = new matrix()
+        var lastState    = new matrix()
+        var origin       = new vec()
+        var center       = new vec()
+        var translation  = new vec()
         var down = layer.on('touchstart', e => {
-            updateOrigin(e)
-            if (!move.active) move.on()
-            if (!up.active) up.on()
+            if (!move.active) {
+                move.on()
+                up.on()
+                center = layer.center
+            }
+            var touchesToVectors = []
+            this._iterateTouches(e.targetTouches, 
+                vector => touchesToVectors.push(vector))
+            origin = vec.prototype.mix(touchesToVectors)
+                .sub(center)
+                .sub(translation)
             e.preventDefault()
-        }, true).on()
+        }).on()
         var move = layer.on('touchmove', e => {
-            // animation.draw(`${layer.identifier}: zoom`, () => {
-                scale = value + e.scale - 1
-                layer.scale = scale
-            // })
+            var differenceFrame = new vec()
+            this._iterateTouches(e.targetTouches, (vector, touch) => {
+                if (!touches[touch.identifier])
+                    touches[touch.identifier] = vector
+                differenceFrame
+                    .add(vector, true)
+                    .sub(touches[touch.identifier], true)
+                touches[touch.identifier] = vector
+            })
+            differenceFrame.div(new vec().fill(e.targetTouches.length), true)
+            translation.add(differenceFrame, true)
+            scale_rotate = lastState
+                .translate(origin.scale(-1))
+                .rotate(e.rotation)
+                .scale(e.scale)
+                .translate(origin)
+            var transformation = scale_rotate.translate(translation)
+            animation.draw(`${layer.identifier}: drag`, () => {
+                layer.matrix = transformation
+            })
             e.preventDefault()
-        }, true)
+        })
         var up = layer.on('touchend', e => {
             var length = e.targetTouches.length
             if (length == 0)
                 cancel()
-            else if (length == 1)
-                value += e.scale - 1
+            else
+                lastState = scale_rotate
             e.preventDefault()
-        }, true)
+        })
         var cancel = () => {
             move.off()
             up.off()
-            // animation.draw(`${layer.identifier}: zoom`, () => {
-                layer.animate({time: .2, ease: 'cubic-bezier(.1, .5, .1, 1.5)'}, {
-                    scale : new vec().fill(1)
+            animation.draw(`${layer.identifier}: drag`, () => {
+                layer.animate({time: .3, ease: 'cubic-bezier(.1, .5, .1, 1.5)'}, {
+                    matrix : new matrix()
                 })
-            // })
-            value = 1
-            scale = 1
-            offset.reset()
+            })
+            center.reset()
+            lastState.reset()
+            translation.reset()
+            touches = {}
         }
         return {
             on () {

@@ -3,7 +3,8 @@
 
 import {
     dom, css, val, geo, vec, matrix,
-    animation, event, text, gesture
+    animation, event, text, gesture,
+    Screen
 } from './fw'
 
 export default class Layer {
@@ -18,8 +19,8 @@ export default class Layer {
                 origin    : new vec(),
                 translate : new vec(),
                 scale     : new vec().fill(1),
-                rotate    : new vec(),
-                matrix3d  : ''
+                rotate    : 0,
+                matrix3d  : new matrix()
             },
             pop : {}
         }
@@ -37,14 +38,16 @@ export default class Layer {
         // if dom is a single parameter
         } else
             this.dom = options
-        // append dom
-        if (val.exists(options) 
-        &&  options.parent !== null 
-        || !val.exists(options))
-            document.body.appendChild(this.dom)
-        // delete options.parent
-        if (val.exists(options) && 'parent' in options) 
-            delete options.parent
+        // parent story
+        if (!val.exists(options))
+            this.parent = Screen
+        else {
+            if (val.exists(options.parent)) {
+                if (options.parent === null) 
+                    delete options.parent
+            } else
+                this.parent = Screen
+        }
         // set other options
         if (val.exists(options)) 
             this.set(options)
@@ -243,14 +246,17 @@ export default class Layer {
     }
     
     set parent (value) {
-        this.event.emit('parent', value);
-        (value.dom || value).appendChild(this.dom)
+        this.event.emit('parent', value)
+        if (value instanceof Layer) 
+            value.append(this.dom)
+        else
+            value.appendChild(this.dom)
     }
     
     get parent () {
         if (this.dom.parentNode)
             if (this.dom.parentNode.layer instanceof Layer)
-                return this.dom.parentNode
+                return this.dom.parentNode.layer
             else
                 return new Layer(this.dom.parentNode)
     }
@@ -513,15 +519,7 @@ export default class Layer {
     
     set rotate (value) {
         this.event.emit('rotate', value)
-        if (val.isNum(value)) {
-            this.props.transformation.rotate.z = value + 'deg'
-        } else if (val.isStr(value))
-            this.props.transformation.rotate.z = value
-        else
-            ['x', 'y', 'z'].forEach(axis => {
-                if (axis in value) 
-                    this.props.transformation.rotate[axis] = value[axis]
-            })
+        this.props.transformation.rotate = `${value}${val.isNum(value)?'deg':''}`
         css.applyTransformation(this.dom, this.props.transformation)
     }
     
@@ -529,30 +527,30 @@ export default class Layer {
         return this.props.transformation.rotate
     }
     
-    set matrix (value) {
-        this.event.emit('matrix', value)
-        this.props.transformation.matrix3d = value.toString()
+    set matrix (matrix) {
+        this.event.emit('matrix', matrix.value)
+        this.props.transformation.matrix3d = matrix
         css.applyTransformation(this.dom, this.props.transformation)
     }
     
     get matrix() {
-        return new matrix(this.props.transformation.matrix3d)
+        return this.props.transformation.matrix3d
     }
     
     // center
     set center (value) {
         if (val.exists(value.x)) {
-            this._setCss('left', value.x)
+            this._setCss('left', '50%')
             this.translate = {x: '-50%'}
         }
         if (val.exists(value.y)) {
-            this._setCss('top', value.y)
+            this._setCss('top', '50%')
             this.translate = {y: '-50%'}
         }
     }
     
     get center () {
-        return geo.center(geo.vpo(this.dom)) 
+        return geo.center(this.rect) 
     }
     
     // offset
@@ -562,7 +560,7 @@ export default class Layer {
     
     // tilt
     set tilt (value) {
-        this.rotate = new fw.vec(-value.y, value.x)
+        this.matrix = new matrix().rotate(new fw.vec(-value.y, value.x))
     }
     
 }

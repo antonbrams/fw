@@ -103,7 +103,7 @@ export default {
 	decay (callback, options = {}) {
 		var id   = window.performance.now()
 		var job, stop
-		var e    = new event.Machine('Decay', true)
+		var e    = new event.Machine('Decay', false)
 		var types = {
 			vec : {
 				calculate (a, b, c) {return a.add(b.sub(a).scale(c), 1)},
@@ -116,23 +116,7 @@ export default {
 		}
 		var out = {
 			set : value => {
-				console.log(stop);
-				if (val.exists(job)) {
-					this.jobs(id, () => {
-						if (!stop) {
-							job.type.calculate(job.value, value, options.speed || .1)
-							callback(job.value)
-							if (job.type.isEqual(job.value, value)) {
-								job  = undefined
-								stop = true
-								e.emit('end')
-							}
-						}
-						var stopped = stop
-						stop = false
-						return stopped
-					})
-				} else {
+				if (!val.exists(job)) {
 					job = {
 						value : value,
 						type  : types[value instanceof vec? 'vec': 'num']
@@ -140,6 +124,20 @@ export default {
 					stop = false
 					e.emit('start')
 				}
+				this.jobs(id, () => {
+					if (!stop) {
+						job.type.calculate(job.value, value, options.speed || .1)
+						callback(job.value)
+						if (job.type.isEqual(job.value, value)) {
+							// job  = undefined
+							stop = true
+							e.emit('end')
+						}
+					}
+					var stopped = stop
+					stop = false
+					return stopped
+				})
 			},
 			stop () {
 				stop = true

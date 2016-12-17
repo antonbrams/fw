@@ -284,8 +284,8 @@ var Layer = function () {
                 origin: new _fw.vec(),
                 translate: new _fw.vec(),
                 scale: new _fw.vec().fill(1),
-                rotate: new _fw.vec(),
-                matrix3d: ''
+                rotate: 0,
+                matrix3d: new _fw.matrix()
             },
             pop: {}
         };
@@ -299,10 +299,12 @@ var Layer = function () {
             } else this.dom = _fw.dom.create('.default');
             // if dom is a single parameter
         } else this.dom = options;
-        // append dom
-        if (_fw.val.exists(options) && options.parent !== null || !_fw.val.exists(options)) document.body.appendChild(this.dom);
-        // delete options.parent
-        if (_fw.val.exists(options) && 'parent' in options) delete options.parent;
+        // parent story
+        if (!_fw.val.exists(options)) this.parent = _fw.Screen;else {
+            if (_fw.val.exists(options.parent)) {
+                if (options.parent === null) delete options.parent;
+            } else this.parent = _fw.Screen;
+        }
         // set other options
         if (_fw.val.exists(options)) this.set(options);
     }
@@ -643,10 +645,10 @@ var Layer = function () {
         key: 'parent',
         set: function set(value) {
             this.event.emit('parent', value);
-            (value.dom || value).appendChild(this.dom);
+            if (value instanceof Layer) value.append(this.dom);else value.appendChild(this.dom);
         },
         get: function get() {
-            if (this.dom.parentNode) if (this.dom.parentNode.layer instanceof Layer) return this.dom.parentNode;else return new Layer(this.dom.parentNode);
+            if (this.dom.parentNode) if (this.dom.parentNode.layer instanceof Layer) return this.dom.parentNode.layer;else return new Layer(this.dom.parentNode);
         }
     }, {
         key: 'content',
@@ -774,14 +776,8 @@ var Layer = function () {
     }, {
         key: 'rotate',
         set: function set(value) {
-            var _this10 = this;
-
             this.event.emit('rotate', value);
-            if (_fw.val.isNum(value)) {
-                this.props.transformation.rotate.z = value + 'deg';
-            } else if (_fw.val.isStr(value)) this.props.transformation.rotate.z = value;else ['x', 'y', 'z'].forEach(function (axis) {
-                if (axis in value) _this10.props.transformation.rotate[axis] = value[axis];
-            });
+            this.props.transformation.rotate = '' + value + (_fw.val.isNum(value) ? 'deg' : '');
             _fw.css.applyTransformation(this.dom, this.props.transformation);
         },
         get: function get() {
@@ -789,13 +785,13 @@ var Layer = function () {
         }
     }, {
         key: 'matrix',
-        set: function set(value) {
-            this.event.emit('matrix', value);
-            this.props.transformation.matrix3d = value.toString();
+        set: function set(matrix) {
+            this.event.emit('matrix', matrix.value);
+            this.props.transformation.matrix3d = matrix;
             _fw.css.applyTransformation(this.dom, this.props.transformation);
         },
         get: function get() {
-            return new _fw.matrix(this.props.transformation.matrix3d);
+            return this.props.transformation.matrix3d;
         }
 
         // center
@@ -804,16 +800,16 @@ var Layer = function () {
         key: 'center',
         set: function set(value) {
             if (_fw.val.exists(value.x)) {
-                this._setCss('left', value.x);
+                this._setCss('left', '50%');
                 this.translate = { x: '-50%' };
             }
             if (_fw.val.exists(value.y)) {
-                this._setCss('top', value.y);
+                this._setCss('top', '50%');
                 this.translate = { y: '-50%' };
             }
         },
         get: function get() {
-            return _fw.geo.center(_fw.geo.vpo(this.dom));
+            return _fw.geo.center(this.rect);
         }
 
         // offset
@@ -829,7 +825,7 @@ var Layer = function () {
     }, {
         key: 'tilt',
         set: function set(value) {
-            this.rotate = new fw.vec(-value.y, value.x);
+            this.matrix = new _fw.matrix().rotate(new fw.vec(-value.y, value.x));
         }
     }]);
 
@@ -1059,7 +1055,7 @@ exports.default = {
 
 		var id = window.performance.now();
 		var job, _stop;
-		var e = new _fw.event.Machine('Decay', true);
+		var e = new _fw.event.Machine('Decay', false);
 		var types = {
 			vec: {
 				calculate: function calculate(a, b, c) {
@@ -1080,23 +1076,7 @@ exports.default = {
 		};
 		var out = {
 			set: function set(value) {
-				console.log(_stop);
-				if (_fw.val.exists(job)) {
-					_this.jobs(id, function () {
-						if (!_stop) {
-							job.type.calculate(job.value, value, options.speed || .1);
-							callback(job.value);
-							if (job.type.isEqual(job.value, value)) {
-								job = undefined;
-								_stop = true;
-								e.emit('end');
-							}
-						}
-						var stopped = _stop;
-						_stop = false;
-						return stopped;
-					});
-				} else {
+				if (!_fw.val.exists(job)) {
 					job = {
 						value: value,
 						type: types[value instanceof _fw.vec ? 'vec' : 'num']
@@ -1104,6 +1084,20 @@ exports.default = {
 					_stop = false;
 					e.emit('start');
 				}
+				_this.jobs(id, function () {
+					if (!_stop) {
+						job.type.calculate(job.value, value, options.speed || .1);
+						callback(job.value);
+						if (job.type.isEqual(job.value, value)) {
+							// job  = undefined
+							_stop = true;
+							e.emit('end');
+						}
+					}
+					var stopped = _stop;
+					_stop = false;
+					return stopped;
+				});
 			},
 			stop: function stop() {
 				_stop = true;
@@ -1273,27 +1267,26 @@ Object.defineProperty(exports, "__esModule", {
 var _fw = __webpack_require__(0);
 
 exports.default = {
-    applyTransformation: function applyTransformation(element, data, type) {
-        // create data
+    applyTransformation: function applyTransformation(element, p, type) {
         if (type == 'origin') {
-            element.style[this.vendor.transformOrigin] = data.origin.x + ' \n                 ' + data.origin.y;
-            element.style[this.vendor.perspectiveOrigin] = '' + data.origin.z;
-        } else element.style[this.vendor.transform] = 'translate3d(\n                    ' + data.translate.x + ',\n                    ' + data.translate.y + ',\n                    ' + data.translate.z + ')\n                rotateX(' + data.rotate.x + ')\n                rotateY(' + data.rotate.y + ')\n                rotateZ(' + data.rotate.z + ')\n                scale3d(\n                    ' + data.scale.x + ',\n                    ' + data.scale.y + ',\n                    ' + data.scale.z + ')\n                ' + data.matrix3d;
+            element.style[this.vendor.transformOrigin] = p.origin.x + ' ' + p.origin.y;
+            element.style[this.vendor.perspectiveOrigin] = '' + p.origin.z;
+        } else element.style[this.vendor.transform] = 'translate(' + p.translate.x + ', ' + p.translate.y + ')\n                rotate(' + p.rotate + ')\n                scale(' + p.scale.x + ', ' + p.scale.y + ')\n                matrix3d(' + p.matrix3d.toString() + ')';
     },
     computed: function computed(element, prop) {
-        return parseInt(document.defaultView.getComputedStyle(element, null).getPropertyValue(prop));
+        return parseFloat(document.defaultView.getComputedStyle(element, null).getPropertyValue(prop));
     },
 
 
     vendor: function (props) {
         var out = {};
-        if (typeof document === "undefined") return out;
+        if (!_fw.val.exists(document)) return out;
         var prefix = [null, 'ms', 'webkit', 'moz', 'o'];
         var div = document.createElement('div');
         props.forEach(function (prop) {
             for (var i = 0; i < prefix.length; i++) {
-                var p = prefix[i] + prefix[i] ? prop.charAt(0).toUpperCase() + prop.slice(1) : prop;
-                if (typeof div.style[p] !== 'undefined') {
+                var p = prefix[i] + prefix[i] ? _fw.text.capitalize(prop) : prop;
+                if (_fw.val.exists(div.style[p])) {
                     out[prop] = p;break;
                 }
             }
@@ -2794,10 +2787,8 @@ exports.default = {
             velocity: new _fw.vec()
         };
         var lastFramePosition = new _fw.vec();
-        // var offset = new vec()
         var controls = this[dragType](layer, {
             down: function down() {
-                // offset = layer.translate.copy().ununit()
                 if (options.down) options.down();
             },
             move: function move(translate) {
@@ -2814,7 +2805,7 @@ exports.default = {
                     // math.rubberRange(value, min, max, range, state)
                     if (options.move) options.move(t);else
                         // animation.draw(`${layer.identifier}: drag`, () => {
-                        layer.translate = t.translation.add(offset).unit('px');
+                        layer.matrix = new _fw.matrix().translate(t.translation.add(offset));
                     // })
                 }
             },
@@ -2822,11 +2813,10 @@ exports.default = {
                 if (options.up) options.up();else
                     // animation.draw(`${layer.identifier}: drag`, () => {
                     layer.animate({ time: .2, ease: 'cubic-bezier(.1, .5, .1, 1.5)' }, {
-                        translate: new _fw.vec()
+                        matrix: new _fw.matrix()
                     });
                 // })
                 lastFramePosition.reset();
-                // offset.reset()
                 t = {};
             }
         });
@@ -2845,55 +2835,69 @@ exports.default = {
             }
         };
     },
+    _iterateTouches: function _iterateTouches(touches, callback) {
+        for (var i = 0; i < touches.length; i++) {
+            var t = touches[i];
+            callback(new _fw.vec(t.clientX, t.clientY), t, touches.length, touches);
+        }
+    },
     zoom: function zoom(layer) {
+        var _this = this;
+
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-        var value = 1;
-        var scale = 1;
-        var updateOrigin = function updateOrigin(e) {
-            var fingers = [];
-            for (var i = 0; i < e.targetTouches.length; i++) {
-                fingers.push(new _fw.vec(e.targetTouches[i].clientX, e.targetTouches[i].clientY));
-            }var rect = layer.rect;
-            var origin = _fw.vec.prototype.mix(fingers).sub(rect.position).scale(1 / scale);
-            layer.child('.layer')[0].move = origin.unit('px');
-            var a = origin.sub(rect.size.scale(.5)).scale(scale - 1);
-            var b = a.sub(offset);
-            offset = a;
-            layer.set({
-                origin: origin,
-                translate: layer.translate.ununit().add(b).unit('px')
-            });
-        };
+        var touches = {};
+        var scale_rotate = new _fw.matrix();
+        var lastState = new _fw.matrix();
+        var origin = new _fw.vec();
+        var center = new _fw.vec();
+        var translation = new _fw.vec();
         var down = layer.on('touchstart', function (e) {
-            updateOrigin(e);
-            if (!move.active) move.on();
-            if (!up.active) up.on();
+            if (!move.active) {
+                move.on();
+                up.on();
+                center = layer.center;
+            }
+            var touchesToVectors = [];
+            _this._iterateTouches(e.targetTouches, function (vector) {
+                return touchesToVectors.push(vector);
+            });
+            origin = _fw.vec.prototype.mix(touchesToVectors).sub(center).sub(translation);
             e.preventDefault();
-        }, true).on();
+        }).on();
         var move = layer.on('touchmove', function (e) {
-            // animation.draw(`${layer.identifier}: zoom`, () => {
-            scale = value + e.scale - 1;
-            layer.scale = scale;
-            // })
+            var differenceFrame = new _fw.vec();
+            _this._iterateTouches(e.targetTouches, function (vector, touch) {
+                if (!touches[touch.identifier]) touches[touch.identifier] = vector;
+                differenceFrame.add(vector, true).sub(touches[touch.identifier], true);
+                touches[touch.identifier] = vector;
+            });
+            differenceFrame.div(new _fw.vec().fill(e.targetTouches.length), true);
+            translation.add(differenceFrame, true);
+            scale_rotate = lastState.translate(origin.scale(-1)).rotate(e.rotation).scale(e.scale).translate(origin);
+            var transformation = scale_rotate.translate(translation);
+            _fw.animation.draw(layer.identifier + ': drag', function () {
+                layer.matrix = transformation;
+            });
             e.preventDefault();
-        }, true);
+        });
         var up = layer.on('touchend', function (e) {
             var length = e.targetTouches.length;
-            if (length == 0) cancel();else if (length == 1) value += e.scale - 1;
+            if (length == 0) cancel();else lastState = scale_rotate;
             e.preventDefault();
-        }, true);
+        });
         var cancel = function cancel() {
             move.off();
             up.off();
-            // animation.draw(`${layer.identifier}: zoom`, () => {
-            layer.animate({ time: .2, ease: 'cubic-bezier(.1, .5, .1, 1.5)' }, {
-                scale: new _fw.vec().fill(1)
+            _fw.animation.draw(layer.identifier + ': drag', function () {
+                layer.animate({ time: .3, ease: 'cubic-bezier(.1, .5, .1, 1.5)' }, {
+                    matrix: new _fw.matrix()
+                });
             });
-            // })
-            value = 1;
-            scale = 1;
-            offset.reset();
+            center.reset();
+            lastState.reset();
+            translation.reset();
+            touches = {};
         };
         return {
             on: function on() {
@@ -2941,7 +2945,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 /*
     // TODO: http://franklinta.com/2014/09/08/computing-css-matrix3d-transforms/
-    http://stackoverflow.com/questions/10592823/how-to-reverse-engineer-a-webkit-matrix3d-transform
     http://www.alanzucconi.com/2016/02/10/tranfsormation-matrix/
     https://github.com/infamous/boxer/blob/master/src/math/Quaternion.js
     http://jsfiddle.net/dFrHS/1/
@@ -2958,20 +2961,34 @@ var Matrix = function () {
 
     _createClass(Matrix, [{
         key: 'multiply',
-        value: function multiply(b, set) {
+        value: function multiply(matrix, set) {
             var a = this.value;
-            var result = [b[0] * a[0] + b[1] * a[4] + b[2] * a[8] + b[3] * a[12], b[0] * a[1] + b[1] * a[5] + b[2] * a[9] + b[3] * a[13], b[0] * a[2] + b[1] * a[6] + b[2] * a[10] + b[3] * a[14], b[0] * a[3] + b[1] * a[7] + b[2] * a[11] + b[3] * a[15], b[4] * a[0] + b[5] * a[4] + b[6] * a[8] + b[7] * a[12], b[4] * a[1] + b[5] * a[5] + b[6] * a[9] + b[7] * a[13], b[4] * a[2] + b[5] * a[6] + b[6] * a[10] + b[7] * a[14], b[4] * a[3] + b[5] * a[7] + b[6] * a[11] + b[7] * a[15], b[8] * a[0] + b[9] * a[4] + b[10] * a[8] + b[11] * a[12], b[8] * a[1] + b[9] * a[5] + b[10] * a[9] + b[11] * a[13], b[8] * a[2] + b[9] * a[6] + b[10] * a[10] + b[11] * a[14], b[8] * a[3] + b[9] * a[7] + b[10] * a[11] + b[11] * a[15], b[12] * a[0] + b[13] * a[4] + b[14] * a[8] + b[15] * a[12], b[12] * a[1] + b[13] * a[5] + b[14] * a[9] + b[15] * a[13], b[12] * a[2] + b[13] * a[6] + b[14] * a[10] + b[15] * a[14], b[12] * a[3] + b[13] * a[7] + b[14] * a[11] + b[15] * a[15]];
+            var b = matrix instanceof Matrix ? matrix.value : matrix;
+            // 4x4 Matrix Multiplication
+            var result = [a[0] * b[0] + a[1] * b[4] + a[2] * b[8] + a[3] * b[12], a[0] * b[1] + a[1] * b[5] + a[2] * b[9] + a[3] * b[13], a[0] * b[2] + a[1] * b[6] + a[2] * b[10] + a[3] * b[14], a[0] * b[3] + a[1] * b[7] + a[2] * b[11] + a[3] * b[15], a[4] * b[0] + a[5] * b[4] + a[6] * b[8] + a[7] * b[12], a[4] * b[1] + a[5] * b[5] + a[6] * b[9] + a[7] * b[13], a[4] * b[2] + a[5] * b[6] + a[6] * b[10] + a[7] * b[14], a[4] * b[3] + a[5] * b[7] + a[6] * b[11] + a[7] * b[15], a[8] * b[0] + a[9] * b[4] + a[10] * b[8] + a[11] * b[12], a[8] * b[1] + a[9] * b[5] + a[10] * b[9] + a[11] * b[13], a[8] * b[2] + a[9] * b[6] + a[10] * b[10] + a[11] * b[14], a[8] * b[3] + a[9] * b[7] + a[10] * b[11] + a[11] * b[15], a[12] * b[0] + a[13] * b[4] + a[14] * b[8] + a[15] * b[12], a[12] * b[1] + a[13] * b[5] + a[14] * b[9] + a[15] * b[13], a[12] * b[2] + a[13] * b[6] + a[14] * b[10] + a[15] * b[14], a[12] * b[3] + a[13] * b[7] + a[14] * b[11] + a[15] * b[15]];
             if (set) this.value = result;else return new Matrix(result);
+        }
+
+        /* 
+            extract floats 
+            from 'matrix3d(0, -1, 0.182, -0.465)'
+            to [0, -1, 0.182, -0.46]
+        */
+
+    }, {
+        key: 'fromCss',
+        value: function fromCss(string) {
+            return string.match(/-?(\d+(.\d+)?)(?=,|\))/g).map(parseFloat);
+        }
+    }, {
+        key: 'toCss',
+        value: function toCss() {
+            return 'matrix3d(' + this.toString() + ')';
         }
     }, {
         key: 'toString',
         value: function toString() {
-            return 'matrix3d(' + this.value.join(',') + ')';
-        }
-    }, {
-        key: 'fromString',
-        value: function fromString(string) {
-            return string.replace(/matrix3d\(|\)/g, '').split(',').map(parseFloat);
+            return this.value.join(',');
         }
     }, {
         key: 'translate',
@@ -2979,7 +2996,19 @@ var Matrix = function () {
             var x = v.x;
             var y = v.y;
             var z = v.z;
+
             return this.multiply([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1], set);
+        }
+    }, {
+        key: 'scale',
+        value: function scale(v, set) {
+            if (_fw.val.isNum(v)) return this.scale(new _fw.vec().fill(v), set);else {
+                var x = v.x;
+                var y = v.y;
+                var z = v.z;
+
+                return this.multiply([x, 0, 0, 0, 0, y, 0, 0, 0, 0, z, 0, 0, 0, 0, 1], set);
+            }
         }
     }, {
         key: 'getTranslation',
@@ -3026,20 +3055,65 @@ var Matrix = function () {
             });
         }
     }, {
-        key: 'scale',
-        value: function scale(v, set) {
-            if (_fw.val.isNum(v)) return this.scale(new _fw.vec(v, v, v), set);else {
-                var x = v.x;
-                var y = v.y;
-                var z = v.z;
-                return this.multiply([x, 0, 0, 0, 0, y, 0, 0, 0, 0, z, 0, 0, 0, 0, 1], set);
-            }
-        }
-    }, {
         key: 'getScale',
         value: function getScale() {
             return new _fw.vec(this.value[0], this.value[5], this.value[10]);
         }
+
+        // projectionMapping (lt, lb, rt, rb) {
+        //     var w = 1, h = 1;
+        //     var adj = function (m) { return [
+        //         m[4]*m[8]-m[5]*m[7], m[2]*m[7]-m[1]*m[8], m[1]*m[5]-m[2]*m[4],
+        //         m[5]*m[6]-m[3]*m[8], m[0]*m[8]-m[2]*m[6], m[2]*m[3]-m[0]*m[5],
+        //         m[3]*m[7]-m[4]*m[6], m[1]*m[6]-m[0]*m[7], m[0]*m[4]-m[1]*m[3]
+        //     ]}
+        //     var multmv = function (m, v) { return [
+        //         m[0]*v[0] + m[1]*v[1] + m[2]*v[2],
+        //         m[3]*v[0] + m[4]*v[1] + m[5]*v[2],
+        //         m[6]*v[0] + m[7]*v[1] + m[8]*v[2]
+        //     ]}
+        //     var multmm = function (a, b) {
+        //         var c = Array(9)
+        //         for (var i = 0; i != 3; ++i)
+        //             for (var j = 0; j != 3; ++j) {
+        //                 var cij = 0
+        //                 for (var k = 0; k != 3; ++k)
+        //                     cij += a[3*i + k]*b[3*k + j]
+        //                 c[3*i + j] = cij
+        //             }
+        //         return c
+        //     }
+        //     var basisToPoints = function (x1, y1, x2, y2, x3, y3, x4, y4) {
+        //         var m = [
+        //             x1, x2, x3,
+        //             y1, y2, y3,
+        //              1,  1,  1
+        //         ]
+        //         var v = multmv(adj(m), [x4, y4, 1])
+        //         return multmm(m, [
+        //             v[0], 0, 0,
+        //             0, v[1], 0,
+        //             0, 0, v[2]
+        //         ])
+        //     }
+        //     var s = basisToPoints(
+        //         0, 0, w, 0, 
+        //         0, h, w, h
+        //     )
+        //     var d = basisToPoints(
+        //         lt.x, lt.y, lb.x, lb.y, 
+        //         rt.x, rt.y, rb.x, rb.y
+        //     )
+        //     var t = multmm(d, adj(s))
+        //     for (i = 0; i != 9; ++i) t[i] = t[i]/t[8];
+        //     return [
+        //         t[0], t[3], 0, t[6],
+        //         t[1], t[4], 0, t[7],
+        //            0,    0, 1,    0,
+        //         t[2], t[5], 0, t[8]
+        //     ]
+        // }
+
     }, {
         key: 'reset',
         value: function reset() {
