@@ -180,10 +180,19 @@ export default class Vec {
         return this
     }
     
-    mix (array) {
-        var sum = new Vec()
-        for (var i = 0; i < array.length; i ++) sum.add(array[i], true)
-        return sum.div(new Vec().fill(array.length))
+    mix (list) {
+        var sum    = new Vec()
+        var length = 1
+        if (val.isArr(list)) {
+            length = list.length
+            for (var i = 0; i < length; i ++) 
+                sum.add(list[i], true)
+        } else if (val.isObj(list)) {
+            length = Object.keys(list).length
+            for (var v in list)
+                sum.add(list[v], true)
+        }
+        return sum.div(new Vec().fill(length))
     }
 }
 

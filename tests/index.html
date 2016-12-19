@@ -47,7 +47,7 @@
         })
     }
     
-    if (1) {
+    if (0) {
         var layer1 = new fw.Layer({
             position : 'absolute',
             zIndex   : 1,
@@ -61,15 +61,58 @@
             bg       : {color: 'red'}
         }))
         // layer1.on('drag')
-        layer1.on('zoom')
+        var a = layer1.on('drag', {
+            rotate: true, 
+            scale: true,
+            move (t) {
+                t.transformation.rotate(new fw.vec(-t.velocity.y, t.velocity.x), 1)
+                return true
+            }
+        }).on()
+    }
+    
+    if (1) {
+        var toggle = new fw.Layer({
+            position : 'absolute',
+            size     : new fw.vec(100, 50),
+            center   : fw.Screen.center,
+            border   : {radius: 25},
+            padding  : 10
+        })
+        var knob = new fw.Layer({
+            parent   : toggle,
+            size     : new fw.vec(40, 100).unit('%'),
+            border   : {radius: 25}
+        })
+        knob.on('drag', {
+            move (t) {
+                var matrix = t.transformation
+                var move = matrix.getTranslation()
+                move.y = 0
+                t.transformation = new fw.matrix().translate(move)
+                return true
+            }
+        }).on()
+        
+        var states = {
+            current : 'on',
+            on      : {left : '0px'},
+            off     : {left : '50px'}
+        }
+        
+        toggle.on('click', e => {
+            states.current = states.current == 'on'? 'off': 'on'
+            knob.animate({time: .2}, states[states.current])
+        }).on()
     }
     
     if (0) {
         var button = new fw.Layer({
-            position : 'absolute',
-            size     : new fw.vec(300, 200),
-            center   : fw.Screen.center,
-            bg : 'none'
+            position    : 'absolute',
+            size        : new fw.vec(300, 200),
+            center      : fw.Screen.center,
+            bg          : 'none',
+            perspective : 500
         })
         
         var layer = new fw.Layer({
@@ -97,9 +140,12 @@
         })
         
         var decay = fw.animation.decay(pointer => {
-            var tilt = new fw.matrix().rotate(new fw.vec(-pointer.y, pointer.x).scale(.1))
+            var tilt = new fw.matrix()
+                .rotate(new fw.vec(-pointer.y, pointer.x).scale(.1))
             layer.matrix = tilt
-            foreground.matrix = tilt.translate(new fw.vec(0, 0, 50))
+            foreground.matrix = new fw.matrix()
+                .translate(new fw.vec(0, 0, 30))
+                .multiply(tilt)
             background.translate = new fw.vec(-pointer.x, -pointer.y).unit('px')
         })
         

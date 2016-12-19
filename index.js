@@ -95,7 +95,7 @@ Object.defineProperty(exports, 'animation', {
   }
 });
 
-var _value = __webpack_require__(15);
+var _value = __webpack_require__(17);
 
 Object.defineProperty(exports, 'val', {
   enumerable: true,
@@ -122,7 +122,7 @@ Object.defineProperty(exports, 'arr', {
   }
 });
 
-var _vector = __webpack_require__(16);
+var _vector = __webpack_require__(18);
 
 Object.defineProperty(exports, 'vec', {
   enumerable: true,
@@ -131,7 +131,7 @@ Object.defineProperty(exports, 'vec', {
   }
 });
 
-var _matrix = __webpack_require__(22);
+var _matrix = __webpack_require__(14);
 
 Object.defineProperty(exports, 'matrix', {
   enumerable: true,
@@ -140,7 +140,7 @@ Object.defineProperty(exports, 'matrix', {
   }
 });
 
-var _math = __webpack_require__(12);
+var _math = __webpack_require__(13);
 
 Object.defineProperty(exports, 'math', {
   enumerable: true,
@@ -194,7 +194,7 @@ Object.defineProperty(exports, 'css', {
   }
 });
 
-var _text = __webpack_require__(14);
+var _text = __webpack_require__(16);
 
 Object.defineProperty(exports, 'text', {
   enumerable: true,
@@ -230,7 +230,7 @@ Object.defineProperty(exports, 'Scroller', {
   }
 });
 
-var _model = __webpack_require__(13);
+var _model = __webpack_require__(15);
 
 Object.defineProperty(exports, 'model', {
   enumerable: true,
@@ -239,7 +239,7 @@ Object.defineProperty(exports, 'model', {
   }
 });
 
-var _gesture = __webpack_require__(21);
+var _gesture = __webpack_require__(12);
 
 Object.defineProperty(exports, 'gesture', {
   enumerable: true,
@@ -248,7 +248,7 @@ Object.defineProperty(exports, 'gesture', {
   }
 });
 
-__webpack_require__(17);
+__webpack_require__(19);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -279,7 +279,7 @@ var Layer = function () {
         this.event = new _fw.event.Machine('Layer');
         this.data = null;
         this._dom = null;
-        this.props = {
+        this._props = {
             transformation: {
                 origin: new _fw.vec(),
                 translate: new _fw.vec(),
@@ -415,8 +415,8 @@ var Layer = function () {
     }, {
         key: 'pop',
         value: function pop() {
-            this.event.emit('pop', this.props.pop);
-            this.props.pop = {
+            this.event.emit('pop', this._props.pop);
+            this._props.pop = {
                 parent: this.dom.parentNode,
                 pos: new _fw.vec(this.dom.style.left, this.dom.style.top),
                 size: new _fw.vec(this.dom.style.width, this.dom.style.height),
@@ -426,7 +426,7 @@ var Layer = function () {
                 position: 'fixed',
                 pos: new _fw.vec(),
                 size: new _fw.vec(this.dom.offsetWidth + .5, this.dom.offsetHeight + .5).unit('px'),
-                translate: this.props.pop.offset.position.unit('px')
+                translate: this._props.pop.offset.position.unit('px')
             });
             document.body.appendChild(this.dom);
             return this;
@@ -434,17 +434,17 @@ var Layer = function () {
     }, {
         key: 'push',
         value: function push() {
-            this.event.emit('push', this.props.pop);
-            this.props.pop.parent.appendChild(this.dom);
+            this.event.emit('push', this._props.pop);
+            this._props.pop.parent.appendChild(this.dom);
             this.set({
                 position: null,
-                pos: this.props.pop.pos,
-                size: this.props.pop.size,
+                pos: this._props.pop.pos,
+                size: this._props.pop.size,
                 translate: new _fw.vec(),
                 scale: new _fw.vec(1, 1, 1),
                 origin: { x: 'center', y: 'center' }
             });
-            this.props.pop = null;
+            this._props.pop = null;
             return this;
         }
     }, {
@@ -735,13 +735,13 @@ var Layer = function () {
             var _this7 = this;
 
             this.event.emit('origin', value);
-            ['x', 'y', 'z'].forEach(function (axis) {
-                if (axis in value) _this7.props.transformation.origin[axis] = value[axis];
+            ['x', 'y'].forEach(function (axis) {
+                if (axis in value) _this7._props.transformation.origin[axis] = value[axis];
             });
-            _fw.css.applyTransformation(this.dom, this.props.transformation, 'origin');
+            _fw.css.applyTransformation(this.dom, this._props.transformation, 'origin');
         },
         get: function get() {
-            return this.props.transformation.origin;
+            return this._props.transformation.origin;
         }
     }, {
         key: 'translate',
@@ -749,13 +749,13 @@ var Layer = function () {
             var _this8 = this;
 
             this.event.emit('translate', value);
-            ['x', 'y', 'z'].forEach(function (axis) {
-                if (axis in value) _this8.props.transformation.translate[axis] = value[axis];
+            ['x', 'y'].forEach(function (axis) {
+                if (axis in value) _this8._props.transformation.translate[axis] = value[axis];
             });
-            _fw.css.applyTransformation(this.dom, this.props.transformation);
+            _fw.css.applyTransformation(this.dom, this._props.transformation);
         },
         get: function get() {
-            return this.props.transformation.translate;
+            return this._props.transformation.translate;
         }
     }, {
         key: 'scale',
@@ -764,34 +764,34 @@ var Layer = function () {
 
             this.event.emit('scale', value);
             if (_fw.val.isNum(value)) {
-                this.props.transformation.scale.x = this.props.transformation.scale.y = this.props.transformation.scale.z = value;
-            } else ['x', 'y', 'z'].forEach(function (axis) {
-                if (axis in value) _this9.props.transformation.scale[axis] = value[axis];
+                this._props.transformation.scale.x = this._props.transformation.scale.y = this._props.transformation.scale.z = value;
+            } else ['x', 'y'].forEach(function (axis) {
+                if (axis in value) _this9._props.transformation.scale[axis] = value[axis];
             });
-            _fw.css.applyTransformation(this.dom, this.props.transformation);
+            _fw.css.applyTransformation(this.dom, this._props.transformation);
         },
         get: function get() {
-            return this.props.transformation.scale;
+            return this._props.transformation.scale;
         }
     }, {
         key: 'rotate',
         set: function set(value) {
             this.event.emit('rotate', value);
-            this.props.transformation.rotate = '' + value + (_fw.val.isNum(value) ? 'deg' : '');
-            _fw.css.applyTransformation(this.dom, this.props.transformation);
+            this._props.transformation.rotate = '' + value + (_fw.val.isNum(value) ? 'deg' : '');
+            _fw.css.applyTransformation(this.dom, this._props.transformation);
         },
         get: function get() {
-            return this.props.transformation.rotate;
+            return this._props.transformation.rotate;
         }
     }, {
         key: 'matrix',
         set: function set(matrix) {
             this.event.emit('matrix', matrix.value);
-            this.props.transformation.matrix3d = matrix;
-            _fw.css.applyTransformation(this.dom, this.props.transformation);
+            this._props.transformation.matrix3d = matrix;
+            _fw.css.applyTransformation(this.dom, this._props.transformation);
         },
         get: function get() {
-            return this.props.transformation.matrix3d;
+            return this._props.transformation.matrix3d;
         }
 
         // center
@@ -818,14 +818,6 @@ var Layer = function () {
         key: 'rect',
         get: function get() {
             return _fw.geo.vpo(this.dom);
-        }
-
-        // tilt
-
-    }, {
-        key: 'tilt',
-        set: function set(value) {
-            this.matrix = new _fw.matrix().rotate(new fw.vec(-value.y, value.x));
         }
     }]);
 
@@ -1572,25 +1564,25 @@ exports.default = {
     }(),
 
     listener: function listener(dom, type, callback, flag) {
-        var toggle = false;
+        var _active = false;
         var out = {
             on: function on() {
-                if (!toggle) {
-                    toggle = true;
+                if (!_active) {
+                    _active = true;
                     dom.addEventListener(type, callback, flag);
                 }
                 return out;
             },
             off: function off() {
-                if (toggle) {
-                    toggle = false;
+                if (_active) {
+                    _active = false;
                     dom.removeEventListener(type, callback, flag);
                 }
                 return out;
             },
 
             get active() {
-                return toggle;
+                return _active;
             }
         };
         return out;
@@ -1685,6 +1677,286 @@ exports.default = {
 
 /***/ },
 /* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _fw = __webpack_require__(0);
+
+exports.default = {
+    scroll: function scroll(layer) {
+        var transport = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+        return layer.on('mousewheel', function (e) {
+            var vector = 0;
+            var w = e.wheelDelta;
+            var d = e.detail;
+            if (d) {
+                // Opera
+                if (w) vector = w / d / 40 * d > 0 ? 1 : -1;
+                // Firefox
+                else vector = -d / 3;
+                // IE / Safari / Chrome
+            } else vector = w / 120;
+            transport({ e: e, vector: vector });
+        });
+    },
+    drag: function drag(layer) {
+        var transport = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+        return this[_fw.event.types.isTouch ? '_multitouch' : '_dragMouse'](layer, {
+            down: function down(t) {
+                transport.down && transport.down();
+            },
+            move: function move(t) {
+                if (transport.move && transport.move(t) || !transport.move) _fw.animation.draw(layer.identifier + ': drag', function () {
+                    layer.matrix = t.transformation;
+                });
+            },
+            up: function up(t) {
+                transport.up && transport.up(t);
+            },
+            cancel: function cancel(t) {
+                if (transport.cancel && transport.cancel(t) || !transport.cancel) _fw.animation.draw(layer.identifier + ': up', function () {
+                    layer.animate({
+                        time: .3,
+                        ease: 'cubic-bezier(.1, .5, .1, 1.5)'
+                    }, {
+                        matrix: new _fw.matrix()
+                    });
+                });
+            },
+
+            translate: _fw.val.exists(transport.translate) ? transport.translate : true,
+            rotate: transport.rotate,
+            scale: transport.scale
+        });
+    },
+    _dragMouse: function _dragMouse(layer, transport) {
+        var _down = new _fw.vec();
+        var velocity = new _fw.vec();
+        return this._dragMouseEventPattern(layer, {
+            down: function down(e) {
+                velocity;
+                _down = velocity = e.pointer;
+                transport.down({ e: e });
+            },
+            move: function move(e) {
+                var translation = e.pointer.sub(_down);
+                transport.move({ e: e,
+                    transformation: new _fw.matrix().translate(translation),
+                    velocity: translation.sub(velocity)
+                });
+                velocity = translation;
+            },
+            up: function up(e) {
+                transport.up({ e: e });
+            },
+            cancel: function cancel(e) {
+                transport.cancel({ e: e });
+                _down.reset();
+                velocity.reset();
+            }
+        });
+    },
+    _multitouch: function _multitouch(layer, t) {
+        // some shared values
+        var touches = {};
+        var scale_rotate = new _fw.matrix();
+        var lastState = new _fw.matrix();
+        var origin = new _fw.vec();
+        var center = new _fw.vec();
+        var translation = new _fw.vec();
+        // export control interface for gesture events
+        return this._dragTouchEventPattern(layer, {
+            init: function init(e) {
+                // get at start of a session 
+                // a center of a layer
+                center = layer.center;
+            },
+            down: function down(e) {
+                // fire interface function
+                t.down && t.down({ e: e });
+                // calculate average vector aka origin and
+                // bring this origin on rotated and scaled object back
+                origin = _fw.vec.prototype.mix(e.pointers).sub(center).sub(translation);
+            },
+            move: function move(e) {
+                // calculate drag difference
+                var velocity = new _fw.vec();
+                for (var id in e.pointers) {
+                    // if a touch is not initialized, 
+                    // save its vector to the list
+                    if (!touches[id]) touches[id] = e.pointers[id];
+                    // calculate difference between frames
+                    velocity.add(e.pointers[id], true).sub(touches[id], true);
+                    // save value for the next time
+                    touches[id] = e.pointers[id];
+                }
+                // calculate average difference between every dragged touch
+                velocity.div(new _fw.vec().fill(e.targetTouches.length), true);
+                // apply difference to persistent translation vector
+                translation.add(velocity, true);
+                // modify scale and rotation matrix
+                var drag = new _fw.matrix();
+                var pinch = new _fw.matrix().translate(origin.scale(-1));
+                if (t.translate) drag.translate(translation, true);
+                if (t.rotate) pinch.rotate(e.rotation, true);
+                if (t.scale) pinch.scale(e.scale, true);
+                scale_rotate = lastState.multiply(pinch.translate(origin));
+                var transformation = scale_rotate.multiply(drag);
+                // export values
+                t.move && t.move({ e: e,
+                    transformation: transformation,
+                    velocity: velocity
+                });
+            },
+            up: function up(e) {
+                // apply matrix for the next drag action
+                if (e.targetTouches.length > 0) lastState = scale_rotate;
+                t.up && t.up({ e: e });
+            },
+            cancel: function cancel(e) {
+                // export up event
+                t.cancel && t.cancel({ e: e });
+                center.reset();
+                lastState.reset();
+                translation.reset();
+                touches = {};
+            }
+        });
+    },
+    _dragMouseEventPattern: function _dragMouseEventPattern(layer, transport) {
+        var down = layer.on('mousedown', function (e) {
+            e.pointer = new _fw.vec(e.clientX, e.clientY);
+            if (!move.active) {
+                move.on();
+                up.on();
+            }
+            transport.down(e);
+            e.preventDefault();
+        });
+        var move = _fw.Screen.on('mousemove', function (e) {
+            e.pointer = new _fw.vec(e.clientX, e.clientY);
+            transport.move(e);
+            e.preventDefault();
+        });
+        var up = _fw.Screen.on('mouseup', function (e) {
+            e.pointer = new _fw.vec(e.clientX, e.clientY);
+            transport.up(e);
+            cancel(e);
+            e.preventDefault();
+        });
+        var cancel = function cancel() {
+            var e = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+            move.off();
+            up.off();
+            transport.cancel(e);
+        };
+        return {
+            on: function on() {
+                down.on();
+                return this;
+            },
+            off: function off() {
+                cancel();
+                down.off();
+                return this;
+            },
+            cancel: function (_cancel) {
+                function cancel() {
+                    return _cancel.apply(this, arguments);
+                }
+
+                cancel.toString = function () {
+                    return _cancel.toString();
+                };
+
+                return cancel;
+            }(function () {
+                cancel();
+                return this;
+            }),
+
+            get active() {
+                return down.active;
+            }
+        };
+    },
+    _dragTouchEventPattern: function _dragTouchEventPattern(layer, transport) {
+        var convertTouches = function convertTouches(fingers) {
+            var out = {};
+            for (var i = 0; i < fingers.length; i++) {
+                out[fingers[i].identifier] = new _fw.vec(fingers[i].clientX, fingers[i].clientY);
+            }return out;
+        };
+        var down = layer.on('touchstart', function (e) {
+            e.pointers = convertTouches(e.targetTouches);
+            if (!move.active) {
+                move.on();
+                up.on();
+                transport.init(e);
+            }
+            transport.down(e);
+            e.preventDefault();
+        });
+        var move = layer.on('touchmove', function (e) {
+            e.pointers = convertTouches(e.targetTouches);
+            transport.move(e);
+            e.preventDefault();
+        });
+        var up = layer.on('touchend', function (e) {
+            transport.up(e);
+            if (e.targetTouches.length == 0) cancel(e);
+            e.preventDefault();
+        });
+        var cancel = function cancel() {
+            var e = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+            move.off();
+            up.off();
+            transport.cancel(e);
+        };
+        return {
+            on: function on() {
+                down.on();
+                return this;
+            },
+            off: function off() {
+                cancel();
+                down.off();
+                return this;
+            },
+            cancel: function (_cancel2) {
+                function cancel() {
+                    return _cancel2.apply(this, arguments);
+                }
+
+                cancel.toString = function () {
+                    return _cancel2.toString();
+                };
+
+                return cancel;
+            }(function () {
+                cancel();
+                return this;
+            }),
+
+            get active() {
+                return down.active;
+            }
+        };
+    }
+};
+
+/***/ },
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1805,7 +2077,213 @@ exports.default = {
 };
 
 /***/ },
-/* 13 */
+/* 14 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _fw = __webpack_require__(0);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/*
+    // TODO: http://franklinta.com/2014/09/08/computing-css-matrix3d-transforms/
+    http://www.alanzucconi.com/2016/02/10/tranfsormation-matrix/
+    https://github.com/infamous/boxer/blob/master/src/math/Quaternion.js
+    http://jsfiddle.net/dFrHS/1/
+    http://keithclark.co.uk/articles/calculating-element-vertex-data-from-css-transforms/
+*/
+
+var Matrix = function () {
+    function Matrix(value) {
+        _classCallCheck(this, Matrix);
+
+        this.init = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+        this.value = !_fw.val.exists(value) ? this.init : _fw.val.isStr(value) ? this.fromString(value) : value;
+    }
+
+    _createClass(Matrix, [{
+        key: 'multiply',
+        value: function multiply(matrix, set) {
+            var a = this.value;
+            var b = matrix instanceof Matrix ? matrix.value : matrix;
+            // 4x4 Matrix Multiplication
+            var result = [a[0] * b[0] + a[1] * b[4] + a[2] * b[8] + a[3] * b[12], a[0] * b[1] + a[1] * b[5] + a[2] * b[9] + a[3] * b[13], a[0] * b[2] + a[1] * b[6] + a[2] * b[10] + a[3] * b[14], a[0] * b[3] + a[1] * b[7] + a[2] * b[11] + a[3] * b[15], a[4] * b[0] + a[5] * b[4] + a[6] * b[8] + a[7] * b[12], a[4] * b[1] + a[5] * b[5] + a[6] * b[9] + a[7] * b[13], a[4] * b[2] + a[5] * b[6] + a[6] * b[10] + a[7] * b[14], a[4] * b[3] + a[5] * b[7] + a[6] * b[11] + a[7] * b[15], a[8] * b[0] + a[9] * b[4] + a[10] * b[8] + a[11] * b[12], a[8] * b[1] + a[9] * b[5] + a[10] * b[9] + a[11] * b[13], a[8] * b[2] + a[9] * b[6] + a[10] * b[10] + a[11] * b[14], a[8] * b[3] + a[9] * b[7] + a[10] * b[11] + a[11] * b[15], a[12] * b[0] + a[13] * b[4] + a[14] * b[8] + a[15] * b[12], a[12] * b[1] + a[13] * b[5] + a[14] * b[9] + a[15] * b[13], a[12] * b[2] + a[13] * b[6] + a[14] * b[10] + a[15] * b[14], a[12] * b[3] + a[13] * b[7] + a[14] * b[11] + a[15] * b[15]];
+            if (set) {
+                this.value = result;
+                return this;
+            } else return new Matrix(result);
+        }
+
+        /* 
+            extract floats 
+            from 'matrix3d(0, -1, 0.182, -0.465)'
+            to [0, -1, 0.182, -0.46]
+        */
+
+    }, {
+        key: 'fromCss',
+        value: function fromCss(string) {
+            return string.match(/-?(\d+(.\d+)?)(?=,|\))/g).map(parseFloat);
+        }
+    }, {
+        key: 'toCss',
+        value: function toCss() {
+            return 'matrix3d(' + this.toString() + ')';
+        }
+    }, {
+        key: 'toString',
+        value: function toString() {
+            return this.value.join(',');
+        }
+    }, {
+        key: 'translate',
+        value: function translate(v, set) {
+            var x = v.x;
+            var y = v.y;
+            var z = v.z;
+
+            return this.multiply([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1], set);
+        }
+    }, {
+        key: 'getTranslation',
+        value: function getTranslation() {
+            return new _fw.vec(this.value[12], this.value[13], this.value[14]);
+        }
+    }, {
+        key: 'scale',
+        value: function scale(v, set) {
+            if (_fw.val.isNum(v)) return this.scale(new _fw.vec().fill(v), set);else {
+                var x = v.x;
+                var y = v.y;
+                var z = v.z;
+
+                return this.multiply([x, 0, 0, 0, 0, y, 0, 0, 0, 0, z, 0, 0, 0, 0, 1], set);
+            }
+        }
+    }, {
+        key: 'getScale',
+        value: function getScale() {
+            return new _fw.vec(this.value[0], this.value[5], this.value[10]);
+        }
+    }, {
+        key: 'rotateX',
+        value: function rotateX(angle, set) {
+            return this._rotate(angle, function (c, s) {
+                return [1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1];
+            }, set);
+        }
+    }, {
+        key: 'rotateY',
+        value: function rotateY(angle, set) {
+            return this._rotate(angle, function (c, s) {
+                return [c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1];
+            }, set);
+        }
+    }, {
+        key: 'rotateZ',
+        value: function rotateZ(angle, set) {
+            return this._rotate(angle, function (c, s) {
+                return [c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+            }, set);
+        }
+    }, {
+        key: '_rotate',
+        value: function _rotate(deg, template, set) {
+            var rad = -deg * Math.PI / 180;
+            return this.multiply(template(Math.cos(rad), Math.sin(rad)), set);
+        }
+    }, {
+        key: 'rotate',
+        value: function rotate(v, set) {
+            if (_fw.val.isNum(v)) return this.rotateZ(v, set);else {
+                return this.rotateX(v.x, set).rotateY(v.y, set).rotateZ(v.z, set);
+            }
+        }
+    }, {
+        key: 'getRotation',
+        value: function getRotation() {
+            return new _fw.vec(Math.atan2(this.value[9], this.value[10]), Math.asin(-this.value[8]), Math.atan2(this.value[4], this.value[0])).apply(function (axis) {
+                return -axis.value * 180 / Math.PI;
+            });
+        }
+
+        // projectionMapping (lt, lb, rt, rb) {
+        //     var w = 1, h = 1;
+        //     var adj = function (m) { return [
+        //         m[4]*m[8]-m[5]*m[7], m[2]*m[7]-m[1]*m[8], m[1]*m[5]-m[2]*m[4],
+        //         m[5]*m[6]-m[3]*m[8], m[0]*m[8]-m[2]*m[6], m[2]*m[3]-m[0]*m[5],
+        //         m[3]*m[7]-m[4]*m[6], m[1]*m[6]-m[0]*m[7], m[0]*m[4]-m[1]*m[3]
+        //     ]}
+        //     var multmv = function (m, v) { return [
+        //         m[0]*v[0] + m[1]*v[1] + m[2]*v[2],
+        //         m[3]*v[0] + m[4]*v[1] + m[5]*v[2],
+        //         m[6]*v[0] + m[7]*v[1] + m[8]*v[2]
+        //     ]}
+        //     var multmm = function (a, b) {
+        //         var c = Array(9)
+        //         for (var i = 0; i != 3; ++i)
+        //             for (var j = 0; j != 3; ++j) {
+        //                 var cij = 0
+        //                 for (var k = 0; k != 3; ++k)
+        //                     cij += a[3*i + k]*b[3*k + j]
+        //                 c[3*i + j] = cij
+        //             }
+        //         return c
+        //     }
+        //     var basisToPoints = function (x1, y1, x2, y2, x3, y3, x4, y4) {
+        //         var m = [
+        //             x1, x2, x3,
+        //             y1, y2, y3,
+        //              1,  1,  1
+        //         ]
+        //         var v = multmv(adj(m), [x4, y4, 1])
+        //         return multmm(m, [
+        //             v[0], 0, 0,
+        //             0, v[1], 0,
+        //             0, 0, v[2]
+        //         ])
+        //     }
+        //     var s = basisToPoints(
+        //         0, 0, w, 0, 
+        //         0, h, w, h
+        //     )
+        //     var d = basisToPoints(
+        //         lt.x, lt.y, lb.x, lb.y, 
+        //         rt.x, rt.y, rb.x, rb.y
+        //     )
+        //     var t = multmm(d, adj(s))
+        //     for (i = 0; i != 9; ++i) t[i] = t[i]/t[8];
+        //     return [
+        //         t[0], t[3], 0, t[6],
+        //         t[1], t[4], 0, t[7],
+        //            0,    0, 1,    0,
+        //         t[2], t[5], 0, t[8]
+        //     ]
+        // }
+
+    }, {
+        key: 'reset',
+        value: function reset() {
+            this.value = this.init;
+            return this;
+        }
+    }]);
+
+    return Matrix;
+}();
+
+exports.default = Matrix;
+
+/***/ },
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2040,7 +2518,7 @@ exports.default = {
 };
 
 /***/ },
-/* 14 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2108,7 +2586,7 @@ exports.default = {
 };
 
 /***/ },
-/* 15 */
+/* 17 */
 /***/ function(module, exports) {
 
 "use strict";
@@ -2154,7 +2632,7 @@ exports.default = {
 };
 
 /***/ },
-/* 16 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2334,11 +2812,21 @@ var Vec = function () {
         }
     }, {
         key: 'mix',
-        value: function mix(array) {
+        value: function mix(list) {
             var sum = new Vec();
-            for (var i = 0; i < array.length; i++) {
-                sum.add(array[i], true);
-            }return sum.div(new Vec().fill(array.length));
+            var length = 1;
+            if (_fw.val.isArr(list)) {
+                length = list.length;
+                for (var i = 0; i < length; i++) {
+                    sum.add(list[i], true);
+                }
+            } else if (_fw.val.isObj(list)) {
+                length = Object.keys(list).length;
+                for (var v in list) {
+                    sum.add(list[v], true);
+                }
+            }
+            return sum.div(new Vec().fill(length));
         }
     }]);
 
@@ -2348,16 +2836,16 @@ var Vec = function () {
 exports.default = Vec;
 
 /***/ },
-/* 17 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(18);
+var content = __webpack_require__(20);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(20)(content, {});
+var update = __webpack_require__(22)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -2374,10 +2862,10 @@ if(false) {
 }
 
 /***/ },
-/* 18 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(19)();
+exports = module.exports = __webpack_require__(21)();
 // imports
 
 
@@ -2388,7 +2876,7 @@ exports.push([module.i, "* {\n  margin: 0;\n  box-sizing: border-box; }\n\nbody 
 
 
 /***/ },
-/* 19 */
+/* 21 */
 /***/ function(module, exports) {
 
 /*
@@ -2444,7 +2932,7 @@ module.exports = function() {
 
 
 /***/ },
-/* 20 */
+/* 22 */
 /***/ function(module, exports) {
 
 /*
@@ -2694,438 +3182,6 @@ function updateLink(linkElement, obj) {
 		URL.revokeObjectURL(oldSrc);
 }
 
-
-/***/ },
-/* 21 */
-/***/ function(module, exports, __webpack_require__) {
-
-"use strict";
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _fw = __webpack_require__(0);
-
-var offset = new _fw.vec();
-
-exports.default = {
-    dragTouch: function dragTouch(layer, params) {
-        var transport = {};
-        var touches = {};
-        var position = new _fw.vec();
-        var down = layer.on('touchstart', function (e) {
-            if (!move.active) move.on();
-            if (!up.active) up.on();
-            params.down();
-            e.preventDefault();
-        }, true).on();
-        var move = layer.on('touchmove', function (e) {
-            var diff = new _fw.vec();
-            var length = e.targetTouches.length;
-            for (var i = 0; i < length; i++) {
-                var touch = e.targetTouches[i];
-                var pointer = new _fw.vec(touch.clientX, touch.clientY);
-                if (!touches[touch.identifier]) touches[touch.identifier] = pointer;
-                diff.add(pointer, true).sub(touches[touch.identifier], true);
-                touches[touch.identifier] = pointer;
-            }
-            diff.div({ x: length, y: length }, true);
-            params.move(position.add(diff, true));
-            e.preventDefault();
-        }, true);
-        var up = layer.on('touchend', function (e) {
-            for (var i = 0; i < e.changedTouches.length; i++) {
-                delete touches[e.changedTouches[i].identifier];
-            }if (e.targetTouches.length == 0) cancel();
-            e.preventDefault();
-        }, true);
-        var cancel = function cancel(e) {
-            move.off();
-            up.off();
-            params.up(transport);
-            transport = {};
-            touches = {};
-            position.reset();
-        };
-        layer.on('touchcancel', cancel, true).on();
-        return { down: down, cancel: cancel };
-    },
-    dragMouse: function dragMouse(layer, params) {
-        var transport = {};
-        var downPosition = new _fw.vec();
-        var down = layer.on('mousedown', function (e) {
-            downPosition = new _fw.vec(e.clientX, e.clientY);
-            move.on();
-            up.on();
-            e.preventDefault();
-        }, true).on();
-        var move = _fw.Screen.on('mousemove', function (e) {
-            var movePosition = new _fw.vec(e.clientX, e.clientY);
-            params.move(movePosition.sub(downPosition));
-            e.preventDefault();
-        }, true);
-        var up = _fw.Screen.on('mouseup', function (e) {
-            cancel();
-            e.preventDefault();
-        }, true);
-        var cancel = function cancel(e) {
-            move.off();
-            up.off();
-            params.up(transport);
-            transport = {};
-        };
-        return { down: down, cancel: cancel };
-    },
-    drag: function drag(layer) {
-        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-        var dragType = _fw.event.types.isTouch ? 'dragTouch' : 'dragMouse';
-        var t = {
-            dragInit: null,
-            velocity: new _fw.vec()
-        };
-        var lastFramePosition = new _fw.vec();
-        var controls = this[dragType](layer, {
-            down: function down() {
-                if (options.down) options.down();
-            },
-            move: function move(translate) {
-                if (!t.dragInit) {
-                    if (translate.len() > 5) {
-                        t.dragInit = translate.copy();
-                        if (options.init) options.init();
-                    }
-                } else {
-                    t.translation = translate.sub(t.dragInit);
-                    // velocity calculation
-                    t.velocity = t.translation.sub(lastFramePosition);
-                    lastFramePosition = t.translation;
-                    // math.rubberRange(value, min, max, range, state)
-                    if (options.move) options.move(t);else
-                        // animation.draw(`${layer.identifier}: drag`, () => {
-                        layer.matrix = new _fw.matrix().translate(t.translation.add(offset));
-                    // })
-                }
-            },
-            up: function up() {
-                if (options.up) options.up();else
-                    // animation.draw(`${layer.identifier}: drag`, () => {
-                    layer.animate({ time: .2, ease: 'cubic-bezier(.1, .5, .1, 1.5)' }, {
-                        matrix: new _fw.matrix()
-                    });
-                // })
-                lastFramePosition.reset();
-                t = {};
-            }
-        });
-        return {
-            on: function on() {
-                controls.down.on();
-                return layer;
-            },
-            off: function off() {
-                controls.down.off();
-                return layer;
-            },
-            cancel: function cancel() {
-                controls.cancel();
-                return layer;
-            }
-        };
-    },
-    _iterateTouches: function _iterateTouches(touches, callback) {
-        for (var i = 0; i < touches.length; i++) {
-            var t = touches[i];
-            callback(new _fw.vec(t.clientX, t.clientY), t, touches.length, touches);
-        }
-    },
-    zoom: function zoom(layer) {
-        var _this = this;
-
-        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-        var touches = {};
-        var scale_rotate = new _fw.matrix();
-        var lastState = new _fw.matrix();
-        var origin = new _fw.vec();
-        var center = new _fw.vec();
-        var translation = new _fw.vec();
-        var down = layer.on('touchstart', function (e) {
-            if (!move.active) {
-                move.on();
-                up.on();
-                center = layer.center;
-            }
-            var touchesToVectors = [];
-            _this._iterateTouches(e.targetTouches, function (vector) {
-                return touchesToVectors.push(vector);
-            });
-            origin = _fw.vec.prototype.mix(touchesToVectors).sub(center).sub(translation);
-            e.preventDefault();
-        }).on();
-        var move = layer.on('touchmove', function (e) {
-            var differenceFrame = new _fw.vec();
-            _this._iterateTouches(e.targetTouches, function (vector, touch) {
-                if (!touches[touch.identifier]) touches[touch.identifier] = vector;
-                differenceFrame.add(vector, true).sub(touches[touch.identifier], true);
-                touches[touch.identifier] = vector;
-            });
-            differenceFrame.div(new _fw.vec().fill(e.targetTouches.length), true);
-            translation.add(differenceFrame, true);
-            scale_rotate = lastState.translate(origin.scale(-1)).rotate(e.rotation).scale(e.scale).translate(origin);
-            var transformation = scale_rotate.translate(translation);
-            _fw.animation.draw(layer.identifier + ': drag', function () {
-                layer.matrix = transformation;
-            });
-            e.preventDefault();
-        });
-        var up = layer.on('touchend', function (e) {
-            var length = e.targetTouches.length;
-            if (length == 0) cancel();else lastState = scale_rotate;
-            e.preventDefault();
-        });
-        var cancel = function cancel() {
-            move.off();
-            up.off();
-            _fw.animation.draw(layer.identifier + ': drag', function () {
-                layer.animate({ time: .3, ease: 'cubic-bezier(.1, .5, .1, 1.5)' }, {
-                    matrix: new _fw.matrix()
-                });
-            });
-            center.reset();
-            lastState.reset();
-            translation.reset();
-            touches = {};
-        };
-        return {
-            on: function on() {
-                down.on();
-                return layer;
-            },
-            off: function off() {
-                down.off();
-                return layer;
-            },
-            cancel: function (_cancel) {
-                function cancel() {
-                    return _cancel.apply(this, arguments);
-                }
-
-                cancel.toString = function () {
-                    return _cancel.toString();
-                };
-
-                return cancel;
-            }(function () {
-                cancel();
-                return layer;
-            })
-        };
-    }
-};
-
-/***/ },
-/* 22 */
-/***/ function(module, exports, __webpack_require__) {
-
-"use strict";
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _fw = __webpack_require__(0);
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-/*
-    // TODO: http://franklinta.com/2014/09/08/computing-css-matrix3d-transforms/
-    http://www.alanzucconi.com/2016/02/10/tranfsormation-matrix/
-    https://github.com/infamous/boxer/blob/master/src/math/Quaternion.js
-    http://jsfiddle.net/dFrHS/1/
-    http://keithclark.co.uk/articles/calculating-element-vertex-data-from-css-transforms/
-*/
-
-var Matrix = function () {
-    function Matrix(value) {
-        _classCallCheck(this, Matrix);
-
-        this.init = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-        this.value = !_fw.val.exists(value) ? this.init : _fw.val.isStr(value) ? this.fromString(value) : value;
-    }
-
-    _createClass(Matrix, [{
-        key: 'multiply',
-        value: function multiply(matrix, set) {
-            var a = this.value;
-            var b = matrix instanceof Matrix ? matrix.value : matrix;
-            // 4x4 Matrix Multiplication
-            var result = [a[0] * b[0] + a[1] * b[4] + a[2] * b[8] + a[3] * b[12], a[0] * b[1] + a[1] * b[5] + a[2] * b[9] + a[3] * b[13], a[0] * b[2] + a[1] * b[6] + a[2] * b[10] + a[3] * b[14], a[0] * b[3] + a[1] * b[7] + a[2] * b[11] + a[3] * b[15], a[4] * b[0] + a[5] * b[4] + a[6] * b[8] + a[7] * b[12], a[4] * b[1] + a[5] * b[5] + a[6] * b[9] + a[7] * b[13], a[4] * b[2] + a[5] * b[6] + a[6] * b[10] + a[7] * b[14], a[4] * b[3] + a[5] * b[7] + a[6] * b[11] + a[7] * b[15], a[8] * b[0] + a[9] * b[4] + a[10] * b[8] + a[11] * b[12], a[8] * b[1] + a[9] * b[5] + a[10] * b[9] + a[11] * b[13], a[8] * b[2] + a[9] * b[6] + a[10] * b[10] + a[11] * b[14], a[8] * b[3] + a[9] * b[7] + a[10] * b[11] + a[11] * b[15], a[12] * b[0] + a[13] * b[4] + a[14] * b[8] + a[15] * b[12], a[12] * b[1] + a[13] * b[5] + a[14] * b[9] + a[15] * b[13], a[12] * b[2] + a[13] * b[6] + a[14] * b[10] + a[15] * b[14], a[12] * b[3] + a[13] * b[7] + a[14] * b[11] + a[15] * b[15]];
-            if (set) this.value = result;else return new Matrix(result);
-        }
-
-        /* 
-            extract floats 
-            from 'matrix3d(0, -1, 0.182, -0.465)'
-            to [0, -1, 0.182, -0.46]
-        */
-
-    }, {
-        key: 'fromCss',
-        value: function fromCss(string) {
-            return string.match(/-?(\d+(.\d+)?)(?=,|\))/g).map(parseFloat);
-        }
-    }, {
-        key: 'toCss',
-        value: function toCss() {
-            return 'matrix3d(' + this.toString() + ')';
-        }
-    }, {
-        key: 'toString',
-        value: function toString() {
-            return this.value.join(',');
-        }
-    }, {
-        key: 'translate',
-        value: function translate(v, set) {
-            var x = v.x;
-            var y = v.y;
-            var z = v.z;
-
-            return this.multiply([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1], set);
-        }
-    }, {
-        key: 'scale',
-        value: function scale(v, set) {
-            if (_fw.val.isNum(v)) return this.scale(new _fw.vec().fill(v), set);else {
-                var x = v.x;
-                var y = v.y;
-                var z = v.z;
-
-                return this.multiply([x, 0, 0, 0, 0, y, 0, 0, 0, 0, z, 0, 0, 0, 0, 1], set);
-            }
-        }
-    }, {
-        key: 'getTranslation',
-        value: function getTranslation() {
-            return new _fw.vec(this.value[12], this.value[13], this.value[14]);
-        }
-    }, {
-        key: 'rotateX',
-        value: function rotateX(angle, set) {
-            return this._rotate(angle, function (c, s) {
-                return [1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1];
-            }, set);
-        }
-    }, {
-        key: 'rotateY',
-        value: function rotateY(angle, set) {
-            return this._rotate(angle, function (c, s) {
-                return [c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1];
-            }, set);
-        }
-    }, {
-        key: 'rotateZ',
-        value: function rotateZ(angle, set) {
-            return this._rotate(angle, function (c, s) {
-                return [c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-            }, set);
-        }
-    }, {
-        key: '_rotate',
-        value: function _rotate(deg, template, set) {
-            var rad = -deg * Math.PI / 180;
-            return this.multiply(template(Math.cos(rad), Math.sin(rad)), set);
-        }
-    }, {
-        key: 'rotate',
-        value: function rotate(v, set) {
-            if (_fw.val.isNum(v)) return this.rotateZ(v, set);else return this.rotateX(v.x, set).rotateY(v.y, set).rotateZ(v.z, set);
-        }
-    }, {
-        key: 'getRotation',
-        value: function getRotation() {
-            return new _fw.vec(Math.atan2(this.value[9], this.value[10]), Math.asin(-this.value[8]), Math.atan2(this.value[4], this.value[0])).apply(function (axis) {
-                return -axis.value * 180 / Math.PI;
-            });
-        }
-    }, {
-        key: 'getScale',
-        value: function getScale() {
-            return new _fw.vec(this.value[0], this.value[5], this.value[10]);
-        }
-
-        // projectionMapping (lt, lb, rt, rb) {
-        //     var w = 1, h = 1;
-        //     var adj = function (m) { return [
-        //         m[4]*m[8]-m[5]*m[7], m[2]*m[7]-m[1]*m[8], m[1]*m[5]-m[2]*m[4],
-        //         m[5]*m[6]-m[3]*m[8], m[0]*m[8]-m[2]*m[6], m[2]*m[3]-m[0]*m[5],
-        //         m[3]*m[7]-m[4]*m[6], m[1]*m[6]-m[0]*m[7], m[0]*m[4]-m[1]*m[3]
-        //     ]}
-        //     var multmv = function (m, v) { return [
-        //         m[0]*v[0] + m[1]*v[1] + m[2]*v[2],
-        //         m[3]*v[0] + m[4]*v[1] + m[5]*v[2],
-        //         m[6]*v[0] + m[7]*v[1] + m[8]*v[2]
-        //     ]}
-        //     var multmm = function (a, b) {
-        //         var c = Array(9)
-        //         for (var i = 0; i != 3; ++i)
-        //             for (var j = 0; j != 3; ++j) {
-        //                 var cij = 0
-        //                 for (var k = 0; k != 3; ++k)
-        //                     cij += a[3*i + k]*b[3*k + j]
-        //                 c[3*i + j] = cij
-        //             }
-        //         return c
-        //     }
-        //     var basisToPoints = function (x1, y1, x2, y2, x3, y3, x4, y4) {
-        //         var m = [
-        //             x1, x2, x3,
-        //             y1, y2, y3,
-        //              1,  1,  1
-        //         ]
-        //         var v = multmv(adj(m), [x4, y4, 1])
-        //         return multmm(m, [
-        //             v[0], 0, 0,
-        //             0, v[1], 0,
-        //             0, 0, v[2]
-        //         ])
-        //     }
-        //     var s = basisToPoints(
-        //         0, 0, w, 0, 
-        //         0, h, w, h
-        //     )
-        //     var d = basisToPoints(
-        //         lt.x, lt.y, lb.x, lb.y, 
-        //         rt.x, rt.y, rb.x, rb.y
-        //     )
-        //     var t = multmm(d, adj(s))
-        //     for (i = 0; i != 9; ++i) t[i] = t[i]/t[8];
-        //     return [
-        //         t[0], t[3], 0, t[6],
-        //         t[1], t[4], 0, t[7],
-        //            0,    0, 1,    0,
-        //         t[2], t[5], 0, t[8]
-        //     ]
-        // }
-
-    }, {
-        key: 'reset',
-        value: function reset() {
-            this.value = this.init;
-            return this;
-        }
-    }]);
-
-    return Matrix;
-}();
-
-exports.default = Matrix;
 
 /***/ }
 /******/ ])

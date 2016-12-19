@@ -14,7 +14,7 @@ export default class Layer {
         this.event      = new event.Machine('Layer')
         this.data       = null
         this._dom       = null
-        this.props      = {
+        this._props     = {
             transformation : {
                 origin    : new vec(),
                 translate : new vec(),
@@ -176,8 +176,8 @@ export default class Layer {
     }
     
     pop () {
-        this.event.emit('pop', this.props.pop)
-        this.props.pop = {
+        this.event.emit('pop', this._props.pop)
+        this._props.pop = {
             parent   : this.dom.parentNode,
             pos      : new vec(this.dom.style.left,  this.dom.style.top),
             size     : new vec(this.dom.style.width, this.dom.style.height),
@@ -187,24 +187,24 @@ export default class Layer {
             position  : 'fixed',
             pos       : new vec(),
             size      : new vec(this.dom.offsetWidth +.5, this.dom.offsetHeight +.5).unit('px'),
-            translate : this.props.pop.offset.position.unit('px')
+            translate : this._props.pop.offset.position.unit('px')
         })
         document.body.appendChild(this.dom)
         return this
     }
     
     push () {
-        this.event.emit('push', this.props.pop)
-        this.props.pop.parent.appendChild(this.dom)
+        this.event.emit('push', this._props.pop)
+        this._props.pop.parent.appendChild(this.dom)
         this.set({
             position  : null,
-            pos       : this.props.pop.pos,
-            size      : this.props.pop.size,
+            pos       : this._props.pop.pos,
+            size      : this._props.pop.size,
             translate : new vec(),
             scale     : new vec(1, 1, 1),
             origin    : {x: 'center', y: 'center'}
         })
-        this.props.pop = null
+        this._props.pop = null
         return this
     }
     
@@ -475,66 +475,66 @@ export default class Layer {
     // transformation
     set origin (value) {
         this.event.emit('origin', value);
-        ['x', 'y', 'z'].forEach(axis => {
+        ['x', 'y'].forEach(axis => {
             if (axis in value) 
-                this.props.transformation.origin[axis] = value[axis]
+                this._props.transformation.origin[axis] = value[axis]
         })
-        css.applyTransformation(this.dom, this.props.transformation, 'origin')
+        css.applyTransformation(this.dom, this._props.transformation, 'origin')
     }
     
     get origin () {
-        return this.props.transformation.origin
+        return this._props.transformation.origin
     }
     
     set translate (value) {
         this.event.emit('translate', value);
-        ['x', 'y', 'z'].forEach(axis => {
+        ['x', 'y'].forEach(axis => {
             if (axis in value) 
-                this.props.transformation.translate[axis] = value[axis]
+                this._props.transformation.translate[axis] = value[axis]
         })
-        css.applyTransformation(this.dom, this.props.transformation)
+        css.applyTransformation(this.dom, this._props.transformation)
     }
     
     get translate () {
-        return this.props.transformation.translate
+        return this._props.transformation.translate
     }
     
     set scale (value) {
         this.event.emit('scale', value)
         if (val.isNum(value)) {
-            this.props.transformation.scale.x =
-            this.props.transformation.scale.y =
-            this.props.transformation.scale.z = value
+            this._props.transformation.scale.x =
+            this._props.transformation.scale.y =
+            this._props.transformation.scale.z = value
         } else
-            ['x', 'y', 'z'].forEach(axis => {
+            ['x', 'y'].forEach(axis => {
                 if (axis in value) 
-                    this.props.transformation.scale[axis] = value[axis]
+                    this._props.transformation.scale[axis] = value[axis]
             })
-        css.applyTransformation(this.dom, this.props.transformation)
+        css.applyTransformation(this.dom, this._props.transformation)
     }
     
     get scale () {
-        return this.props.transformation.scale
+        return this._props.transformation.scale
     }
     
     set rotate (value) {
         this.event.emit('rotate', value)
-        this.props.transformation.rotate = `${value}${val.isNum(value)?'deg':''}`
-        css.applyTransformation(this.dom, this.props.transformation)
+        this._props.transformation.rotate = `${value}${val.isNum(value)?'deg':''}`
+        css.applyTransformation(this.dom, this._props.transformation)
     }
     
     get rotate () {
-        return this.props.transformation.rotate
+        return this._props.transformation.rotate
     }
     
     set matrix (matrix) {
         this.event.emit('matrix', matrix.value)
-        this.props.transformation.matrix3d = matrix
-        css.applyTransformation(this.dom, this.props.transformation)
+        this._props.transformation.matrix3d = matrix
+        css.applyTransformation(this.dom, this._props.transformation)
     }
     
     get matrix() {
-        return this.props.transformation.matrix3d
+        return this._props.transformation.matrix3d
     }
     
     // center
@@ -556,11 +556,6 @@ export default class Layer {
     // offset
     get rect () {
         return geo.vpo(this.dom)
-    }
-    
-    // tilt
-    set tilt (value) {
-        this.matrix = new matrix().rotate(new fw.vec(-value.y, value.x))
     }
     
 }

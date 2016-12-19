@@ -32,24 +32,24 @@ export default {
     },
     
     listener (dom, type, callback, flag) {
-        var toggle = false
+        var _active = false
         var out = {
             on () {
-                if (!toggle) {
-                    toggle = true
+                if (!_active) {
+                    _active = true
                     dom.addEventListener(type, callback, flag)
                 }
                 return out
             },
             off () {
-                if (toggle) {
-                    toggle = false
+                if (_active) {
+                    _active = false
                     dom.removeEventListener(type, callback, flag)
                 }
                 return out
             },
             get active () {
-                return toggle
+                return _active
             }
         }
         return out

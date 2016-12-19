@@ -1,229 +1,254 @@
 
 
 
-import {animation, vec, event, math, Screen, matrix, Layer} from './fw'
-
-var offset = new vec()
+import {
+    animation, vec, event, math, 
+    Screen, matrix, Layer, val
+} from './fw'
 
 export default {
     
-    dragTouch (layer, params) {
-        var transport = {}
-        var touches   = {}
-        var position  = new vec()
-        var down = layer.on('touchstart', e => {
-            if (!move.active) move.on()
-            if (!up.active) up.on()
-            params.down()
-            e.preventDefault()
-        }, true).on()
-        var move = layer.on('touchmove', e => {
-            var diff   = new vec()
-            var length = e.targetTouches.length
-            for (var i = 0; i < length; i ++) {
-                var touch   = e.targetTouches[i]
-                var pointer = new vec(touch.clientX, touch.clientY)
-                if (!touches[touch.identifier]) touches[touch.identifier] = pointer
-                diff.add(pointer, true).sub(touches[touch.identifier], true)
-                touches[touch.identifier] = pointer
-            }
-            diff.div({x: length, y: length}, true)
-            params.move(position.add(diff, true))
-            e.preventDefault()
-        }, true)
-        var up = layer.on('touchend', e => {
-            for (var i = 0; i < e.changedTouches.length; i ++)
-                delete touches[e.changedTouches[i].identifier]
-            if (e.targetTouches.length == 0) cancel()
-            e.preventDefault()
-        }, true)
-        var cancel = e => {
-            move.off()
-            up.off()
-            params.up(transport)
-            transport = {}
-            touches   = {}
-            position.reset()
-        }
-        layer.on('touchcancel', cancel, true).on()
-        return {down, cancel}
+    scroll (layer, transport = {}) {
+        return layer.on('mousewheel', e => {
+            var vector = 0
+            var w = e.wheelDelta
+            var d = e.detail
+            if (d) {
+                // Opera
+                if (w) vector = w / d / 40 * d > 0? 1: -1
+                // Firefox
+                else vector = -d / 3
+            // IE / Safari / Chrome
+            } else vector = w / 120
+            transport({e, vector})
+        })
     },
     
-    dragMouse (layer, params) {
-        var transport    = {}
-        var downPosition = new vec()
-        var down = layer.on('mousedown', e => {
-            downPosition = new vec(e.clientX, e.clientY)
-            move.on()
-            up.on()
-            e.preventDefault()
-        }, true).on()
-        var move = Screen.on('mousemove', e => {
-            var movePosition = new vec(e.clientX, e.clientY)
-            params.move(movePosition.sub(downPosition))
-            e.preventDefault()
-        }, true)
-        var up = Screen.on('mouseup', e => {
-            cancel()
-            e.preventDefault()
-        }, true)
-        var cancel = e => {
-            move.off()
-            up.off()
-            params.up(transport)
-            transport = {}
-        }
-        return {down, cancel}
-    },
-    
-    drag (layer, options = {}) {
-        var dragType = event.types.isTouch? 'dragTouch': 'dragMouse'
-        var t = {
-            dragInit : null,
-            velocity : new vec()
-        }
-        var lastFramePosition = new vec()
-        var controls = this[dragType](layer, {
-            down () {
-                if (options.down) options.down()
+    drag (layer, transport = {}) {
+        return this[event.types.isTouch? '_multitouch': '_dragMouse'](layer, {
+            down (t) {
+                transport.down && transport.down()
             },
-            move (translate) {
-                if (!t.dragInit) {
-                    if (translate.len() > 5) {
-                        t.dragInit = translate.copy()
-                        if (options.init) options.init()
-                    }
-                } else {
-                    t.translation = translate.sub(t.dragInit)
-                    // velocity calculation
-                    t.velocity        = t.translation.sub(lastFramePosition)
-                    lastFramePosition = t.translation
-                    // math.rubberRange(value, min, max, range, state)
-                    if (options.move)
-                        options.move(t)
-                    else
-                        // animation.draw(`${layer.identifier}: drag`, () => {
-                            layer.matrix = new matrix().translate(t.translation.add(offset))
-                        // })
-                }
+            move (t) {
+                if (transport.move && transport.move(t) || !transport.move)
+                    animation.draw(`${layer.identifier}: drag`, () => {
+                        layer.matrix = t.transformation
+                    })
             },
-            up () {
-                if (options.up) 
-                    options.up()
-                else
-                    // animation.draw(`${layer.identifier}: drag`, () => {
-                        layer.animate({time: .2, ease: 'cubic-bezier(.1, .5, .1, 1.5)'}, {
+            up (t) {
+                transport.up && transport.up(t)
+            },
+            cancel (t) {
+                if (transport.cancel && transport.cancel(t) || !transport.cancel) 
+                    animation.draw(`${layer.identifier}: up`, () => {
+                        layer.animate({
+                            time : .3, 
+                            ease : 'cubic-bezier(.1, .5, .1, 1.5)'
+                        },{
                             matrix : new matrix()
                         })
-                    // })
-                lastFramePosition.reset()
-                t = {}
-            }
+                    })
+            },
+            translate : val.exists(transport.translate)? transport.translate: true,
+            rotate    : transport.rotate,
+            scale     : transport.scale
         })
-        return {
-            on () {
-                controls.down.on()
-                return layer
-            },
-            off () {
-                controls.down.off()
-                return layer
-            },
-            cancel () {
-                controls.cancel()
-                return layer
-            },
-        }
     },
     
-    _iterateTouches (touches, callback) {
-        for (var i = 0; i < touches.length; i ++) {
-            var t = touches[i]
-            callback(
-                new vec(t.clientX, t.clientY), 
-                t, touches.length, touches
-            )
-        }
+    _dragMouse (layer, transport) {
+        var down     = new vec()
+        var velocity = new vec()
+        return this._dragMouseEventPattern(layer, {
+            down (e) {
+                velocity
+                down = velocity = e.pointer
+                transport.down({e})
+            },
+            move (e) {
+                var translation = e.pointer.sub(down)
+                transport.move({e, 
+                    transformation : new matrix().translate(translation),
+                    velocity : translation.sub(velocity)
+                })
+                velocity = translation
+            },
+            up (e) {
+                transport.up({e})
+            },
+            cancel (e) {
+                transport.cancel({e})
+                down.reset()
+                velocity.reset()
+            },
+        })
     },
     
-    zoom (layer, options = {}) {
+    _multitouch (layer, t) {
+        // some shared values
         var touches      = {}
         var scale_rotate = new matrix()
         var lastState    = new matrix()
         var origin       = new vec()
         var center       = new vec()
         var translation  = new vec()
-        var down = layer.on('touchstart', e => {
+        // export control interface for gesture events
+        return this._dragTouchEventPattern(layer, {
+            init (e) {
+                // get at start of a session 
+                // a center of a layer
+                center = layer.center
+            },
+            down (e) {
+                // fire interface function
+                t.down && t.down({e})
+                // calculate average vector aka origin and
+                // bring this origin on rotated and scaled object back
+                origin = vec.prototype.mix(e.pointers)
+                    .sub(center)
+                    .sub(translation)
+            },
+            move (e) {
+                // calculate drag difference
+                var velocity = new vec()
+                for (var id in e.pointers) {
+                    // if a touch is not initialized, 
+                    // save its vector to the list
+                    if (!touches[id]) touches[id] = e.pointers[id]
+                    // calculate difference between frames
+                    velocity
+                        .add(e.pointers[id], true)
+                        .sub(touches[id], true)
+                    // save value for the next time
+                    touches[id] = e.pointers[id]
+                }
+                // calculate average difference between every dragged touch
+                velocity.div(new vec().fill(e.targetTouches.length), true)
+                // apply difference to persistent translation vector
+                translation.add(velocity, true)
+                // modify scale and rotation matrix
+                var drag  = new matrix()
+                var pinch = new matrix().translate(origin.scale(-1))
+                if (t.translate) drag.translate(translation, true)
+                if (t.rotate) pinch.rotate(e.rotation, true)
+                if (t.scale) pinch.scale(e.scale, true)
+                scale_rotate = lastState.multiply(pinch.translate(origin))
+                var transformation = scale_rotate.multiply(drag)
+                // export values
+                t.move && t.move({e,
+                    transformation,
+                    velocity
+                })
+            },
+            up (e) {
+                // apply matrix for the next drag action
+                if (e.targetTouches.length > 0) lastState = scale_rotate
+                t.up && t.up({e})
+            },
+            cancel (e) {
+                // export up event
+                t.cancel && t.cancel({e})
+                center.reset()
+                lastState.reset()
+                translation.reset()
+                touches = {}
+            }
+        })
+    },
+    
+    _dragMouseEventPattern (layer, transport) {
+        var down = layer.on('mousedown', e => {
+            e.pointer = new vec(e.clientX, e.clientY)
             if (!move.active) {
                 move.on()
                 up.on()
-                center = layer.center
             }
-            var touchesToVectors = []
-            this._iterateTouches(e.targetTouches, 
-                vector => touchesToVectors.push(vector))
-            origin = vec.prototype.mix(touchesToVectors)
-                .sub(center)
-                .sub(translation)
-            e.preventDefault()
-        }).on()
-        var move = layer.on('touchmove', e => {
-            var differenceFrame = new vec()
-            this._iterateTouches(e.targetTouches, (vector, touch) => {
-                if (!touches[touch.identifier])
-                    touches[touch.identifier] = vector
-                differenceFrame
-                    .add(vector, true)
-                    .sub(touches[touch.identifier], true)
-                touches[touch.identifier] = vector
-            })
-            differenceFrame.div(new vec().fill(e.targetTouches.length), true)
-            translation.add(differenceFrame, true)
-            scale_rotate = lastState
-                .translate(origin.scale(-1))
-                .rotate(e.rotation)
-                .scale(e.scale)
-                .translate(origin)
-            var transformation = scale_rotate.translate(translation)
-            animation.draw(`${layer.identifier}: drag`, () => {
-                layer.matrix = transformation
-            })
+            transport.down(e)
             e.preventDefault()
         })
-        var up = layer.on('touchend', e => {
-            var length = e.targetTouches.length
-            if (length == 0)
-                cancel()
-            else
-                lastState = scale_rotate
+        var move = Screen.on('mousemove', e => {
+            e.pointer = new vec(e.clientX, e.clientY)
+            transport.move(e)
             e.preventDefault()
         })
-        var cancel = () => {
+        var up = Screen.on('mouseup', e => {
+            e.pointer = new vec(e.clientX, e.clientY)
+            transport.up(e)
+            cancel(e)
+            e.preventDefault()
+        })
+        var cancel = (e = {}) => {
             move.off()
             up.off()
-            animation.draw(`${layer.identifier}: drag`, () => {
-                layer.animate({time: .3, ease: 'cubic-bezier(.1, .5, .1, 1.5)'}, {
-                    matrix : new matrix()
-                })
-            })
-            center.reset()
-            lastState.reset()
-            translation.reset()
-            touches = {}
+            transport.cancel(e)
         }
         return {
             on () {
                 down.on()
-                return layer
+                return this
             },
             off () {
+                cancel()
                 down.off()
-                return layer
+                return this
             },
             cancel () {
-                cancel()
-                return layer
+                cancel() 
+                return this
             },
+            get active () {return down.active},
+        }
+    },
+    
+    _dragTouchEventPattern (layer, transport) {
+        var convertTouches = fingers => {
+            var out = {}
+            for (var i = 0; i < fingers.length; i ++) 
+                out[fingers[i].identifier] = new vec(
+                    fingers[i].clientX,
+                    fingers[i].clientY
+                )
+            return out
+        }
+        var down = layer.on('touchstart', e => {
+            e.pointers = convertTouches(e.targetTouches)
+            if (!move.active) {
+                move.on()
+                up.on()
+                transport.init(e)
+            }
+            transport.down(e)
+            e.preventDefault()
+        })
+        var move = layer.on('touchmove', e => {
+            e.pointers = convertTouches(e.targetTouches)
+            transport.move(e)
+            e.preventDefault()
+        })
+        var up = layer.on('touchend', e => {
+            transport.up(e)
+            if (e.targetTouches.length == 0) cancel(e)
+            e.preventDefault()
+        })
+        var cancel = (e = {}) => {
+            move.off()
+            up.off()
+            transport.cancel(e)
+        }
+        return {
+            on () {
+                down.on()
+                return this
+            },
+            off () {
+                cancel()
+                down.off()
+                return this
+            },
+            cancel () {
+                cancel() 
+                return this
+            },
+            get active () {return down.active},
         }
     },
 }

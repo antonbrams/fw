@@ -47,9 +47,10 @@ export default class Matrix {
 			a[12]*b[2] + a[13]*b[6] + a[14]*b[10] + a[15]*b[14],
 			a[12]*b[3] + a[13]*b[7] + a[14]*b[11] + a[15]*b[15]
 		]
-        if (set) 
+        if (set) {
             this.value = result
-        else 
+            return this
+        } else 
             return new Matrix(result)
 	}
     
@@ -83,6 +84,14 @@ export default class Matrix {
         ], set)
     }
     
+    getTranslation () {
+        return new vec(
+            this.value[12], 
+            this.value[13], 
+            this.value[14]
+        )
+    }
+    
     scale (v, set) {
         if (val.isNum(v))
             return this.scale(new vec().fill(v), set)
@@ -97,11 +106,11 @@ export default class Matrix {
         }
     }
     
-    getTranslation () {
+    getScale () {
         return new vec(
-            this.value[12], 
-            this.value[13], 
-            this.value[14]
+            this.value[0], 
+            this.value[5], 
+            this.value[10]
         )
     }
     
@@ -140,11 +149,12 @@ export default class Matrix {
     rotate (v, set) {
         if (val.isNum(v))
             return this.rotateZ(v, set)
-        else
+        else {
             return this
                 .rotateX(v.x, set)
                 .rotateY(v.y, set)
                 .rotateZ(v.z, set)
+        }
     }
     
     getRotation () {
@@ -153,14 +163,6 @@ export default class Matrix {
             Math.asin(-this.value[8]),
             Math.atan2(this.value[4], this.value[0])
         ).apply(axis => - axis.value * 180 / Math.PI)
-    }
-    
-    getScale () {
-        return new vec(
-            this.value[0], 
-            this.value[5], 
-            this.value[10]
-        )
     }
     
     // projectionMapping (lt, lb, rt, rb) {
