@@ -74,7 +74,7 @@ export default {
 	            down   : isTouch? 'touchstart': 'mousedown',
 	            move   : isTouch? 'touchmove': 'mousemove',
 	            up     : isTouch? 'touchend': 'mouseup',
-                enter  : isTouch? null: 'mouseenter',
+                in     : isTouch? null: 'mouseenter',
 	            out    : isTouch? null: 'mouseleave',
                 cancel : isTouch? 'touchcancel': null,
                 scroll : 'scroll',
@@ -82,6 +82,70 @@ export default {
 	        }
         }
     })(),
+    
+    /*
+        toggle.on('file', {
+            in () {
+                layer.bg({color: 'red'})
+            },
+            out () {
+                layer.bg({color: null})
+            },
+            drop (data) {
+                console.log(data)
+            }
+        }).on()    
+    */
+    
+	file (layer, t = {}) {
+        var over = layer.on('dragover',  e => {
+            t.in && t.in({e})
+            leave.on()
+            drop.on()
+            e.preventDefault()
+        })
+        var leave = layer.on('dragleave', e => {
+            t.out && t.out({e})
+            leave.off()
+            drop.off()
+            e.preventDefault()
+        })
+        var drop = layer.on('drop', e => {
+            t.out && t.out({e})
+        	var read = (file, callback) => {
+        	    if (/\.(jpe?g|png|gif)$/i.test(file.name)) {
+        			var reader = new FileReader()
+        			reader.onload = function (e) {
+        				callback({
+                            name : file.name, 
+                            data : this.result
+                        })
+                    }
+        			reader.readAsDataURL(file)
+        	    }
+        	}
+			var files = e.dataTransfer.files
+			var out	= []
+			for (var i = 0; i < files.length; i ++)
+				read(files[i], data => {
+					out.push(data)
+					if (out.length == files.length && t.drop)
+                        t.drop(out)
+				})
+			e.preventDefault()
+        })
+        return {
+            on () {
+                over.on()
+                return this
+            },
+            off () {
+                over.off()
+                return this
+            },
+            get active () {return over.active}
+        }
+	},
     
 }
 

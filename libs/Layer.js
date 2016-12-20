@@ -61,6 +61,9 @@ export default class Layer {
         // dom events
         else if (event.support(this.dom, topic))
             return event.listener(this.dom, topic, fn, options)
+        // custom events
+        else if (topic in event)
+            return event[topic](this, fn)
         // dom css
         else
             return this.event.on(topic, fn)

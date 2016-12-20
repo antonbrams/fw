@@ -8,36 +8,13 @@ export default {
 	cloneObject (_object) {
 		return JSON.parse(JSON.stringify(_object))
 	},
-
-	readFile (file, callback) {
-	    if (/\.(jpe?g|png|gif)$/i.test(file.name)) {
-			var reader = new FileReader()
-			reader.onload = () => { 
-				callback({
-					name: file.name,
-					data: this.result
-				})
-			}
-			reader.readAsDataURL(file)
-	    }
-	},
-
-	dropFile (zone, onready) {
-		zone.ondragover		= () => { zone.classList.add('drop'); return false }
-		zone.ondragleave	= () => { zone.classList.remove('drop') }
-		zone.ondrop 		= (() => {
-			zone.classList.remove('drop')
-			var event 	= window.event
-			var files 	= event.dataTransfer.files
-			var output	= []
-			for (var i = 0; i < files.length; i ++)
-				this.readFile(files[i], function (file) {
-					output.push(file);
-					if (output.length == files.length) onready(output)
-				})
-			event.preventDefault()
-		}).bind(this)
-	},
+	
+	uuid() {
+	  	var s = () => {return 
+		  	Math.floor((1 + Math.random()) * 0x10000)
+		  		.toString(16).substring(1)}
+	  	return `${s()+s()}-${s()}-${s()}-${s()}-${s()+s()+s()}`
+  	},
 	
 	uploadFile (input, onready) {
 		input.onchange = (() => {

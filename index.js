@@ -319,8 +319,10 @@ var Layer = function () {
             if (topic in _fw.gesture) return _fw.gesture[topic](this, fn);
             // dom events
             else if (_fw.event.support(this.dom, topic)) return _fw.event.listener(this.dom, topic, fn, options);
-                // dom css
-                else return this.event.on(topic, fn);
+                // custom events
+                else if (topic in _fw.event) return _fw.event[topic](this, fn);
+                    // dom css
+                    else return this.event.on(topic, fn);
         }
 
         // setter getters
@@ -1360,51 +1362,22 @@ exports.default = {
 	cloneObject: function cloneObject(_object) {
 		return JSON.parse(JSON.stringify(_object));
 	},
-	readFile: function readFile(file, callback) {
-		var _this = this;
-
-		if (/\.(jpe?g|png|gif)$/i.test(file.name)) {
-			var reader = new FileReader();
-			reader.onload = function () {
-				callback({
-					name: file.name,
-					data: _this.result
-				});
-			};
-			reader.readAsDataURL(file);
-		}
-	},
-	dropFile: function dropFile(zone, onready) {
-		var _this2 = this;
-
-		zone.ondragover = function () {
-			zone.classList.add('drop');return false;
+	uuid: function uuid() {
+		var s = function s() {
+			return;
+			Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
 		};
-		zone.ondragleave = function () {
-			zone.classList.remove('drop');
-		};
-		zone.ondrop = function () {
-			zone.classList.remove('drop');
-			var event = window.event;
-			var files = event.dataTransfer.files;
-			var output = [];
-			for (var i = 0; i < files.length; i++) {
-				_this2.readFile(files[i], function (file) {
-					output.push(file);
-					if (output.length == files.length) onready(output);
-				});
-			}event.preventDefault();
-		}.bind(this);
+		return s() + s() + '-' + s() + '-' + s() + '-' + s() + '-' + (s() + s() + s());
 	},
 	uploadFile: function uploadFile(input, onready) {
-		var _this3 = this;
+		var _this = this;
 
 		input.onchange = function () {
 			var event = window.event;
 			var files = event.target.files;
 			var output = [];
 			for (var i = 0; i < files.length; i++) {
-				_this3.readFile(files[i], function (file) {
+				_this.readFile(files[i], function (file) {
 					output.push(file);
 					if (output.length == files.length) onready(output);
 				});
@@ -1607,15 +1580,82 @@ exports.default = {
                 down: isTouch ? 'touchstart' : 'mousedown',
                 move: isTouch ? 'touchmove' : 'mousemove',
                 up: isTouch ? 'touchend' : 'mouseup',
-                enter: isTouch ? null : 'mouseenter',
+                in: isTouch ? null : 'mouseenter',
                 out: isTouch ? null : 'mouseleave',
                 cancel: isTouch ? 'touchcancel' : null,
                 scroll: 'scroll',
                 change: 'change'
             };
         }
-    }()
+    }(),
 
+    /*
+        toggle.on('file', {
+            in () {
+                layer.bg({color: 'red'})
+            },
+            out () {
+                layer.bg({color: null})
+            },
+            drop (data) {
+                console.log(data)
+            }
+        }).on()    
+    */
+
+    file: function file(layer) {
+        var t = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+        var over = layer.on('dragover', function (e) {
+            t.in && t.in({ e: e });
+            leave.on();
+            drop.on();
+            e.preventDefault();
+        });
+        var leave = layer.on('dragleave', function (e) {
+            t.out && t.out({ e: e });
+            leave.off();
+            drop.off();
+            e.preventDefault();
+        });
+        var drop = layer.on('drop', function (e) {
+            t.out && t.out({ e: e });
+            var read = function read(file, callback) {
+                if (/\.(jpe?g|png|gif)$/i.test(file.name)) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        callback({
+                            name: file.name,
+                            data: this.result
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            var files = e.dataTransfer.files;
+            var out = [];
+            for (var i = 0; i < files.length; i++) {
+                read(files[i], function (data) {
+                    out.push(data);
+                    if (out.length == files.length && t.drop) t.drop(out);
+                });
+            }e.preventDefault();
+        });
+        return {
+            on: function on() {
+                over.on();
+                return this;
+            },
+            off: function off() {
+                over.off();
+                return this;
+            },
+
+            get active() {
+                return over.active;
+            }
+        };
+    }
 };
 
 /***/ },
