@@ -1,7 +1,7 @@
 
 
 
-import {vec, val} from './fw'
+import {vec, val, math} from './fw'
 
 export default {
 	
@@ -62,6 +62,34 @@ export default {
 			a.l < pointer.x && pointer.x < a.l + a.w
 		&&  a.t < pointer.y && pointer.y < a.t + a.h
 		)
+	},
+	
+	vectorRange (vector, limit, range) {
+		var over = new vec()
+		return {
+			value : new vec(
+				math.rubberRange(vector.x, limit.l, limit.r, range, state => over.x = state), 
+				math.rubberRange(vector.x, limit.t, limit.b, range, state => over.y = state)
+			),
+			over
+		}
+	},
+	
+	getSide (pointer, size, border) {
+		var border  = .5 * border
+		return {
+			x: pointer.x < border? 'l': size.x - pointer.x < border? 'r': 'c',
+			y: pointer.y < border? 't': size.y - pointer.y < border? 'b': 'c'
+		}
+	},
+	
+	// {x: 'l|c|r', y: 't|m|b'}
+	getCursor (side) {
+		return side? {
+			t: {l: 'nw-resize', c: 'n-resize', r: 'ne-resize'},
+			c: {l:  'w-resize', c:     'move', r:  'e-resize'},
+			b: {l: 'sw-resize', c: 's-resize', r: 'se-resize'}
+		}[side.y][side.x]: null	
 	},
 }
 

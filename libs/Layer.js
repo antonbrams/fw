@@ -57,13 +57,13 @@ export default class Layer {
     on (topic, fn, options) {
         // gestures
         if (topic in gesture)
-            return gesture[topic](this, fn)
+            return gesture[topic](this, fn).on()
         // dom events
         else if (event.support(this.dom, topic))
-            return event.listener(this.dom, topic, fn, options)
+            return event.listener(this.dom, topic, fn, options).on()
         // custom events
         else if (topic in event)
-            return event[topic](this, fn)
+            return event[topic](this, fn).on()
         // dom css
         else
             return this.event.on(topic, fn)

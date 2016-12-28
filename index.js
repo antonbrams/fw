@@ -316,11 +316,11 @@ var Layer = function () {
         key: 'on',
         value: function on(topic, fn, options) {
             // gestures
-            if (topic in _fw.gesture) return _fw.gesture[topic](this, fn);
+            if (topic in _fw.gesture) return _fw.gesture[topic](this, fn).on();
             // dom events
-            else if (_fw.event.support(this.dom, topic)) return _fw.event.listener(this.dom, topic, fn, options);
+            else if (_fw.event.support(this.dom, topic)) return _fw.event.listener(this.dom, topic, fn, options).on();
                 // custom events
-                else if (topic in _fw.event) return _fw.event[topic](this, fn);
+                else if (topic in _fw.event) return _fw.event[topic](this, fn).on();
                     // dom css
                     else return this.event.on(topic, fn);
         }
@@ -1048,8 +1048,8 @@ exports.default = {
 		var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
 		var id = window.performance.now();
-		var job, _stop;
 		var e = new _fw.event.Machine('Decay', false);
+		var job, _stop;
 		var types = {
 			vec: {
 				calculate: function calculate(a, b, c) {
@@ -1069,7 +1069,7 @@ exports.default = {
 			}
 		};
 		var out = {
-			set: function set(value) {
+			to: function to(value) {
 				if (!_fw.val.exists(job)) {
 					job = {
 						value: value,
@@ -1092,6 +1092,10 @@ exports.default = {
 					_stop = false;
 					return stopped;
 				});
+			},
+			set: function set(value) {
+				job.value = value;
+				callback(value);
 			},
 			stop: function stop() {
 				_stop = true;
@@ -1537,25 +1541,25 @@ exports.default = {
     }(),
 
     listener: function listener(dom, type, callback, flag) {
-        var _active = false;
+        var active = false;
         var out = {
             on: function on() {
-                if (!_active) {
-                    _active = true;
+                if (!active) {
+                    active = true;
                     dom.addEventListener(type, callback, flag);
                 }
                 return out;
             },
             off: function off() {
-                if (_active) {
-                    _active = false;
+                if (active) {
+                    active = false;
                     dom.removeEventListener(type, callback, flag);
                 }
                 return out;
             },
 
             get active() {
-                return _active;
+                return active;
             }
         };
         return out;
@@ -1563,7 +1567,6 @@ exports.default = {
     support: function support(element, type) {
         var supported = 'on' + type in element;
         if (!supported) {
-            // TODO: check this one: element[type]
             element.setAttribute(type, null);
             supported = typeof element[type] === 'function';
         }
@@ -1590,7 +1593,7 @@ exports.default = {
     }(),
 
     /*
-        toggle.on('file', {
+        var dropZone = layer.on('file', {
             in () {
                 layer.bg({color: 'red'})
             },
@@ -1603,22 +1606,22 @@ exports.default = {
         }).on()    
     */
 
-    file: function file(layer) {
+    fileDrop: function fileDrop(layer) {
         var t = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-        var over = layer.on('dragover', function (e) {
+        var over = this.listener(layer.dom, 'dragover', function (e) {
             t.in && t.in({ e: e });
             leave.on();
             drop.on();
             e.preventDefault();
         });
-        var leave = layer.on('dragleave', function (e) {
+        var leave = this.listener(layer.dom, 'dragleave', function (e) {
             t.out && t.out({ e: e });
             leave.off();
             drop.off();
             e.preventDefault();
         });
-        var drop = layer.on('drop', function (e) {
+        var drop = this.listener(layer.dom, 'drop', function (e) {
             t.out && t.out({ e: e });
             var read = function read(file, callback) {
                 if (/\.(jpe?g|png|gif)$/i.test(file.name)) {
@@ -1712,6 +1715,34 @@ exports.default = {
 	},
 	hitTest: function hitTest(a, pointer) {
 		return a.l < pointer.x && pointer.x < a.l + a.w && a.t < pointer.y && pointer.y < a.t + a.h;
+	},
+	vectorRange: function vectorRange(vector, limit, range) {
+		var over = new _fw.vec();
+		return {
+			value: new _fw.vec(_fw.math.rubberRange(vector.x, limit.l, limit.r, range, function (state) {
+				return over.x = state;
+			}), _fw.math.rubberRange(vector.x, limit.t, limit.b, range, function (state) {
+				return over.y = state;
+			})),
+			over: over
+		};
+	},
+	getSide: function getSide(pointer, size, border) {
+		var border = .5 * border;
+		return {
+			x: pointer.x < border ? 'l' : size.x - pointer.x < border ? 'r' : 'c',
+			y: pointer.y < border ? 't' : size.y - pointer.y < border ? 'b' : 'c'
+		};
+	},
+
+
+	// {x: 'l|c|r', y: 't|m|b'}
+	getCursor: function getCursor(side) {
+		return side ? {
+			t: { l: 'nw-resize', c: 'n-resize', r: 'ne-resize' },
+			c: { l: 'w-resize', c: 'move', r: 'e-resize' },
+			b: { l: 'sw-resize', c: 's-resize', r: 'se-resize' }
+		}[side.y][side.x] : null;
 	}
 };
 
@@ -1729,7 +1760,7 @@ Object.defineProperty(exports, "__esModule", {
 var _fw = __webpack_require__(0);
 
 exports.default = {
-    scroll: function scroll(layer) {
+    wheel: function wheel(layer) {
         var transport = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
         return layer.on('mousewheel', function (e) {
@@ -1746,12 +1777,48 @@ exports.default = {
             transport({ e: e, vector: vector });
         });
     },
+    resize: function resize(layer) {
+        var transport = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+        var border = 20;
+        var side = { x: null, y: null };
+        var cursorHover = _fw.event.listener(layer.dom, 'mousemove', function (e) {
+            var rect = layer.rect;
+            var pointer = new _fw.vec(e.clientX, e.clientY);
+            side = _fw.geo.getSide(pointer.sub(rect.position), rect.size, border);
+            layer.dom.style.cursor = _fw.geo.getCursor(side);
+        });
+        var drag = this._dragMouse(layer, {
+            down: function down(t) {
+                cursorHover.off();
+            },
+            move: function move(t) {},
+            up: function up(t) {},
+            cancel: function cancel(t) {
+                cursorHover.on();
+            }
+        });
+        return {
+            on: function on() {
+                drag.on();
+                cursorHover.on();
+            },
+            off: function off() {
+                drag.off();
+                cursorHover.off();
+            },
+
+            get active() {
+                return cursorHover.status;
+            }
+        };
+    },
     drag: function drag(layer) {
         var transport = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
         return this[_fw.event.types.isTouch ? '_multitouch' : '_dragMouse'](layer, {
             down: function down(t) {
-                transport.down && transport.down();
+                transport.down && transport.down(t);
             },
             move: function move(t) {
                 if (transport.move && transport.move(t) || !transport.move) _fw.animation.draw(layer.identifier + ': drag', function () {
@@ -1777,28 +1844,28 @@ exports.default = {
             scale: transport.scale
         });
     },
-    _dragMouse: function _dragMouse(layer, transport) {
+    _dragMouse: function _dragMouse(layer, t) {
         var _down = new _fw.vec();
         var velocity = new _fw.vec();
         return this._dragMouseEventPattern(layer, {
             down: function down(e) {
                 velocity;
                 _down = velocity = e.pointer;
-                transport.down({ e: e });
+                t.down({ e: e });
             },
             move: function move(e) {
                 var translation = e.pointer.sub(_down);
-                transport.move({ e: e,
+                t.move({ e: e,
                     transformation: new _fw.matrix().translate(translation),
                     velocity: translation.sub(velocity)
                 });
                 velocity = translation;
             },
             up: function up(e) {
-                transport.up({ e: e });
+                t.up({ e: e });
             },
             cancel: function cancel(e) {
-                transport.cancel({ e: e });
+                t.cancel({ e: e });
                 _down.reset();
                 velocity.reset();
             }
@@ -1849,6 +1916,7 @@ exports.default = {
                 if (t.rotate) pinch.rotate(e.rotation, true);
                 if (t.scale) pinch.scale(e.scale, true);
                 scale_rotate = lastState.multiply(pinch.translate(origin));
+                // get final transformation
                 var transformation = scale_rotate.multiply(drag);
                 // export values
                 t.move && t.move({ e: e,
@@ -1871,24 +1939,24 @@ exports.default = {
             }
         });
     },
-    _dragMouseEventPattern: function _dragMouseEventPattern(layer, transport) {
-        var down = layer.on('mousedown', function (e) {
+    _dragMouseEventPattern: function _dragMouseEventPattern(layer, t) {
+        var down = _fw.event.listener(layer.dom, 'mousedown', function (e) {
             e.pointer = new _fw.vec(e.clientX, e.clientY);
             if (!move.active) {
                 move.on();
                 up.on();
             }
-            transport.down(e);
+            t.down(e);
             e.preventDefault();
         });
-        var move = _fw.Screen.on('mousemove', function (e) {
+        var move = _fw.event.listener(document, 'mousemove', function (e) {
             e.pointer = new _fw.vec(e.clientX, e.clientY);
-            transport.move(e);
+            t.move(e);
             e.preventDefault();
         });
-        var up = _fw.Screen.on('mouseup', function (e) {
+        var up = _fw.event.listener(document, 'mouseup', function (e) {
             e.pointer = new _fw.vec(e.clientX, e.clientY);
-            transport.up(e);
+            t.up(e);
             cancel(e);
             e.preventDefault();
         });
@@ -1897,7 +1965,7 @@ exports.default = {
 
             move.off();
             up.off();
-            transport.cancel(e);
+            t.cancel(e);
         };
         return {
             on: function on() {
@@ -1929,30 +1997,30 @@ exports.default = {
             }
         };
     },
-    _dragTouchEventPattern: function _dragTouchEventPattern(layer, transport) {
+    _dragTouchEventPattern: function _dragTouchEventPattern(layer, t) {
         var convertTouches = function convertTouches(fingers) {
             var out = {};
             for (var i = 0; i < fingers.length; i++) {
                 out[fingers[i].identifier] = new _fw.vec(fingers[i].clientX, fingers[i].clientY);
             }return out;
         };
-        var down = layer.on('touchstart', function (e) {
+        var down = _fw.event.listener(layer.dom, 'touchstart', function (e) {
             e.pointers = convertTouches(e.targetTouches);
             if (!move.active) {
                 move.on();
                 up.on();
-                transport.init(e);
+                t.init(e);
             }
-            transport.down(e);
+            t.down(e);
             e.preventDefault();
         });
-        var move = layer.on('touchmove', function (e) {
+        var move = _fw.event.listener(layer.dom, 'touchmove', function (e) {
             e.pointers = convertTouches(e.targetTouches);
-            transport.move(e);
+            t.move(e);
             e.preventDefault();
         });
-        var up = layer.on('touchend', function (e) {
-            transport.up(e);
+        var up = _fw.event.listener(layer.dom, 'touchend', function (e) {
+            t.up(e);
             if (e.targetTouches.length == 0) cancel(e);
             e.preventDefault();
         });
@@ -1961,7 +2029,7 @@ exports.default = {
 
             move.off();
             up.off();
-            transport.cancel(e);
+            t.cancel(e);
         };
         return {
             on: function on() {

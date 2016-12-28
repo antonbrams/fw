@@ -8,158 +8,16 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no">
 </head>
 <body>
-
+    
+    
 </body>
-
+<style>
+    
+    /* style */
+    
+</style>
 <script src="../index.js"></script>
-<script>
-    
-    if (0) {
-        var scroller = new fw.Scroller({
-            flow         : 'x',
-            position     : 'absolute',
-            size         : new fw.vec(200, 200),
-            borderRadius : 5,
-            boxShadow    : '0 2px 10px 0 rgba(0,0,0, .2)',
-            center       : fw.Screen.center
-        })
-        
-        var model = fw.model.put({count: 3, model: {
-            id    : '{type: int, mode: forward, from: 1}',
-            image : '{type: image}'
-        }})
-        
-        model.on('make', item => {
-            var layerB = new fw.Layer({
-                parent  : scroller,
-                size    : new fw.vec(200, 200)
-            }).bind(item, {
-                image : {
-                    key  : 'image',
-                    read : 'backgroundImage',
-                    set (value, layer) {
-                        fw.etc.compressImage(value, .1, url => {
-                            layer.image(url)
-                        })
-                    }}
-            })
-            return layerB
-        })
-    }
-    
-    if (0) {
-        var layer1 = new fw.Layer({
-            position : 'absolute',
-            zIndex   : 1,
-            size     : new fw.vec(300, 300),
-            center   : fw.Screen.center
-        })
-        layer1.append(new fw.Layer({
-            position : 'absolute',
-            size     : new fw.vec(10, 10),
-            border   : {radius: 10},
-            bg       : {color: 'red'}
-        }))
-        // layer1.on('drag')
-        var a = layer1.on('drag', {
-            rotate: true, 
-            scale: true,
-            move (t) {
-                t.transformation.rotate(new fw.vec(-t.velocity.y, t.velocity.x), 1)
-                return true
-            }
-        }).on()
-    }
-    
-    if (1) {
-        var toggle = new fw.Layer({
-            position : 'absolute',
-            size     : new fw.vec(100, 50),
-            center   : fw.Screen.center,
-            border   : {radius: 25},
-            padding  : 10
-        })
-        var knob = new fw.Layer({
-            parent   : toggle,
-            size     : new fw.vec(40, 100).unit('%'),
-            border   : {radius: 25}
-        })
-        knob.on('drag', {
-            move (t) {
-                var matrix = t.transformation
-                var move = matrix.getTranslation()
-                move.y = 0
-                t.transformation = new fw.matrix().translate(move)
-                return true
-            }
-        }).on()
-        
-        var states = {
-            current : 'on',
-            on      : {left : '0px'},
-            off     : {left : '50px'}
-        }
-        
-        toggle.on('click', e => {
-            states.current = states.current == 'on'? 'off': 'on'
-            knob.animate({time: .2}, states[states.current])
-        }).on()
-    }
-    
-    if (0) {
-        var button = new fw.Layer({
-            position    : 'absolute',
-            size        : new fw.vec(300, 200),
-            center      : fw.Screen.center,
-            bg          : 'none',
-            perspective : 500
-        })
-        
-        var layer = new fw.Layer({
-            position : 'absolute',
-            overflow : 'hidden',
-            parent   : button,
-            size     : new fw.vec(100, 100).unit('%'),
-            border   : {radius: 10},
-        })
-        
-        var background = new fw.Layer({
-            position : 'absolute',
-            parent   : layer,
-            size     : new fw.vec(100, 100).unit('%'),
-            bg       : 'radial-gradient(closest-side, rgba(255,255,255,1), rgba(255,255,255,0))',
-        })
-        
-        var foreground = new fw.Layer({
-            parent        : button,
-            position      : 'absolute',
-            size          : new fw.vec(200, 100),
-            center        : layer.center,
-            border        : {radius: 10},
-            bg            : {color: 'red'},
-        })
-        
-        var decay = fw.animation.decay(pointer => {
-            var tilt = new fw.matrix()
-                .rotate(new fw.vec(-pointer.y, pointer.x).scale(.1))
-            layer.matrix = tilt
-            foreground.matrix = new fw.matrix()
-                .translate(new fw.vec(0, 0, 30))
-                .multiply(tilt)
-            background.translate = new fw.vec(-pointer.x, -pointer.y).unit('px')
-        })
-        
-        var move = button.on('mousemove', e => {
-            var pointer = new fw.vec(e.clientX, e.clientY).sub(layer.center)
-            decay.set(pointer)
-        }, 1).on()
-        
-        var out = button.on('mouseleave', e => {
-            decay.set(new fw.vec(0,0))
-        }, 1).on()
-    }
-    
-</script>
+<script src="./index.js"></script>
 </html>
 
 

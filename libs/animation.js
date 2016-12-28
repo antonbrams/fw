@@ -102,8 +102,8 @@ export default {
 	
 	decay (callback, options = {}) {
 		var id   = window.performance.now()
-		var job, stop
 		var e    = new event.Machine('Decay', false)
+		var job, stop
 		var types = {
 			vec : {
 				calculate (a, b, c) {return a.add(b.sub(a).scale(c), 1)},
@@ -115,7 +115,7 @@ export default {
 			}
 		}
 		var out = {
-			set : value => {
+			to : value => {
 				if (!val.exists(job)) {
 					job = {
 						value : value,
@@ -138,6 +138,10 @@ export default {
 					stop = false
 					return stopped
 				})
+			},
+			set (value) {
+				job.value = value
+				callback(value)
 			},
 			stop () {
 				stop = true

@@ -32,25 +32,23 @@ export default {
     },
     
     listener (dom, type, callback, flag) {
-        var _active = false
+        var active = false
         var out = {
             on () {
-                if (!_active) {
-                    _active = true
+                if (!active) {
+                    active = true
                     dom.addEventListener(type, callback, flag)
                 }
                 return out
             },
             off () {
-                if (_active) {
-                    _active = false
+                if (active) {
+                    active = false
                     dom.removeEventListener(type, callback, flag)
                 }
                 return out
             },
-            get active () {
-                return _active
-            }
+            get active () {return active}
         }
         return out
     },
@@ -58,7 +56,6 @@ export default {
     support (element, type) {
         var supported = `on${type}` in element
         if (!supported) {
-            // TODO: check this one: element[type]
             element.setAttribute(type, null)
             supported = typeof element[type] === 'function'
         }
@@ -84,7 +81,7 @@ export default {
     })(),
     
     /*
-        toggle.on('file', {
+        var dropZone = layer.on('file', {
             in () {
                 layer.bg({color: 'red'})
             },
@@ -97,20 +94,20 @@ export default {
         }).on()    
     */
     
-	file (layer, t = {}) {
-        var over = layer.on('dragover',  e => {
+	fileDrop (layer, t = {}) {
+        var over = this.listener(layer.dom, 'dragover',  e => {
             t.in && t.in({e})
             leave.on()
             drop.on()
             e.preventDefault()
         })
-        var leave = layer.on('dragleave', e => {
+        var leave = this.listener(layer.dom, 'dragleave', e => {
             t.out && t.out({e})
             leave.off()
             drop.off()
             e.preventDefault()
         })
-        var drop = layer.on('drop', e => {
+        var drop = this.listener(layer.dom, 'drop', e => {
             t.out && t.out({e})
         	var read = (file, callback) => {
         	    if (/\.(jpe?g|png|gif)$/i.test(file.name)) {

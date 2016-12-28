@@ -3,12 +3,13 @@
 
 import {
     animation, vec, event, math, 
-    Screen, matrix, Layer, val
+    Screen, matrix, Layer, val,
+    geo
 } from './fw'
 
 export default {
     
-    scroll (layer, transport = {}) {
+    wheel (layer, transport = {}) {
         return layer.on('mousewheel', e => {
             var vector = 0
             var w = e.wheelDelta
@@ -24,10 +25,46 @@ export default {
         })
     },
     
+    resize (layer, transport = {}) {
+        var border = 20
+        var side = {x: null, y: null}
+        var cursorHover = event.listener(layer.dom, 'mousemove', e => {
+            var rect    = layer.rect
+            var pointer = new vec(e.clientX, e.clientY)
+            side = geo.getSide(pointer.sub(rect.position), rect.size, border)
+            layer.dom.style.cursor = geo.getCursor(side)
+        })
+        var drag = this._dragMouse(layer, {
+            down (t) {
+                cursorHover.off()
+            },
+            move (t) {
+
+            },
+            up (t) {
+                
+            },
+            cancel (t) {
+                cursorHover.on()
+            }
+        })
+        return {
+            on () {
+                drag.on()
+                cursorHover.on()
+            },
+            off () {
+                drag.off()
+                cursorHover.off()
+            },
+            get active () {return cursorHover.status}
+        }
+    },
+    
     drag (layer, transport = {}) {
         return this[event.types.isTouch? '_multitouch': '_dragMouse'](layer, {
             down (t) {
-                transport.down && transport.down()
+                transport.down && transport.down(t)
             },
             move (t) {
                 if (transport.move && transport.move(t) || !transport.move)
@@ -55,28 +92,28 @@ export default {
         })
     },
     
-    _dragMouse (layer, transport) {
+    _dragMouse (layer, t) {
         var down     = new vec()
         var velocity = new vec()
         return this._dragMouseEventPattern(layer, {
             down (e) {
                 velocity
                 down = velocity = e.pointer
-                transport.down({e})
+                t.down({e})
             },
             move (e) {
                 var translation = e.pointer.sub(down)
-                transport.move({e, 
+                t.move({e, 
                     transformation : new matrix().translate(translation),
                     velocity : translation.sub(velocity)
                 })
                 velocity = translation
             },
             up (e) {
-                transport.up({e})
+                t.up({e})
             },
             cancel (e) {
-                transport.cancel({e})
+                t.cancel({e})
                 down.reset()
                 velocity.reset()
             },
@@ -132,6 +169,7 @@ export default {
                 if (t.rotate) pinch.rotate(e.rotation, true)
                 if (t.scale) pinch.scale(e.scale, true)
                 scale_rotate = lastState.multiply(pinch.translate(origin))
+                // get final transformation
                 var transformation = scale_rotate.multiply(drag)
                 // export values
                 t.move && t.move({e,
@@ -151,35 +189,35 @@ export default {
                 lastState.reset()
                 translation.reset()
                 touches = {}
-            }
+            },
         })
     },
     
-    _dragMouseEventPattern (layer, transport) {
-        var down = layer.on('mousedown', e => {
+    _dragMouseEventPattern (layer, t) {
+        var down = event.listener(layer.dom, 'mousedown', e => {
             e.pointer = new vec(e.clientX, e.clientY)
             if (!move.active) {
                 move.on()
                 up.on()
             }
-            transport.down(e)
+            t.down(e)
             e.preventDefault()
         })
-        var move = Screen.on('mousemove', e => {
+        var move = event.listener(document, 'mousemove', e => {
             e.pointer = new vec(e.clientX, e.clientY)
-            transport.move(e)
+            t.move(e)
             e.preventDefault()
         })
-        var up = Screen.on('mouseup', e => {
+        var up = event.listener(document, 'mouseup', e => {
             e.pointer = new vec(e.clientX, e.clientY)
-            transport.up(e)
+            t.up(e)
             cancel(e)
             e.preventDefault()
         })
         var cancel = (e = {}) => {
             move.off()
             up.off()
-            transport.cancel(e)
+            t.cancel(e)
         }
         return {
             on () {
@@ -199,7 +237,7 @@ export default {
         }
     },
     
-    _dragTouchEventPattern (layer, transport) {
+    _dragTouchEventPattern (layer, t) {
         var convertTouches = fingers => {
             var out = {}
             for (var i = 0; i < fingers.length; i ++) 
@@ -209,30 +247,30 @@ export default {
                 )
             return out
         }
-        var down = layer.on('touchstart', e => {
+        var down = event.listener(layer.dom, 'touchstart', e => {
             e.pointers = convertTouches(e.targetTouches)
             if (!move.active) {
                 move.on()
                 up.on()
-                transport.init(e)
+                t.init(e)
             }
-            transport.down(e)
+            t.down(e)
             e.preventDefault()
         })
-        var move = layer.on('touchmove', e => {
+        var move = event.listener(layer.dom, 'touchmove', e => {
             e.pointers = convertTouches(e.targetTouches)
-            transport.move(e)
+            t.move(e)
             e.preventDefault()
         })
-        var up = layer.on('touchend', e => {
-            transport.up(e)
+        var up = event.listener(layer.dom, 'touchend', e => {
+            t.up(e)
             if (e.targetTouches.length == 0) cancel(e)
             e.preventDefault()
         })
         var cancel = (e = {}) => {
             move.off()
             up.off()
-            transport.cancel(e)
+            t.cancel(e)
         }
         return {
             on () {
