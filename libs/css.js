@@ -11,10 +11,10 @@ export default {
             element.style[this.vendor.perspectiveOrigin] = `${p.origin.z}`
         } else 
             element.style[this.vendor.transform] = 
-               `translate(${p.translate.x}, ${p.translate.y})
+               `matrix3d(${p.matrix3d.toString()})
+                translate(${p.translate.x}, ${p.translate.y})
                 rotate(${p.rotate})
-                scale(${p.scale.x}, ${p.scale.y})
-                matrix3d(${p.matrix3d.toString()})`
+                scale(${p.scale.x}, ${p.scale.y})`
     },
     
     computed (element, prop) {

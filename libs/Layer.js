@@ -132,8 +132,8 @@ export default class Layer {
                 margin : 10
             }).bind(item, {
                 image : {
-                    key  : 'title', 
-                    read : 'backgroundImage',
+                    to   : 'title',
+                    from : 'backgroundImage',
                     set (value, layer) {
                         layer.set({content: 'test ' + value})
                     },
@@ -148,26 +148,31 @@ export default class Layer {
     bind (model, params) {
         for (var key in params) {
             var options   = params[key]
-            var modelKey  = options.key || options
+            var modelKey  = options.to || options
             var initValue = model[modelKey]
             var curValue  = null
-            this.on(options.read || key, value => curValue = value)
-            var set = value => {
-                if (options.set)
-                    options.set(value, this)
-                else {
-                    var param  = {}
-                    param[key] = value
-                    this.set(param)
-                }
-            }
-            var get = () => {
-                if (options.get)
-                    return options.get(curValue, this)
-                else 
-                    return curValue
-            }
-            Object.defineProperty(model, modelKey, {set, get})
+            this.on(options.from || key, value => curValue = value)
+            Object.defineProperty(model, modelKey, {
+                set : ((options, key) => {
+                    return value => {
+                        if (options.set)
+                            options.set(value, this)
+                        else {
+                            var param  = {}
+                            param[key] = value
+                            this.set(param)
+                        }
+                    }
+                })(options, key),
+                get : (options => {
+                    return () => {
+                        if (options.get)
+                            return options.get(this)
+                        else 
+                            return curValue
+                    }
+                })(options)
+            })
             model[modelKey] = initValue
         }
         return this

@@ -16,10 +16,10 @@ class Screen extends Layer {
     on (topic, fn, options) {
         // gestures
         if (topic in event)
-           return gesture[topic](this, fn)
+           return gesture[topic](this, fn).on()
        // dom events
         else if (event.support(document, topic))
-            return event.listener(document, topic, fn, options)
+            return event.listener(document, topic, fn, options).on()
         // dom css
         else
             return this.event.on(topic, fn)

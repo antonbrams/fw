@@ -1,9 +1,13 @@
 
 
 
-{dom, Layer, Screen, Scroller, vec, etc, model, matrix, animation} = fw
+{
+    dom, Layer, Screen, Scroller, 
+    vec, etc, model, matrix, 
+    animation
+} = fw
 
-if 1
+if 0
     layer = new Layer
         center : Screen.center
     .on 'resize'
@@ -26,46 +30,51 @@ if 0
         boxShadow : '0 2px 10px 0 rgba(0,0,0, .2)'
         center    : Screen.center
     
-    model = model.put 
-        count : 3
-        model :
-            id    : '{type: int, mode: forward, from: 1}',
-            image : '{type: image}'
+    model = model.put
+            count : 3
+            model :
+                id    : '{type: int, mode: forward, from: 1}'
+                image : '{type: image}'
+        .on 'make', (item) ->
+            new Layer
+                parent : scroller
+                size   : new vec 200, 200
+            .bind item,
+                identifier : 
+                    to  : 'id'
+                    get : (layer) -> layer.identifier
+                image :
+                    to   : 'image'
+                    from : 'backgroundImage'
+                    set  : (value, layer) ->
+                        etc.compressImage value, .1, (url) -> layer.image url
+        .on 'destroy', (item) ->
+            l = item.layer
+            l.animate time : .3,
+                opacity : 0
+                scale   : new vec 0, 1
+                margin  : l : l.size.scale(-1).unit('px').x,
+                () -> l.destroy()
     
-    model.on 'make', (item) ->
-        new Layer
-            parent : scroller
-            size   : new vec 200, 200
-        .bind(item, {
-            image :
-                key  : 'image'
-                read : 'backgroundImage'
-                set  : (value, layer) ->
-                    etc.compressImage value, .1, (url) ->
-                        layer.image url
-        })
+    console.log model
+    scroller.on 'click', (e) ->
+        console.log model.delete id : 1
 
 # drag n drop
-if 0
+if 1
+    link = 'http://www.springfieldinterchange.com/wp-content/themes/thesis_16b2/custom-sample/rotator/sample-4.jpg'
+    
     layer1 = new Layer
         position : 'absolute'
         zIndex   : 1
         size     : new vec 300, 300
         center   : Screen.center
+        image    : link
     
-    layer1.append new Layer
-        position : 'absolute'
-        size     : new vec 10, 10
-        border   : radius: 10
-        bg       : color: 'red'
+    onDrag   = layer1.on 'drag'
+    onZoom   = layer1.on 'pinchToZoom'
+    onRotate = layer1.on 'pinchToRotate'
     
-    onDrag = layer1.on 'drag',
-        rotate : true
-        scale  : true
-        move   : (t) ->
-            t.transformation.rotate new vec(-t.velocity.y, t.velocity.x), 1
-            return true
-
 # toggle
 if 0
     toggle = new Layer

@@ -1,8 +1,8 @@
-var Layer, Screen, Scroller, animation, background, button, decay, dom, etc, foreground, knob, layer, layer1, matrix, model, move, onDrag, out, scroller, states, toggle, vec;
+var Layer, Screen, Scroller, animation, background, button, decay, dom, etc, foreground, knob, layer, layer1, link, matrix, model, move, onDrag, onRotate, onZoom, out, scroller, states, toggle, vec;
 
 dom = fw.dom, Layer = fw.Layer, Screen = fw.Screen, Scroller = fw.Scroller, vec = fw.vec, etc = fw.etc, model = fw.model, matrix = fw.matrix, animation = fw.animation;
 
-if (1) {
+if (0) {
   layer = new Layer({
     center: Screen.center
   }).on('resize');
@@ -35,15 +35,20 @@ if (0) {
       id: '{type: int, mode: forward, from: 1}',
       image: '{type: image}'
     }
-  });
-  model.on('make', function(item) {
+  }).on('make', function(item) {
     return new Layer({
       parent: scroller,
       size: new vec(200, 200)
     }).bind(item, {
+      identifier: {
+        to: 'id',
+        get: function(layer) {
+          return layer.identifier;
+        }
+      },
       image: {
-        key: 'image',
-        read: 'backgroundImage',
+        to: 'image',
+        from: 'backgroundImage',
         set: function(value, layer) {
           return etc.compressImage(value, .1, function(url) {
             return layer.image(url);
@@ -51,34 +56,41 @@ if (0) {
         }
       }
     });
+  }).on('destroy', function(item) {
+    var l;
+    l = item.layer;
+    return l.animate({
+      time: .3
+    }, {
+      opacity: 0,
+      scale: new vec(0, 1),
+      margin: {
+        l: l.size.scale(-1).unit('px').x
+      }
+    }, function() {
+      return l.destroy();
+    });
+  });
+  console.log(model);
+  scroller.on('click', function(e) {
+    return console.log(model["delete"]({
+      id: 1
+    }));
   });
 }
 
-if (0) {
+if (1) {
+  link = 'http://www.springfieldinterchange.com/wp-content/themes/thesis_16b2/custom-sample/rotator/sample-4.jpg';
   layer1 = new Layer({
     position: 'absolute',
     zIndex: 1,
     size: new vec(300, 300),
-    center: Screen.center
+    center: Screen.center,
+    image: link
   });
-  layer1.append(new Layer({
-    position: 'absolute',
-    size: new vec(10, 10),
-    border: {
-      radius: 10
-    },
-    bg: {
-      color: 'red'
-    }
-  }));
-  onDrag = layer1.on('drag', {
-    rotate: true,
-    scale: true,
-    move: function(t) {
-      t.transformation.rotate(new vec(-t.velocity.y, t.velocity.x), 1);
-      return true;
-    }
-  });
+  onDrag = layer1.on('drag');
+  onZoom = layer1.on('pinchToZoom');
+  onRotate = layer1.on('pinchToRotate');
 }
 
 if (0) {
