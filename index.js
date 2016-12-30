@@ -1721,17 +1721,6 @@ exports.default = {
 	hitTest: function hitTest(a, pointer) {
 		return a.l < pointer.x && pointer.x < a.l + a.w && a.t < pointer.y && pointer.y < a.t + a.h;
 	},
-	vectorRange: function vectorRange(vector, limit, range) {
-		var over = new _fw.vec();
-		return {
-			value: new _fw.vec(_fw.math.rubberRange(vector.x, limit.l, limit.r, range, function (state) {
-				return over.x = state;
-			}), _fw.math.rubberRange(vector.x, limit.t, limit.b, range, function (state) {
-				return over.y = state;
-			})),
-			over: over
-		};
-	},
 	getSide: function getSide(pointer, size, border) {
 		var border = .5 * border;
 		return {
@@ -1763,6 +1752,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 var _fw = __webpack_require__(0);
+
+var animationPreset = {
+    time: .3,
+    ease: 'cubic-bezier(.1, .5, .1, 1.2)'
+};
 
 exports.default = {
     wheel: function wheel(layer) {
@@ -1823,62 +1817,60 @@ exports.default = {
     drag: function drag(layer) {
         var transport = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-        if (!transport.move) transport.move = function (t) {
-            _fw.animation.draw(layer.identifier + ': translate.move', function () {
-                layer.matrix = new _fw.matrix().translate(t.translate);
-            });
-        };
-        if (!transport.cancel) transport.cancel = function (t) {
-            _fw.animation.draw(layer.identifier + ': translate.cancel', function () {
-                layer.animate({
-                    time: .3,
-                    ease: 'cubic-bezier(.1, .5, .1, 1.5)'
-                }, {
-                    matrix: new _fw.matrix()
+        var translate = new _fw.vec();
+        var method = _fw.event.types.isTouch ? '_initMultitouchGesture' : '_dragMouse';
+        var mod = Object.assign(Object.assign({}, transport), {
+            move: function move(t) {
+                if (transport.move && transport.move(t) !== false || !transport.move) {
+                    translate = t.translate;
+                    if (t.constraints) translate.range(t.constraints, true);
+                    _fw.animation.draw(layer.identifier + ': translate.move', function () {
+                        return layer.matrix = new _fw.matrix().translate(translate);
+                    });
+                }
+            },
+            cancel: function cancel(t) {
+                t.translate = translate;
+                if (transport.cancel && transport.cancel(t) !== false || !transport.cancel) _fw.animation.draw(layer.identifier + ': translate.cancel', function () {
+                    return layer.animate(animationPreset, { matrix: new _fw.matrix() });
                 });
-            });
-        };
-        return this[_fw.event.types.isTouch ? '_initMultitouchGesture' : '_dragMouse'](layer, transport, 'translate');
+            }
+        });
+        return this[method](layer, mod, 'translate');
     },
     pinchToRotate: function pinchToRotate(layer) {
         var transport = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-        if (!transport.move) transport.move = function (t) {
-            _fw.animation.draw(layer.identifier + ': rotate.move', function () {
-                layer.rotate = t.rotate;
-            });
-        };
-        if (!transport.cancel) transport.cancel = function (t) {
-            _fw.animation.draw(layer.identifier + ': rotate.cancel', function () {
-                layer.animate({
-                    time: .3,
-                    ease: 'cubic-bezier(.1, .5, .1, 1.5)'
-                }, {
-                    rotate: 0
+        return this._initMultitouchGesture(layer, Object.assign(Object.assign({}, transport), {
+            move: function move(t) {
+                if (transport.move && transport.move(t) !== false || !transport.move) _fw.animation.draw(layer.identifier + ': rotate.move', function () {
+                    return layer.rotate = t.rotate;
                 });
-            });
-        };
-        return this._initMultitouchGesture(layer, transport, 'rotate');
+            },
+            cancel: function cancel(t) {
+                if (transport.cancel && transport.cancel(t) !== false || !transport.cancel) _fw.animation.draw(layer.identifier + ': rotate.cancel', function () {
+                    return layer.animate(animationPreset, { rotate: 0 });
+                });
+            }
+        }), 'rotate');
     },
     pinchToZoom: function pinchToZoom(layer) {
         var transport = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-        if (!transport.move) transport.move = function (t) {
-            _fw.animation.draw(layer.identifier + ': scale.move', function () {
-                layer.scale = t.scale;
-            });
-        };
-        if (!transport.cancel) transport.cancel = function (t) {
-            _fw.animation.draw(layer.identifier + ': scale.cancel', function () {
-                layer.animate({
-                    time: .3,
-                    ease: 'cubic-bezier(.1, .5, .1, 1.5)'
-                }, {
-                    scale: 1
+        return this._initMultitouchGesture(layer, Object.assign(Object.assign({}, transport), {
+            move: function move(t) {
+                if (transport.move && transport.move(t) !== false || !transport.move) _fw.animation.draw(layer.identifier + ': scale.move', function () {
+                    layer.scale = t.scale;
                 });
-            });
-        };
-        return this._initMultitouchGesture(layer, transport, 'scale');
+            },
+            cancel: function cancel(t) {
+                if (transport.cancel && transport.cancel(t) !== false || !transport.cancel) _fw.animation.draw(layer.identifier + ': scale.cancel', function () {
+                    layer.animate(animationPreset, {
+                        scale: 1
+                    });
+                });
+            }
+        }), 'scale');
     },
 
 
@@ -1889,46 +1881,38 @@ exports.default = {
     */
 
     _dragMouse: function _dragMouse(layer, transport) {
-        var down = new _fw.vec();
+        var _down = new _fw.vec();
         var velocity = new _fw.vec();
-        var out = Object.assign({}, transport);
-        out.down = function (t) {
-            velocity;
-            down = velocity = t.pointer;
-            transport.down && transport.down({
-                event: t.event,
-                down: down
-            });
-        };
-        out.move = function (t) {
-            var translate = t.pointer.sub(down);
-            transport.move && transport.move({
-                event: t.event,
-                translate: translate,
-                velocity: translate.sub(velocity)
-            });
-            velocity = translate;
-        };
-        out.cancel = function (t) {
-            transport.cancel(t);
-            down.reset();
-            velocity.reset();
-        };
-        return this._dragMouseEventPattern(layer, out);
+        return this._dragMouseEventPattern(layer, Object.assign(Object.assign({}, transport), {
+            down: function down(t) {
+                velocity;
+                _down = velocity = t.pointer;
+                transport.down && transport.down({
+                    event: t.event,
+                    down: _down
+                });
+            },
+            move: function move(t) {
+                var translate = t.pointer.sub(_down);
+                transport.move && transport.move({
+                    event: t.event,
+                    translate: translate,
+                    velocity: translate.sub(velocity)
+                });
+                velocity = translate;
+            },
+            cancel: function cancel(t) {
+                transport.cancel(t);
+                _down.reset();
+                velocity.reset();
+            }
+        }));
     },
-
-
-    /*
-        layer     : a regular layer object
-        transport : the transport of the type
-        type      : 'translate' | 'rotate' | 'scale'
-    */
-
     _initMultitouchGesture: function _initMultitouchGesture(layer, transport, type) {
         var address = 'transformationTouchEventLink';
         if (!layer._props[address]) {
             var listener = new _fw.event.Machine('transformationTouchEventLink');
-            var transport_ = {};['init', 'down', 'move', 'up', 'cancel'].forEach(function (key) {
+            var transport_ = { constraints: {} };['init', 'down', 'move', 'up', 'cancel'].forEach(function (key) {
                 return transport_[key] = function (t) {
                     return listener.emit(key, t);
                 };
@@ -1940,9 +1924,9 @@ exports.default = {
                 cancel: toggle.cancel,
                 checkToggle: function checkToggle() {
                     var flag = 'off';
-                    var interest = ['translate', 'rotate', 'scale'];
-                    for (var i = 0; i < interest.length; i++) {
-                        if (transport_[interest[i]]) {
+                    var property = ['translate', 'rotate', 'scale'];
+                    for (var i = 0; i < property.length; i++) {
+                        if (transport_[property[i]]) {
                             flag = 'on';break;
                         }
                     }toggle[flag]();
@@ -1959,6 +1943,10 @@ exports.default = {
                         if (type == 'scale') t.scale = t.transformation.getScale().z;
                     }
                     method[key](t);
+                    if (key == 'move') {
+                        link.transport.constraints[type] = t.constraints;
+                        delete t.constraints;
+                    }
                 };
             }(transport, key));
         }return {
@@ -1986,7 +1974,7 @@ exports.default = {
         var lastState = new _fw.matrix();
         var origin = new _fw.vec();
         var center = new _fw.vec();
-        var translation = new _fw.vec();
+        var translate = new _fw.vec();
         // export control interface for gesture events
         return this._dragTouchEventPattern(layer, {
             init: function init(t) {
@@ -1999,9 +1987,23 @@ exports.default = {
                 transport.down && transport.down(t);
                 // calculate average vector aka origin and
                 // bring this origin on rotated and scaled object back
-                origin = _fw.vec.prototype.mix(t.pointers).sub(center).sub(translation);
+                origin = _fw.vec.prototype.mix(t.pointers).sub(center).sub(translate);
             },
             move: function move(t) {
+                // define max and min movement for rotation and scale
+                // translation constraints happens later on touch and mouse together
+                var rotate = t.event.rotation;
+                var rConst = transport.constraints.rotate;
+                if (rConst) {
+                    var last = lastState.getRotation().z;
+                    rotate = _fw.math.rubberRange(rotate + last, rConst.min, rConst.max, rConst.length || 10, rConst.onLimit) - last;
+                }
+                var scale = t.event.scale;
+                var sConst = transport.constraints.scale;
+                if (sConst) {
+                    var last = lastState.getScale().z;
+                    scale = _fw.math.rubberRange(scale + last, sConst.min + 1, sConst.max + 1, sConst.length || .2, sConst.onLimit) - last;
+                }
                 // calculate drag difference
                 var velocity = new _fw.vec();
                 for (var id in t.pointers) {
@@ -2016,13 +2018,13 @@ exports.default = {
                 // calculate average difference between every dragged touch
                 velocity.div(new _fw.vec().fill(t.event.targetTouches.length), true);
                 // apply difference to persistent translation vector
-                translation.add(velocity, true);
+                translate.add(velocity, true);
                 // modify scale and rotation matrix
                 var drag = new _fw.matrix();
                 var pinch = new _fw.matrix().translate(origin.scale(-1));
-                if (transport.translate) drag.translate(translation, true);
-                if (transport.rotate) pinch.rotate(t.event.rotation, true);
-                if (transport.scale) pinch.scale(t.event.scale, true);
+                if (transport.translate) drag.translate(translate, true);
+                if (transport.rotate) pinch.rotate(rotate, true);
+                if (transport.scale) pinch.scale(scale, true);
                 scale_rotate = lastState.multiply(pinch.translate(origin));
                 // get final transformation
                 var transformation = scale_rotate.multiply(drag);
@@ -2043,7 +2045,7 @@ exports.default = {
                 transport.cancel && transport.cancel(t);
                 center.reset();
                 lastState.reset();
-                translation.reset();
+                translate.reset();
                 touches = {};
             }
         });
@@ -2244,17 +2246,17 @@ exports.default = {
 		// https://www.desmos.com/calculator
 		// Based on 1-pow(1+x,-1)
 		var factor = 1.3;
-		var isMax = _fw.val.exists(max);
-		var isMin = _fw.val.exists(min);
+		var isMax = _fw.val.exists(min);
+		var isMin = _fw.val.exists(max);
 		if (isMax || isMin) {
-			var dir = value < max;
+			var dir = value < min;
 			var range = (dir ? 1 : -1) * range;
-			var len = dir ? max : min;
+			var len = dir ? min : max;
 			var x = (len - value) / range;
 			var y = len - range * (1 - Math.pow(1 + x, -factor));
 		}
-		var maxState = isMax && value < max;
-		var minState = isMin && value > min;
+		var maxState = isMax && value < min;
+		var minState = isMin && value > max;
 		if (state) state(maxState ? 'max' : minState ? 'min' : null);
 		return maxState || minState ? y : value;
 	},
@@ -2311,12 +2313,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     http://keithclark.co.uk/articles/calculating-element-vertex-data-from-css-transforms/
 */
 
+var init = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+
 var Matrix = function () {
     function Matrix(value) {
         _classCallCheck(this, Matrix);
 
-        this.init = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-        this.value = !_fw.val.exists(value) ? this.init : _fw.val.isStr(value) ? this.fromString(value) : value;
+        this.value = !_fw.val.exists(value) ? init : _fw.val.isStr(value) ? this.fromString(value) : value;
     }
 
     _createClass(Matrix, [{
@@ -2424,6 +2427,16 @@ var Matrix = function () {
                 return -axis.value * 180 / Math.PI;
             });
         }
+    }, {
+        key: 'resetRotation',
+        value: function resetRotation() {
+            var _this = this;
+
+            [0, 1, 2, 4, 5, 6, 8, 9, 10].forEach(function (i) {
+                return _this.value[i] = init[i];
+            });
+            return this;
+        }
 
         // projectionMapping (lt, lb, rt, rb) {
         //     var w = 1, h = 1;
@@ -2482,7 +2495,7 @@ var Matrix = function () {
     }, {
         key: 'reset',
         value: function reset() {
-            this.value = this.init;
+            this.value = init;
             return this;
         }
     }]);
@@ -2898,8 +2911,8 @@ var Vec = function () {
         }
     }, {
         key: 'div',
-        value: function div(vec, apply) {
-            if (apply) {
+        value: function div(vec, set) {
+            if (set) {
                 this.x /= vec.x || 1;
                 this.y /= vec.y || 1;
                 this.z /= vec.z || 1;
@@ -3024,19 +3037,30 @@ var Vec = function () {
         key: 'mix',
         value: function mix(list) {
             var sum = new Vec();
-            var length = 1;
+            var len = 1;
             if (_fw.val.isArr(list)) {
-                length = list.length;
-                for (var i = 0; i < length; i++) {
+                len = list.length;
+                for (var i = 0; i < len; i++) {
                     sum.add(list[i], true);
                 }
             } else if (_fw.val.isObj(list)) {
-                length = Object.keys(list).length;
+                len = Object.keys(list).length;
                 for (var v in list) {
                     sum.add(list[v], true);
                 }
             }
-            return sum.div(new Vec().fill(length));
+            return sum.div(new Vec().fill(len));
+        }
+    }, {
+        key: 'range',
+        value: function range(rect, set) {
+            var range = _fw.val.exists(rect.length) ? _fw.val.isNum(rect.length) ? { x: rect.length, y: rect.length } : rect.length : { x: 100, y: 100 };
+            rect.onLimit = rect.onLimit || {};
+            var vec = new Vec(_fw.math.rubberRange(this.x, rect.l, rect.r, range.x, rect.onLimit.x), _fw.math.rubberRange(this.y, rect.t, rect.b, range.y, rect.onLimit.y));
+            if (set) {
+                this.x = vec.x;
+                this.y = vec.y;
+            } else return vec;
         }
     }]);
 

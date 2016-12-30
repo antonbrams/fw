@@ -1,6 +1,6 @@
-var Layer, Screen, Scroller, animation, background, button, decay, dom, etc, foreground, knob, layer, layer1, link, matrix, model, move, onDrag, onRotate, onZoom, out, scroller, states, toggle, vec;
+var Layer, Screen, Scroller, animation, background, button, decay, dom, etc, event, foreground, knob, layer, layer1, link, matrix, model, move, onDrag, onRotate, onZoom, out, scroller, states, toggle, vec;
 
-dom = fw.dom, Layer = fw.Layer, Screen = fw.Screen, Scroller = fw.Scroller, vec = fw.vec, etc = fw.etc, model = fw.model, matrix = fw.matrix, animation = fw.animation;
+dom = fw.dom, Layer = fw.Layer, Screen = fw.Screen, Scroller = fw.Scroller, vec = fw.vec, etc = fw.etc, model = fw.model, matrix = fw.matrix, animation = fw.animation, event = fw.event;
 
 if (0) {
   layer = new Layer({
@@ -174,17 +174,15 @@ if (0) {
   });
   decay = animation.decay(function(pointer) {
     var tilt;
-    tilt = new matrix().rotate(new vec(-pointer.y, pointer.x).scale(.1));
+    tilt = new matrix().rotate(new vec(-pointer.y, pointer.x).scale(.2));
     layer.matrix = tilt;
-    foreground.matrix = new matrix().translate(new vec(0, 0, 30)).multiply(tilt);
+    foreground.matrix = new matrix().translate(new vec(0, 0, 200)).multiply(tilt);
     return background.translate = new vec(-pointer.x, -pointer.y).unit('px');
   });
-  move = button.on('mousemove', function(e) {
-    var pointer;
-    pointer = new vec(e.clientX, e.clientY).sub(layer.center);
-    return decay.to(pointer);
+  move = button.on(event.types.move, function(e) {
+    return decay.to(new vec(e.clientX, e.clientY).sub(layer.center));
   });
-  out = button.on('mouseleave', function(e) {
+  out = button.on(event.types.out, function(e) {
     return decay.to(new vec());
   });
 }

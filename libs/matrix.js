@@ -11,17 +11,18 @@ import {val, vec} from './fw'
     http://keithclark.co.uk/articles/calculating-element-vertex-data-from-css-transforms/
 */
 
+var init = [
+    1, 0, 0, 0, 
+    0, 1, 0, 0,
+    0, 0, 1, 0, 
+    0, 0, 0, 1
+]
+
 export default class Matrix {
     
     constructor (value) {
-        this.init = [
-            1, 0, 0, 0, 
-            0, 1, 0, 0,
-            0, 0, 1, 0, 
-            0, 0, 0, 1
-        ]
         this.value = 
-            !val.exists(value)? this.init:
+            !val.exists(value)? init:
              val.isStr(value)? this.fromString(value): value
     }
     
@@ -165,6 +166,11 @@ export default class Matrix {
         ).apply(axis => - axis.value * 180 / Math.PI)
     }
     
+    resetRotation () {
+        [0, 1, 2, 4, 5, 6, 8, 9, 10].forEach(i => this.value[i] = init[i])
+        return this
+    }
+    
     // projectionMapping (lt, lb, rt, rb) {
     //     var w = 1, h = 1;
     //     var adj = function (m) { return [
@@ -220,7 +226,7 @@ export default class Matrix {
     // }
     
     reset () {
-        this.value = this.init
+        this.value = init
         return this
     }
 

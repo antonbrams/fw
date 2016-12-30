@@ -71,8 +71,7 @@ export default {
 			if (!active) {
 				active = true
 				var loop = setInterval(() => {
-					for (var i in jobs) 
-						if (jobs[i]()) delete jobs[i]
+					for (var i in jobs) if (jobs[i]()) delete jobs[i]
 					if (Object.keys(jobs).length == 0) {
 						active = false
 						clearTimeout(loop)

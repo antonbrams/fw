@@ -1,7 +1,7 @@
 
 
 
-import {val} from './fw'
+import {val, math} from './fw'
 
 export default class Vec {
 
@@ -41,8 +41,8 @@ export default class Vec {
         )
     }
     
-    div (vec, apply) {
-	    if (apply) {
+    div (vec, set) {
+	    if (set) {
 	        this.x /= (vec.x || 1)
 	        this.y /= (vec.y || 1)
 	        this.z /= (vec.z || 1)
@@ -181,19 +181,36 @@ export default class Vec {
     }
     
     mix (list) {
-        var sum    = new Vec()
-        var length = 1
+        var sum = new Vec()
+        var len = 1
         if (val.isArr(list)) {
-            length = list.length
-            for (var i = 0; i < length; i ++) 
+            len = list.length
+            for (var i = 0; i < len; i ++) 
                 sum.add(list[i], true)
         } else if (val.isObj(list)) {
-            length = Object.keys(list).length
+            len = Object.keys(list).length
             for (var v in list)
                 sum.add(list[v], true)
         }
-        return sum.div(new Vec().fill(length))
+        return sum.div(new Vec().fill(len))
     }
+    
+	range (rect, set) {
+        var range = val.exists(rect.length)? (
+                val.isNum(rect.length)? 
+                {x: rect.length, y: rect.length}: 
+                rect.length
+            ): {x: 100, y: 100}
+        rect.onLimit = rect.onLimit || {}
+        var vec = new Vec(
+			math.rubberRange(this.x, rect.l, rect.r, range.x, rect.onLimit.x),
+			math.rubberRange(this.y, rect.t, rect.b, range.y, rect.onLimit.y)
+		)
+        if (set) {
+            this.x = vec.x
+            this.y = vec.y
+        } else return vec
+	}
 }
 
 

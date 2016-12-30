@@ -80,17 +80,17 @@ export default {
         // https://www.desmos.com/calculator
         // Based on 1-pow(1+x,-1)
 		var factor = 1.3
-		var isMax  = val.exists(max)
-		var isMin  = val.exists(min)
+		var isMax  = val.exists(min)
+		var isMin  = val.exists(max)
 		if (isMax || isMin) {
-			var dir   = value < max
+			var dir   = value < min
 			var range = (dir? 1: -1) * range
-			var len   = dir? max: min
+			var len   = dir? min: max
 			var x     = (len - value) / range
 			var y     = len - range * (1 - Math.pow(1 + x, -factor))
 		}
-		var maxState = isMax && value < max
-		var minState = isMin && value > min
+		var maxState = isMax && value < min
+		var minState = isMin && value > max
 		if (state) state(maxState? 'max': minState? 'min': null)
 		return (maxState || minState? y: value)
 	},

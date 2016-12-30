@@ -64,17 +64,6 @@ export default {
 		)
 	},
 	
-	vectorRange (vector, limit, range) {
-		var over = new vec()
-		return {
-			value : new vec(
-				math.rubberRange(vector.x, limit.l, limit.r, range, state => over.x = state), 
-				math.rubberRange(vector.x, limit.t, limit.b, range, state => over.y = state)
-			),
-			over
-		}
-	},
-	
 	getSide (pointer, size, border) {
 		var border  = .5 * border
 		return {

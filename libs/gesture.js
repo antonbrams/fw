@@ -7,6 +7,11 @@ import {
     geo
 } from './fw'
 
+var animationPreset = {
+    time : .3, 
+    ease : 'cubic-bezier(.1, .5, .1, 1.2)'
+}
+
 export default {
     
     wheel (layer, transport = {}) {
@@ -69,61 +74,60 @@ export default {
     },
     
     drag (layer, transport = {}) {
-        if (!transport.move) transport.move = t => {
-            animation.draw(`${layer.identifier}: translate.move`, () => {
-                layer.matrix = new matrix().translate(t.translate)
-            })
-        }
-        if (!transport.cancel) transport.cancel = t => {
-            animation.draw(`${layer.identifier}: translate.cancel`, () => {
-                layer.animate({
-                    time : .3, 
-                    ease : 'cubic-bezier(.1, .5, .1, 1.5)'
-                },{
-                    matrix : new matrix()
-                })
-            })
-        }
-        return this[event.types.isTouch? '_initMultitouchGesture': '_dragMouse']
-            (layer, transport, 'translate')
+        var translate = new vec()
+        var method = event.types.isTouch? '_initMultitouchGesture': '_dragMouse'
+        var mod    = Object.assign(Object.assign({}, transport), {
+            move (t) {
+                if (transport.move && transport.move(t) !== false || !transport.move) {
+                    translate = t.translate
+                    if (t.constraints) 
+                        translate.range(t.constraints, true)
+                    animation.draw(`${layer.identifier}: translate.move`,
+                        () => layer.matrix = new matrix().translate(translate))
+                }
+            },
+            cancel (t) {
+                t.translate = translate
+                if (transport.cancel && transport.cancel(t) !== false || !transport.cancel)
+                    animation.draw(`${layer.identifier}: translate.cancel`,
+                        () => layer.animate(animationPreset, {matrix : new matrix()}))
+            }
+        })
+        return this[method](layer, mod, 'translate')
     },
     
     pinchToRotate (layer, transport = {}) {
-        if (!transport.move) transport.move = t => {
-            animation.draw(`${layer.identifier}: rotate.move`, () => {
-                layer.rotate = t.rotate
-            })
-        }
-        if (!transport.cancel) transport.cancel = t => {
-            animation.draw(`${layer.identifier}: rotate.cancel`, () => {
-                layer.animate({
-                    time : .3, 
-                    ease : 'cubic-bezier(.1, .5, .1, 1.5)'
-                },{
-                    rotate : 0
-                })
-            })
-        }
-        return this._initMultitouchGesture(layer, transport, 'rotate')
+        return this._initMultitouchGesture(layer, Object.assign(Object.assign({}, transport), {
+            move (t) {
+                if (transport.move && transport.move(t) !== false || !transport.move)
+                    animation.draw(`${layer.identifier}: rotate.move`,
+                        () => layer.rotate = t.rotate)
+            },
+            cancel (t) {
+                if (transport.cancel && transport.cancel(t) !== false || !transport.cancel)
+                    animation.draw(`${layer.identifier}: rotate.cancel`, 
+                        () => layer.animate(animationPreset, {rotate : 0}))
+            }
+        }), 'rotate')
     },
     
     pinchToZoom (layer, transport = {}) {
-        if (!transport.move) transport.move = t => {
-            animation.draw(`${layer.identifier}: scale.move`, () => {
-                layer.scale = t.scale
-            })
-        }
-        if (!transport.cancel) transport.cancel = t => {
-            animation.draw(`${layer.identifier}: scale.cancel`, () => {
-                layer.animate({
-                    time : .3, 
-                    ease : 'cubic-bezier(.1, .5, .1, 1.5)'
-                },{
-                    scale : 1
-                })
-            })
-        }
-        return this._initMultitouchGesture(layer, transport, 'scale')
+        return this._initMultitouchGesture(layer, Object.assign(Object.assign({}, transport), {
+            move (t) {
+                if (transport.move && transport.move(t) !== false || !transport.move)
+                    animation.draw(`${layer.identifier}: scale.move`, () => {
+                        layer.scale = t.scale
+                    })
+            },
+            cancel (t) {
+                if (transport.cancel && transport.cancel(t) !== false || !transport.cancel)
+                    animation.draw(`${layer.identifier}: scale.cancel`, () => {
+                        layer.animate(animationPreset, {
+                            scale : 1
+                        })
+                    })
+            }
+        }), 'scale')
     },
     
     /*
@@ -135,45 +139,39 @@ export default {
     _dragMouse (layer, transport) {
         var down     = new vec()
         var velocity = new vec()
-        var out = Object.assign({}, transport)
-        out.down = t => {
-            velocity
-            down = velocity = t.pointer
-            transport.down && transport.down({
-                event : t.event, 
-                down
-            })
-        }
-        out.move = t => {
-            var translate = t.pointer.sub(down)
-            transport.move && transport.move({
-                event     : t.event, 
-                translate,
-                velocity  : translate.sub(velocity)
-            })
-            velocity = translate
-        }
-        out.cancel = t => {
-            transport.cancel(t)
-            down.reset()
-            velocity.reset()
-        }
-        return this._dragMouseEventPattern(layer, out)
+        return this._dragMouseEventPattern(layer, Object.assign(Object.assign({}, transport), {
+            down (t) {
+                velocity
+                down = velocity = t.pointer
+                transport.down && transport.down({
+                    event : t.event, 
+                    down
+                })
+            },
+            move (t) {
+                var translate = t.pointer.sub(down)
+                transport.move && transport.move({
+                    event     : t.event, 
+                    translate,
+                    velocity  : translate.sub(velocity)
+                })
+                velocity = translate
+            },
+            cancel (t) {
+                transport.cancel(t)
+                down.reset()
+                velocity.reset()
+            },
+        }))
     },
-    
-    /*
-        layer     : a regular layer object
-        transport : the transport of the type
-        type      : 'translate' | 'rotate' | 'scale'
-    */
     
     _initMultitouchGesture (layer, transport, type) {
         var address = 'transformationTouchEventLink'
         if (!layer._props[address]) {
             var listener   = new event.Machine('transformationTouchEventLink')
-            var transport_ = {}
-            ;['init', 'down', 'move', 'up', 'cancel'].forEach(
-                key => transport_[key] = t => listener.emit(key, t))
+            var transport_ = {constraints: {}}
+            ;['init', 'down', 'move', 'up', 'cancel'].forEach(key => 
+                transport_[key] = t => listener.emit(key, t))
             var toggle = this._multitouch(layer, transport_)
             layer._props[address] = {
                 listener,
@@ -181,9 +179,9 @@ export default {
                 cancel    : toggle.cancel,
                 checkToggle () {
                     var flag = 'off'
-                    var interest = ['translate', 'rotate', 'scale']
-                    for (var i = 0; i < interest.length; i ++)
-                        if (transport_[interest[i]]) {flag = 'on'; break}
+                    var property = ['translate', 'rotate', 'scale']
+                    for (var i = 0; i < property.length; i ++)
+                        if (transport_[property[i]]) {flag = 'on'; break}
                     toggle[flag]()
                 }
             }
@@ -197,6 +195,10 @@ export default {
                     if (type == 'scale') t.scale = t.transformation.getScale().z
                 }
                 method[key](t)
+                if (key == 'move') {
+                    link.transport.constraints[type] = t.constraints
+                    delete t.constraints
+                }
             })(transport, key))
         return {
             get active () {
@@ -223,7 +225,7 @@ export default {
         var lastState    = new matrix()
         var origin       = new vec()
         var center       = new vec()
-        var translation  = new vec()
+        var translate    = new vec()
         // export control interface for gesture events
         return this._dragTouchEventPattern(layer, {
             init (t) {
@@ -238,9 +240,27 @@ export default {
                 // bring this origin on rotated and scaled object back
                 origin = vec.prototype.mix(t.pointers)
                     .sub(center)
-                    .sub(translation)
+                    .sub(translate)
             },
             move (t) {
+                // define max and min movement for rotation and scale
+                // translation constraints happens later on touch and mouse together
+                var rotate = t.event.rotation
+                var rConst = transport.constraints.rotate
+                if (rConst) {
+                    var last = lastState.getRotation().z
+                    rotate = math.rubberRange(
+                    rotate + last, rConst.min, rConst.max,
+                    rConst.length || 10, rConst.onLimit) - last
+                }
+                var scale  = t.event.scale
+                var sConst = transport.constraints.scale
+                if (sConst) {
+                    var last = lastState.getScale().z
+                    scale = math.rubberRange(
+                    scale + last, sConst.min + 1, sConst.max + 1,
+                    sConst.length || .2, sConst.onLimit) - last
+                }
                 // calculate drag difference
                 var velocity = new vec()
                 for (var id in t.pointers) {
@@ -257,13 +277,13 @@ export default {
                 // calculate average difference between every dragged touch
                 velocity.div(new vec().fill(t.event.targetTouches.length), true)
                 // apply difference to persistent translation vector
-                translation.add(velocity, true)
+                translate.add(velocity, true)
                 // modify scale and rotation matrix
                 var drag  = new matrix()
                 var pinch = new matrix().translate(origin.scale(-1))
-                if (transport.translate) drag.translate(translation, true)
-                if (transport.rotate) pinch.rotate(t.event.rotation, true)
-                if (transport.scale) pinch.scale(t.event.scale, true)
+                if (transport.translate) drag.translate(translate, true)
+                if (transport.rotate) pinch.rotate(rotate, true)
+                if (transport.scale) pinch.scale(scale, true)
                 scale_rotate = lastState.multiply(pinch.translate(origin))
                 // get final transformation
                 var transformation = scale_rotate.multiply(drag)
@@ -284,7 +304,7 @@ export default {
                 transport.cancel && transport.cancel(t)
                 center.reset()
                 lastState.reset()
-                translation.reset()
+                translate.reset()
                 touches = {}
             },
         })

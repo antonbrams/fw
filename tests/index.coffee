@@ -4,7 +4,7 @@
 {
     dom, Layer, Screen, Scroller, 
     vec, etc, model, matrix, 
-    animation
+    animation, event
 } = fw
 
 if 0
@@ -138,19 +138,17 @@ if 0
     
     decay = animation.decay (pointer) ->
         tilt = new matrix()
-            .rotate new vec(-pointer.y, pointer.x).scale .1
+            .rotate new vec(-pointer.y, pointer.x).scale .2
         layer.matrix = tilt
         foreground.matrix = new matrix()
-            .translate new vec 0, 0, 30
+            .translate new vec 0, 0, 200
             .multiply tilt
         background.translate = new vec(-pointer.x, -pointer.y).unit 'px'
     
-    move = button.on 'mousemove', (e) ->
-        pointer = new vec e.clientX, e.clientY
-            .sub layer.center
-        decay.to pointer
+    move = button.on event.types.move, (e) ->
+        decay.to new vec(e.clientX, e.clientY).sub layer.center
     
-    out = button.on 'mouseleave', (e) ->
+    out = button.on event.types.out, (e) ->
         decay.to new vec()
 
 
