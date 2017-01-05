@@ -287,7 +287,9 @@ var Layer = function () {
                 rotate: 0,
                 matrix3d: new _fw.matrix()
             },
-            pop: {}
+            pop: {},
+            templateUpdater: null,
+            transformationTouchEventLink: null
         };
         // if no options
         if (!_fw.val.exists(options)) this.dom = _fw.dom.create('.default');else if (_fw.val.isObj(options)) {
@@ -660,8 +662,16 @@ var Layer = function () {
     }, {
         key: 'content',
         set: function set(value) {
-            this.event.emit('content', value);
-            this.dom.innerHTML = value;
+            var _this7 = this;
+
+            var set = function set(string) {
+                _this7.event.emit('content', string);
+                _this7.dom.innerHTML = string;
+            };
+            if (_fw.val.isObj(value)) this._props.templateUpdater = _fw.dom.template(value.bind, value.html, set);else {
+                set(tmp);
+                this._props.templateUpdater.off();
+            }
         },
         get: function get() {
             return this.dom.innerHTML;
@@ -739,11 +749,11 @@ var Layer = function () {
     }, {
         key: 'origin',
         set: function set(value) {
-            var _this7 = this;
+            var _this8 = this;
 
             this.event.emit('origin', value);
             ['x', 'y'].forEach(function (axis) {
-                if (axis in value) _this7._props.transformation.origin[axis] = value[axis];
+                if (axis in value) _this8._props.transformation.origin[axis] = value[axis];
             });
             _fw.css.applyTransformation(this.dom, this._props.transformation, 'origin');
         },
@@ -753,11 +763,11 @@ var Layer = function () {
     }, {
         key: 'translate',
         set: function set(value) {
-            var _this8 = this;
+            var _this9 = this;
 
             this.event.emit('translate', value);
             ['x', 'y'].forEach(function (axis) {
-                if (axis in value) _this8._props.transformation.translate[axis] = value[axis];
+                if (axis in value) _this9._props.transformation.translate[axis] = value[axis];
             });
             _fw.css.applyTransformation(this.dom, this._props.transformation);
         },
@@ -767,13 +777,13 @@ var Layer = function () {
     }, {
         key: 'scale',
         set: function set(value) {
-            var _this9 = this;
+            var _this10 = this;
 
             this.event.emit('scale', value);
             if (_fw.val.isNum(value)) {
                 this._props.transformation.scale.x = this._props.transformation.scale.y = this._props.transformation.scale.z = value;
             } else ['x', 'y'].forEach(function (axis) {
-                if (axis in value) _this9._props.transformation.scale[axis] = value[axis];
+                if (axis in value) _this10._props.transformation.scale[axis] = value[axis];
             });
             _fw.css.applyTransformation(this.dom, this._props.transformation);
         },
@@ -1307,51 +1317,90 @@ exports.default = {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
-   value: true
+    value: true
 });
 
 var _fw = __webpack_require__(0);
 
 exports.default = {
 
-   // create ('div#id .class .class')
-   create: function create() {
-      var query = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
+    // create ('div#id .class .class')
+    create: function create() {
+        var query = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
 
-      var classes = query.replace(/ /g, '').split('.');
-      var tagAndId = [];
-      if (classes[0].length == 0) tagAndId = classes[0].split('#');
-      classes.shift();
-      var element = document.createElement(tagAndId[0] || 'div');
-      if (tagAndId.length > 1) element.id = tagAndId[1];
-      classes.forEach(function (style) {
-         return element.classList.add(style);
-      });
-      return element;
-   },
-   fromString: function fromString(html) {
-      var parent = document.createElement('div');
-      parent.innerHTML = html;
-      return parent.firstChild;
-   },
-   prepend: function prepend(parent, child) {
-      if (parent.firstChild) parent.insertBefore(child, parent.firstChild);else parent.appendChild(child);
-   },
-   clone: function clone(dom) {
-      var _this = this;
+        var classes = query.replace(/ /g, '').split('.');
+        var tagAndId = [];
+        if (classes[0].length == 0) tagAndId = classes[0].split('#');
+        classes.shift();
+        var element = document.createElement(tagAndId[0] || 'div');
+        if (tagAndId.length > 1) element.id = tagAndId[1];
+        classes.forEach(function (style) {
+            return element.classList.add(style);
+        });
+        return element;
+    },
+    template: function template(model, tmp, callback) {
+        var init = true;
+        var active = true;
+        var render = function render() {
+            var result = tmp.replace(/{([A-z 0-9]+)}/g, function ($1, $2) {
+                if (init) {
+                    var val = model[$2];
+                    Object.defineProperty(model, $2, {
+                        set: function set(value) {
+                            val = value;
+                            if (active) render();
+                        },
 
-      var clone = dom.cloneNode(true);
-      clone.remove = function () {
-         return _this.parentNode.removeChild(_this);
-      };
-      dom.parentNode.appendChild(clone);
-      return clone;
-   },
-   selection: function selection(mode) {
-      document.ondragstart = document.onselectstart = mode ? null : function () {
-         return false;
-      };
-   }
+                        get: function get() {
+                            return val;
+                        }
+                    });
+                }
+                return model[$2];
+            });
+            callback(result);
+            init = false;
+        };
+        render();
+        return {
+            on: function on() {
+                active = true;
+                return this;
+            },
+            off: function off() {
+                active = false;
+                return this;
+            },
+
+            get active() {
+                return active;
+            }
+        };
+    },
+    fromString: function fromString(html) {
+        var parent = document.createElement('div');
+        parent.innerHTML = html;
+        return parent.firstChild;
+    },
+    prepend: function prepend(parent, child) {
+        if (parent.firstChild) parent.insertBefore(child, parent.firstChild);else parent.appendChild(child);
+    },
+    clone: function clone(dom) {
+        var _this = this;
+
+        var clone = dom.cloneNode(true);
+        clone.remove = function () {
+            return _this.parentNode.removeChild(_this);
+        };
+        dom.parentNode.appendChild(clone);
+        return clone;
+    },
+    selection: function selection(mode) {
+        document.ondragstart = document.onselectstart = mode ? null : function () {
+            return false;
+        };
+    }
 };
 
 /***/ },
@@ -1368,15 +1417,14 @@ Object.defineProperty(exports, "__esModule", {
 var _fw = __webpack_require__(0);
 
 exports.default = {
-	cloneObject: function cloneObject(_object) {
-		return JSON.parse(JSON.stringify(_object));
+	clone: function clone(object, methods) {
+		return Object.assign(Object.assign({}, object), methods);
+		//return JSON.parse(JSON.stringify(_object))
 	},
 	uuid: function uuid() {
-		var s = function s() {
-			return;
-			Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-		};
-		return s() + s() + '-' + s() + '-' + s() + '-' + s() + '-' + (s() + s() + s());
+		return 'dd-d-d-d-ddd'.replace(/d/g, function () {
+			return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+		});
 	},
 	uploadFile: function uploadFile(input, onready) {
 		var _this = this;
@@ -1819,7 +1867,7 @@ exports.default = {
 
         var translate = new _fw.vec();
         var method = _fw.event.types.isTouch ? '_initMultitouchGesture' : '_dragMouse';
-        var mod = Object.assign(Object.assign({}, transport), {
+        return this[method](layer, _fw.etc.clone(transport, {
             move: function move(t) {
                 if (transport.move && transport.move(t) !== false || !transport.move) {
                     translate = t.translate;
@@ -1835,13 +1883,12 @@ exports.default = {
                     return layer.animate(animationPreset, { matrix: new _fw.matrix() });
                 });
             }
-        });
-        return this[method](layer, mod, 'translate');
+        }), 'translate');
     },
     pinchToRotate: function pinchToRotate(layer) {
         var transport = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-        return this._initMultitouchGesture(layer, Object.assign(Object.assign({}, transport), {
+        return this._initMultitouchGesture(layer, _fw.etc.clone(transport, {
             move: function move(t) {
                 if (transport.move && transport.move(t) !== false || !transport.move) _fw.animation.draw(layer.identifier + ': rotate.move', function () {
                     return layer.rotate = t.rotate;
@@ -1857,7 +1904,7 @@ exports.default = {
     pinchToZoom: function pinchToZoom(layer) {
         var transport = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-        return this._initMultitouchGesture(layer, Object.assign(Object.assign({}, transport), {
+        return this._initMultitouchGesture(layer, _fw.etc.clone(transport, {
             move: function move(t) {
                 if (transport.move && transport.move(t) !== false || !transport.move) _fw.animation.draw(layer.identifier + ': scale.move', function () {
                     layer.scale = t.scale;
@@ -1883,7 +1930,7 @@ exports.default = {
     _dragMouse: function _dragMouse(layer, transport) {
         var _down = new _fw.vec();
         var velocity = new _fw.vec();
-        return this._dragMouseEventPattern(layer, Object.assign(Object.assign({}, transport), {
+        return this._dragMouseEventPattern(layer, _fw.etc.clone(transport, {
             down: function down(t) {
                 velocity;
                 _down = velocity = t.pointer;
@@ -1936,19 +1983,19 @@ exports.default = {
         var link = layer._props[address];
         for (var key in transport) {
             link.listener.on(key, function (method, key) {
-                return function (t) {
-                    if (key == 'move') {
-                        if (type == 'translate') t.translate = t.transformation.getTranslation();
-                        if (type == 'rotate') t.rotate = t.transformation.getRotation().z;
-                        if (type == 'scale') t.scale = t.transformation.getScale().z;
-                    }
-                    method[key](t);
-                    if (key == 'move') {
-                        link.transport.constraints[type] = t.constraints;
-                        delete t.constraints;
-                    }
-                };
-            }(transport, key));
+                return key == 'move' ? function (t) {
+                    // adapt output for every type
+                    if (type == 'translate') t.translate = t.transformation.getTranslation();
+                    if (type == 'rotate') t.rotate = t.transformation.getRotation().z;
+                    if (type == 'scale') t.scale = t.transformation.getScale().z;
+                    // execute event function
+                    method(t);
+                    // apply new transport to the whole
+                    // transformation multitouch event
+                    link.transport.constraints[type] = t.constraints;
+                    delete t.constraints;
+                } : method;
+            }(transport[key], key));
         }return {
             get active() {
                 return link.transport[type];
@@ -2612,8 +2659,8 @@ exports.default = {
     */
 
     init: function init(model) {
-        var destroy = function destroy(item) {
-            item.layer.destroy();
+        var destroy = function destroy(layer) {
+            layer.destroy();
         };
         var make = function make(item) {/* no initial value */};
         var methods = {
@@ -2637,7 +2684,9 @@ exports.default = {
             },
             splice: function splice() {
                 var deleted = Array.prototype.splice.apply(this, arguments);
-                deleted.forEach(destroy);
+                deleted.forEach(function (a) {
+                    return destroy(a.layer);
+                });
                 return deleted;
             },
             find: function find(query) {

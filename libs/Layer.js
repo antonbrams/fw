@@ -22,7 +22,9 @@ export default class Layer {
                 rotate    : 0,
                 matrix3d  : new matrix()
             },
-            pop : {}
+            pop : {},
+            templateUpdater              : null,
+            transformationTouchEventLink : null,
         }
         // if no options
         if (!val.exists(options))
@@ -289,8 +291,16 @@ export default class Layer {
     }
     
     set content (value) {
-        this.event.emit('content', value)
-        this.dom.innerHTML = value
+        var set = string => {
+            this.event.emit('content', string)
+            this.dom.innerHTML = string
+        }
+        if (val.isObj(value))
+            this._props.templateUpdater = dom.template(value.bind, value.html, set)
+        else {
+            set(tmp)
+            this._props.templateUpdater.off()
+        }
     }
     
     get content () {

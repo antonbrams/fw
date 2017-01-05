@@ -96,8 +96,8 @@ export default {
     */
     
     init (model) {
-        var destroy = item => {item.layer.destroy()}
-        var make    = item => {/* no initial value */}
+        var destroy = layer => {layer.destroy()}
+        var make    = item  => {/* no initial value */}
         var methods = {
             on (topic, callback) {
                 if (topic == 'make') {
@@ -120,7 +120,7 @@ export default {
             },
             splice () {
                 var deleted = Array.prototype.splice.apply(this, arguments)
-                deleted.forEach(destroy)
+                deleted.forEach(a => destroy(a.layer))
                 return deleted
             },
             find (query) {

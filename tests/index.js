@@ -1,4 +1,4 @@
-var Layer, Screen, Scroller, animation, background, button, decay, dom, etc, event, foreground, knob, layer, layer1, link, matrix, model, move, onDrag, onRotate, onZoom, out, scroller, states, toggle, vec;
+var Layer, Screen, Scroller, animation, background, button, decay, dom, etc, event, foreground, knob, layer, layer1, matrix, mockup, mod, model, move, onDrag, onRotate, onZoom, out, scroller, states, toggle, vec;
 
 dom = fw.dom, Layer = fw.Layer, Screen = fw.Screen, Scroller = fw.Scroller, vec = fw.vec, etc = fw.etc, model = fw.model, matrix = fw.matrix, animation = fw.animation, event = fw.event;
 
@@ -18,10 +18,25 @@ if (0) {
   });
 }
 
+if (1) {
+  mod = {
+    name: 'this is my name',
+    id: 'some_id'
+  };
+  layer = new Layer({
+    center: Screen.center,
+    content: {
+      html: "<div id='{id}'>{name}</div>",
+      bind: mod
+    }
+  }).on('click', function(e) {
+    return mod.name = 'this is something different!';
+  });
+}
+
 if (0) {
   scroller = new Scroller({
     flow: 'x',
-    position: 'absolute',
     size: new vec(200, 200),
     border: {
       radius: 5
@@ -29,7 +44,7 @@ if (0) {
     boxShadow: '0 2px 10px 0 rgba(0,0,0, .2)',
     center: Screen.center
   });
-  model = model.put({
+  mockup = model.put({
     count: 3,
     model: {
       id: '{type: int, mode: forward, from: 1}',
@@ -56,41 +71,69 @@ if (0) {
         }
       }
     });
-  }).on('destroy', function(item) {
-    var l;
-    l = item.layer;
-    return l.animate({
+  }).on('destroy', function(layer) {
+    return layer.animate({
       time: .3
     }, {
       opacity: 0,
       scale: new vec(0, 1),
       margin: {
-        l: l.size.scale(-1).unit('px').x
+        l: layer.size.scale(-1).unit('px').x
       }
     }, function() {
-      return l.destroy();
+      return layer.destroy();
     });
   });
-  console.log(model);
+  console.log(mockup);
   scroller.on('click', function(e) {
-    return console.log(model["delete"]({
+    return console.log(mockup["delete"]({
       id: 1
     }));
   });
 }
 
-if (1) {
-  link = 'http://www.springfieldinterchange.com/wp-content/themes/thesis_16b2/custom-sample/rotator/sample-4.jpg';
+if (0) {
+  model = model.put({
+    count: 1,
+    model: {
+      image: '{type: image}'
+    }
+  });
   layer1 = new Layer({
     position: 'absolute',
     zIndex: 1,
     size: new vec(300, 300),
-    center: Screen.center,
-    image: link
+    center: Screen.center
+  }).bind(model[0], {
+    image: 'image'
   });
-  onDrag = layer1.on('drag');
-  onZoom = layer1.on('pinchToZoom');
-  onRotate = layer1.on('pinchToRotate');
+  onDrag = layer1.on('drag', {
+    move: function(t) {
+      return t.constraints = {
+        l: -10,
+        r: 10
+      };
+    }
+  });
+  onZoom = layer1.on('pinchToZoom', {
+    move: function(t) {
+      return t.constraints = {
+        min: 1,
+        max: 2
+      };
+    }
+  });
+  onRotate = layer1.on('pinchToRotate', {
+    move: function(t) {
+      return t.constraints = {
+        min: -10,
+        max: 10
+      };
+    },
+    cancel: function(t) {
+      return console.log('tight');
+    }
+  });
 }
 
 if (0) {
@@ -176,7 +219,7 @@ if (0) {
     var tilt;
     tilt = new matrix().rotate(new vec(-pointer.y, pointer.x).scale(.2));
     layer.matrix = tilt;
-    foreground.matrix = new matrix().translate(new vec(0, 0, 200)).multiply(tilt);
+    foreground.matrix = new matrix().translate(new vec(0, 0, 100)).multiply(tilt);
     return background.translate = new vec(-pointer.x, -pointer.y).unit('px');
   });
   move = button.on(event.types.move, function(e) {

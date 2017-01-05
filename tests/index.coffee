@@ -15,22 +15,35 @@ if 0
 # drag n drop file
 if 0
     layer = new Layer
-        center : Screen.center
-    .on 'fileDrop',
-        drop : (data) ->
-            console.log data
+            center : Screen.center
+        .on 'fileDrop',
+            drop : (data) ->
+                console.log data
+
+# dynamic templates
+if 1
+    mod = 
+        name : 'this is my name'
+        id   : 'some_id'
+    
+    layer = new Layer
+            center  : Screen.center
+            content :
+                html : "<div id='{id}'>{name}</div>"
+                bind : mod
+        .on 'click', (e) ->
+            mod.name = 'this is something different!'
 
 # model
 if 0
     scroller = new Scroller
         flow      : 'x'
-        position  : 'absolute'
         size      : new vec 200, 200
-        border    : radius: 5
+        border    : radius : 5
         boxShadow : '0 2px 10px 0 rgba(0,0,0, .2)'
         center    : Screen.center
     
-    model = model.put
+    mockup = model.put
             count : 3
             model :
                 id    : '{type: int, mode: forward, from: 1}'
@@ -48,32 +61,51 @@ if 0
                     from : 'backgroundImage'
                     set  : (value, layer) ->
                         etc.compressImage value, .1, (url) -> layer.image url
-        .on 'destroy', (item) ->
-            l = item.layer
-            l.animate time : .3,
+        .on 'destroy', (layer) ->
+            layer.animate time : .3,
                 opacity : 0
                 scale   : new vec 0, 1
-                margin  : l : l.size.scale(-1).unit('px').x,
-                () -> l.destroy()
+                margin  : l : layer.size.scale(-1).unit('px').x,
+                () -> layer.destroy()
     
-    console.log model
+    console.log mockup
     scroller.on 'click', (e) ->
-        console.log model.delete id : 1
+        console.log mockup.delete id : 1
 
 # drag n drop
-if 1
-    link = 'http://www.springfieldinterchange.com/wp-content/themes/thesis_16b2/custom-sample/rotator/sample-4.jpg'
+if 0
+    model = model.put
+            count : 1
+            model :
+                image : '{type: image}'
     
     layer1 = new Layer
-        position : 'absolute'
-        zIndex   : 1
-        size     : new vec 300, 300
-        center   : Screen.center
-        image    : link
+            position : 'absolute'
+            zIndex   : 1
+            size     : new vec 300, 300
+            center   : Screen.center
+        .bind model[0],
+            image: 'image'
     
-    onDrag   = layer1.on 'drag'
-    onZoom   = layer1.on 'pinchToZoom'
-    onRotate = layer1.on 'pinchToRotate'
+    onDrag   = layer1.on 'drag',
+        move : (t) ->
+            t.constraints = 
+                l: -10,
+                r: 10
+            # layer1.rect.position.log('tight')
+            
+    onZoom   = layer1.on 'pinchToZoom',
+        move : (t) ->
+            t.constraints = 
+                min: 1,
+                max: 2
+    onRotate = layer1.on 'pinchToRotate',
+        move : (t) ->
+            t.constraints = 
+                min: -10,
+                max: 10
+        cancel : (t) ->
+            console.log 'tight'
     
 # toggle
 if 0
@@ -141,7 +173,7 @@ if 0
             .rotate new vec(-pointer.y, pointer.x).scale .2
         layer.matrix = tilt
         foreground.matrix = new matrix()
-            .translate new vec 0, 0, 200
+            .translate new vec 0, 0, 100
             .multiply tilt
         background.translate = new vec(-pointer.x, -pointer.y).unit 'px'
     

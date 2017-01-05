@@ -17,6 +17,40 @@ export default {
         return element
     },
     
+    template (model, tmp, callback) {
+        var init   = true
+        var active = true
+        var render = function () {
+            var result = tmp.replace(/{([A-z 0-9]+)}/g, ($1, $2) => {
+                if (init) {
+                    var val = model[$2]
+                    Object.defineProperty(model, $2, {
+                        set (value) {
+                            val = value
+                            if (active) render()
+                        },
+                        get : () => val
+                    })
+                }
+                return model[$2]
+            })
+            callback(result)
+            init = false
+        }
+        render()
+        return {
+            on () {
+                active = true
+                return this
+            },
+            off () {
+                active = false
+                return this
+            },
+            get active () {return active}
+        }
+    },
+    
     fromString (html) {
 		var parent = document.createElement('div')
 	    parent.innerHTML = html

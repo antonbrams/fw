@@ -4,7 +4,7 @@
 import {
     animation, vec, event, math, 
     Screen, matrix, Layer, val,
-    geo
+    geo, etc
 } from './fw'
 
 var animationPreset = {
@@ -76,7 +76,7 @@ export default {
     drag (layer, transport = {}) {
         var translate = new vec()
         var method = event.types.isTouch? '_initMultitouchGesture': '_dragMouse'
-        var mod    = Object.assign(Object.assign({}, transport), {
+        return this[method](layer, etc.clone(transport, {
             move (t) {
                 if (transport.move && transport.move(t) !== false || !transport.move) {
                     translate = t.translate
@@ -92,12 +92,11 @@ export default {
                     animation.draw(`${layer.identifier}: translate.cancel`,
                         () => layer.animate(animationPreset, {matrix : new matrix()}))
             }
-        })
-        return this[method](layer, mod, 'translate')
+        }), 'translate')
     },
     
     pinchToRotate (layer, transport = {}) {
-        return this._initMultitouchGesture(layer, Object.assign(Object.assign({}, transport), {
+        return this._initMultitouchGesture(layer, etc.clone(transport, {
             move (t) {
                 if (transport.move && transport.move(t) !== false || !transport.move)
                     animation.draw(`${layer.identifier}: rotate.move`,
@@ -112,7 +111,7 @@ export default {
     },
     
     pinchToZoom (layer, transport = {}) {
-        return this._initMultitouchGesture(layer, Object.assign(Object.assign({}, transport), {
+        return this._initMultitouchGesture(layer, etc.clone(transport, {
             move (t) {
                 if (transport.move && transport.move(t) !== false || !transport.move)
                     animation.draw(`${layer.identifier}: scale.move`, () => {
@@ -139,7 +138,7 @@ export default {
     _dragMouse (layer, transport) {
         var down     = new vec()
         var velocity = new vec()
-        return this._dragMouseEventPattern(layer, Object.assign(Object.assign({}, transport), {
+        return this._dragMouseEventPattern(layer, etc.clone(transport, {
             down (t) {
                 velocity
                 down = velocity = t.pointer
@@ -188,18 +187,20 @@ export default {
         }
         var link = layer._props[address]
         for (var key in transport)
-            link.listener.on(key, ((method, key) => t => {
-                if (key == 'move') {
+            link.listener.on(key, ((method, key) => {
+                return key == 'move'? t => {
+                    // adapt output for every type
                     if (type == 'translate') t.translate = t.transformation.getTranslation()
                     if (type == 'rotate') t.rotate = t.transformation.getRotation().z
                     if (type == 'scale') t.scale = t.transformation.getScale().z
-                }
-                method[key](t)
-                if (key == 'move') {
+                    // execute event function
+                    method(t)
+                    // apply new transport to the whole
+                    // transformation multitouch event
                     link.transport.constraints[type] = t.constraints
                     delete t.constraints
-                }
-            })(transport, key))
+                }: method
+            })(transport[key], key))
         return {
             get active () {
                 return link.transport[type]

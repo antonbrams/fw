@@ -4,16 +4,16 @@
 import {val} from './fw'
 
 export default {
-
-	cloneObject (_object) {
-		return JSON.parse(JSON.stringify(_object))
+	
+	clone (object, methods) {
+		return Object.assign(Object.assign({}, object), methods)
+		//return JSON.parse(JSON.stringify(_object))
 	},
 	
 	uuid() {
-	  	var s = () => {return 
-		  	Math.floor((1 + Math.random()) * 0x10000)
-		  		.toString(16).substring(1)}
-	  	return `${s()+s()}-${s()}-${s()}-${s()}-${s()+s()+s()}`
+	  	return `dd-d-d-d-ddd`.replace(/d/g, () =>
+			Math.floor((1 + Math.random()) * 0x10000)
+				.toString(16).substring(1))
   	},
 	
 	uploadFile (input, onready) {
