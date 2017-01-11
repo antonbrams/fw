@@ -8,6 +8,7 @@ var env		= process.env.NODE_ENV.split('.')
 
 config.add({
 	entry : {'./index.js' : './libs/fw.js'},
+	devtool : 'source-map',
     output : {
 		filename: '[name]',
         libraryTarget: "umd",
@@ -42,7 +43,6 @@ config.add({
 })
 
 if (env.mode == 'build') config.add({
-		devtool : 'eval',
 		plugins : [
 			new webpack.optimize.UglifyJsPlugin({
       			output: {comments: false},

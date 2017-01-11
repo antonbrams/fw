@@ -76,16 +76,32 @@ export default class Layer {
         for (var key in options) {
             var value = options[key]
             // use methods
-            if (key in this)
+            if (key in this) {
                 if (val.isFn(this[key])) 
                     this[key](value)
                 else
                     this[key] = value
-            // set standard css parameters
-            else
-                this._setCss(key, value)
+            // set attributes
+            } else if (key in this.dom) this._setAttribute(key, value)
+            // set css parameters
+            else if (key in this.dom.style) this._setCss(key, value)
         }
         return this
+    }
+    
+    _setAttribute (option, value) {
+        var set = (key, value) => {
+            this.event.emit(key, value)
+            if (val.exists(value))
+                this.dom.setAttribute(key, value)
+            else
+                this.dom.removeAttribute(key)
+        }
+        if (val.isStr(option))
+            set(option, value)
+        else if (val.isObj(option))
+            for (var key in option)
+                set(key, option[key])
     }
     
     _setCss (options, value) {
@@ -188,10 +204,10 @@ export default class Layer {
     pop () {
         this.event.emit('pop', this._props.pop)
         this._props.pop = {
-            parent   : this.dom.parentNode,
-            pos      : new vec(this.dom.style.left,  this.dom.style.top),
-            size     : new vec(this.dom.style.width, this.dom.style.height),
-            offset   : geo.vpo(this.dom)
+            parent : this.dom.parentNode,
+            pos    : new vec(this.dom.style.left, this.dom.style.top),
+            size   : new vec(this.dom.style.width, this.dom.style.height),
+            offset : geo.vpo(this.dom)
         }
         this.set({
             position  : 'fixed',
@@ -248,6 +264,11 @@ export default class Layer {
     
     // dom structure
     child (query) {
+        var children = this.dom.querySelector(query)
+        return children.layer || new Layer(children)
+    }
+    
+    childs (query) {
         var children = this.dom.querySelectorAll(query)
         var out = []
         for (var i = 0; i < children.length; i ++)
@@ -298,7 +319,7 @@ export default class Layer {
         if (val.isObj(value))
             this._props.templateUpdater = dom.template(value.bind, value.html, set)
         else {
-            set(tmp)
+            set(value)
             this._props.templateUpdater.off()
         }
     }

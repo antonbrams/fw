@@ -31,47 +31,64 @@ export default {
     },
     
     resize (layer, transport = {}) {
-        var border = 20
-        var side = {x: null, y: null}
-        var cursorHover = event.listener(layer.dom, 'mousemove', e => {
-            var rect    = layer.rect
-            var pointer = new vec(e.clientX, e.clientY)
-            side = geo.getSide(pointer.sub(rect.position), rect.size, border)
-            layer.dom.style.cursor = geo.getCursor(side)
-        })
-        var drag = this._dragMouse(layer, {
-            down (t) {
-                cursorHover.off()
-            },
-            move (t) {
-
-            },
-            up (t) {
-                
-            },
-            cancel (t) {
-                cursorHover.on()
-            }
-        })
+        
         return {
             get active () {
-                return cursorHover.status
             },
             on () {
-                drag.on()
-                cursorHover.on()
                 return this
             },
             off () {
-                drag.off()
-                cursorHover.off()
                 return this
             },
             cancel () {
                 
-            },
+            }
         }
     },
+    
+    // resize (layer, transport = {}) {
+    //     var border = 20
+    //     var side = {x: null, y: null}
+    //     var cursorHover = event.listener(layer.dom, 'mousemove', e => {
+    //         var rect    = layer.rect
+    //         var pointer = new vec(e.clientX, e.clientY)
+    //         side = geo.getSide(pointer.sub(rect.position), rect.size, border)
+    //         layer.dom.style.cursor = geo.getCursor(side)
+    //     })
+    //     var drag = this._dragMouse(layer, {
+    //         down (t) {
+    //             cursorHover.off()
+    //         },
+    //         move (t) {
+    // 
+    //         },
+    //         up (t) {
+    //             
+    //         },
+    //         cancel (t) {
+    //             cursorHover.on()
+    //         }
+    //     })
+    //     return {
+    //         get active () {
+    //             return cursorHover.status
+    //         },
+    //         on () {
+    //             drag.on()
+    //             cursorHover.on()
+    //             return this
+    //         },
+    //         off () {
+    //             drag.off()
+    //             cursorHover.off()
+    //             return this
+    //         },
+    //         cancel () {
+    //             
+    //         },
+    //     }
+    // },
     
     drag (layer, transport = {}) {
         var translate = new vec()

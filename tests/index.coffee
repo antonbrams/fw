@@ -7,9 +7,12 @@
     animation, event
 } = fw
 
-if 0
+if 1
     layer = new Layer
+        position : 'relative'
+        dom    : '<video></video>',
         center : Screen.center
+        src    : 'test'
     .on 'resize'
 
 # drag n drop file
@@ -21,7 +24,7 @@ if 0
                 console.log data
 
 # dynamic templates
-if 1
+if 0
     mod = 
         name : 'this is my name'
         id   : 'some_id'
@@ -37,11 +40,12 @@ if 1
 # model
 if 0
     scroller = new Scroller
+        position  : 'relative'
+        center    : Screen.center
         flow      : 'x'
         size      : new vec 200, 200
         border    : radius : 5
         boxShadow : '0 2px 10px 0 rgba(0,0,0, .2)'
-        center    : Screen.center
     
     mockup = model.put
             count : 3
@@ -145,7 +149,7 @@ if 0
         size        : new vec 300, 200
         center      : Screen.center
         bg          : 'none'
-        perspective : 500
+        perspective : '500px'
     
     layer = new Layer
         position : 'absolute'
@@ -153,6 +157,7 @@ if 0
         parent   : button
         size     : new vec(100, 100).unit '%'
         border   : radius : 10
+        center   : button.center
     
     background = new Layer
         position : 'absolute'
@@ -164,17 +169,21 @@ if 0
         parent   : button
         position : 'absolute'
         size     : new vec 200, 100
-        center   : layer.center
+        center   : button.center
         border   : radius : 10
         bg       : color : 'red'
     
     decay = animation.decay (pointer) ->
-        tilt = new matrix()
-            .rotate new vec(-pointer.y, pointer.x).scale .2
-        layer.matrix = tilt
+        rotate = (obj) ->
+            offset = obj.size.scale .5
+            new matrix()
+                .translate offset
+                .rotate new vec(-pointer.y, pointer.x).scale(.1)
+                .translate offset.scale -1
+        layer.matrix = rotate layer
         foreground.matrix = new matrix()
             .translate new vec 0, 0, 100
-            .multiply tilt
+            .multiply rotate foreground
         background.translate = new vec(-pointer.x, -pointer.y).unit 'px'
     
     move = button.on event.types.move, (e) ->

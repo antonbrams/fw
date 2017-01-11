@@ -2,9 +2,12 @@ var Layer, Screen, Scroller, animation, background, button, decay, dom, etc, eve
 
 dom = fw.dom, Layer = fw.Layer, Screen = fw.Screen, Scroller = fw.Scroller, vec = fw.vec, etc = fw.etc, model = fw.model, matrix = fw.matrix, animation = fw.animation, event = fw.event;
 
-if (0) {
+if (1) {
   layer = new Layer({
-    center: Screen.center
+    position: 'relative',
+    dom: '<video></video>',
+    center: Screen.center,
+    src: 'test'
   }).on('resize');
 }
 
@@ -18,7 +21,7 @@ if (0) {
   });
 }
 
-if (1) {
+if (0) {
   mod = {
     name: 'this is my name',
     id: 'some_id'
@@ -36,13 +39,14 @@ if (1) {
 
 if (0) {
   scroller = new Scroller({
+    position: 'relative',
+    center: Screen.center,
     flow: 'x',
     size: new vec(200, 200),
     border: {
       radius: 5
     },
-    boxShadow: '0 2px 10px 0 rgba(0,0,0, .2)',
-    center: Screen.center
+    boxShadow: '0 2px 10px 0 rgba(0,0,0, .2)'
   });
   mockup = model.put({
     count: 3,
@@ -186,7 +190,7 @@ if (0) {
     size: new vec(300, 200),
     center: Screen.center,
     bg: 'none',
-    perspective: 500
+    perspective: '500px'
   });
   layer = new Layer({
     position: 'absolute',
@@ -195,7 +199,8 @@ if (0) {
     size: new vec(100, 100).unit('%'),
     border: {
       radius: 10
-    }
+    },
+    center: button.center
   });
   background = new Layer({
     position: 'absolute',
@@ -207,7 +212,7 @@ if (0) {
     parent: button,
     position: 'absolute',
     size: new vec(200, 100),
-    center: layer.center,
+    center: button.center,
     border: {
       radius: 10
     },
@@ -216,10 +221,14 @@ if (0) {
     }
   });
   decay = animation.decay(function(pointer) {
-    var tilt;
-    tilt = new matrix().rotate(new vec(-pointer.y, pointer.x).scale(.2));
-    layer.matrix = tilt;
-    foreground.matrix = new matrix().translate(new vec(0, 0, 100)).multiply(tilt);
+    var rotate;
+    rotate = function(obj) {
+      var offset;
+      offset = obj.size.scale(.5);
+      return new matrix().translate(offset).rotate(new vec(-pointer.y, pointer.x).scale(.1)).translate(offset.scale(-1));
+    };
+    layer.matrix = rotate(layer);
+    foreground.matrix = new matrix().translate(new vec(0, 0, 100)).multiply(rotate(foreground));
     return background.translate = new vec(-pointer.x, -pointer.y).unit('px');
   });
   move = button.on(event.types.move, function(e) {
