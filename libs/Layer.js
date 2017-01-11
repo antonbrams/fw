@@ -320,7 +320,8 @@ export default class Layer {
             this._props.templateUpdater = dom.template(value.bind, value.html, set)
         else {
             set(value)
-            this._props.templateUpdater.off()
+            if (this._props.templateUpdater)
+                this._props.templateUpdater.off()
         }
     }
     
