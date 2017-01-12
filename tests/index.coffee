@@ -9,11 +9,10 @@
 
 if 1
     layer = new Layer
-        position : 'relative'
-        dom    : '<video></video>',
         center : Screen.center
         src    : 'test'
-    .on 'resize'
+    
+    layer.on 'resize'
 
 # drag n drop file
 if 0
@@ -78,7 +77,7 @@ if 0
 
 # drag n drop
 if 0
-    model = model.put
+    m = model.put
             count : 1
             model :
                 image : '{type: image}'
@@ -88,7 +87,7 @@ if 0
             zIndex   : 1
             size     : new vec 300, 300
             center   : Screen.center
-        .bind model[0],
+        .bind m[0],
             image: 'image'
     
     onDrag   = layer1.on 'drag',

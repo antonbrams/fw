@@ -5,19 +5,12 @@ import {vec, event, gesture, Layer} from './fw'
 
 class Screen extends Layer {
     
-    constructor () {
-        super({
-            dom    : document.body,
-            parent : null
-        })
-    }
-    
     // external event interface
     on (topic, fn, options) {
         // gestures
         if (topic in event)
            return gesture[topic](this, fn).on()
-       // dom events
+        // dom events
         else if (event.support(document, topic))
             return event.listener(document, topic, fn, options).on()
         // dom css
@@ -35,6 +28,6 @@ class Screen extends Layer {
     
 }
 
-export default new Screen()
+export default new Screen(document.body)
 
 

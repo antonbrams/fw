@@ -1,56 +1,81 @@
 
 
 
-import {arr, val, vec, debug, Layer} from './fw'
+import {arr, val, vec, debug, array, Layer} from './fw'
 
 export default {
     
-    Machine : class {
-        
-        constructor (namespace = 'event', debug = false) {
-            this.namespace = `[${namespace}]`
-            this.debug     = debug
-            this.topics    = {}
+    Machine (namespace = 'event', debug = false) {
+        var log = (msg, topic, payload) => {
+            if (out.debug) {
+                var obj = {
+                    topic,
+                    timestamp : new Date().getTime()
+                }
+                if (val.exists(payload)) Object.assign(obj, {payload})
+                console.log(`[${namespace}] ${msg}`, obj)
+            }
         }
-        
-        on (topic, fn) {
-            if (this.debug) 
-                console.log(`${this.namespace} subscribed to`, topic)
-            if (!this.topics[topic])
-                this.topics[topic] = []
-            this.topics[topic].push(fn)
-            return this
+        var topics = {}
+        var out = {
+            debug,
+            on (topic, callback) {
+                if (!topics[topic]) topics[topic] = []
+                return {
+                    get active () {
+                        return topics[topic] 
+                            && topics[topic].indexOf(callback) > -1
+                    },
+                    on () {
+                        if (!this.active) {
+                            log('subscribed to', topic)
+                            topics[topic].push(callback)
+                        }
+                        return this
+                    },
+                    off () {
+                        if (this.active) {
+                            log('unsubscribed from', topic)
+                            array.delete(topics[topic], callback)
+                        }
+                        return this
+                    }
+                }.on()
+            },
+            emit (topic, payload) {
+                log('fired', topic, payload)
+                if (topics[topic])
+                    topics[topic].forEach(callback => callback(payload))
+                return this
+            }
         }
-        
-        emit (topic, t) {
-            if (this.debug) 
-                console.log(`${this.namespace} fired`, topic)
-            if (this.topics[topic])
-                this.topics[topic].forEach(fn => fn(t))
-            return this
-        }
+        return out
     },
     
     listener (dom, type, callback, flag) {
-        var active = false
-        var out = {
+        var fn = e => {
+            e.undef = () => {e.preventDefault(); return e}
+            e.stop  = () => {e.stopPropagation(); return e}
+            e.both  = () => e.undef().stop()
+            return callback(e)
+        }
+        return {
+            active : false,
             on () {
-                if (!active) {
-                    active = true
-                    dom.addEventListener(type, callback, flag)
+                if (!this.active) {
+                    this.active = true
+                    dom.addEventListener(type, fn, flag)
                 }
-                return out
+                return this
             },
             off () {
-                if (active) {
-                    active = false
-                    dom.removeEventListener(type, callback, flag)
+                if (this.active) {
+                    this.active = false
+                    dom.removeEventListener(type, fn, flag)
                 }
-                return out
-            },
-            get active () {return active}
+                return this
+            }
         }
-        return out
     },
     
     support (element, type) {
@@ -132,6 +157,9 @@ export default {
 			e.preventDefault()
         })
         return {
+            get active () {
+                return over.active
+            },
             on () {
                 over.on()
                 return this
@@ -139,8 +167,7 @@ export default {
             off () {
                 over.off()
                 return this
-            },
-            get active () {return over.active}
+            }
         }
 	},
     

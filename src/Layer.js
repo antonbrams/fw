@@ -11,7 +11,7 @@ export default class Layer {
     
     constructor (options) {
         this.identifier = new Date().getTime()
-        this.event      = new event.Machine('Layer')
+        this.event      = event.Machine('Layer')
         this.data       = null
         this._dom       = null
         this._props     = {
@@ -26,33 +26,32 @@ export default class Layer {
             templateUpdater              : null,
             transformationTouchEventLink : null,
         }
-        // if no options
-        if (!val.exists(options))
-            this.dom = dom.create('.default')
-        else if (val.isObj(options)) {
+        // if no options at all
+        if (!val.exists(options)) {
+            this.dom    = dom.create('.default')
+            this.parent = Screen
+        // if options are an tulpet
+        } else if (val.isObj(options)) {
             // apply dom element
             if ('dom' in options) {
                 this.dom = options.dom
                 delete options.dom
             // if no dom, create just div with .layer
-            } else
-                this.dom = dom.create('.default')
-        // if dom is a single parameter
-        } else
-            this.dom = options
-        // parent story
-        if (!val.exists(options))
-            this.parent = Screen
-        else {
-            if (val.exists(options.parent)) {
+            } else this.dom = dom.create('.default')
+            // parent
+            if ('parent' in options) {
                 if (options.parent === null) 
                     delete options.parent
-            } else
+            } else this.parent = Screen
+            // set other options
+            this.set(options)
+        // if options is a single parameter
+        } else if (val.isDom(options) || val.isStr(options)) {
+            this.dom = options
+            // add if not added
+            if (val.isDom(options) && !options.parentNode)
                 this.parent = Screen
         }
-        // set other options
-        if (val.exists(options)) 
-            this.set(options)
     }
     
     // external event interface
@@ -317,7 +316,8 @@ export default class Layer {
             this.dom.innerHTML = string
         }
         if (val.isObj(value))
-            this._props.templateUpdater = dom.template(value.bind, value.html, set)
+            this._props.templateUpdater = 
+                dom.template(value.bind, value.html, set)
         else {
             set(value)
             if (this._props.templateUpdater)
@@ -580,11 +580,11 @@ export default class Layer {
     // center
     set center (value) {
         if (val.exists(value.x)) {
-            this._setCss('left', '50%')
+            this._setCss('left', `${value.x - this.rect.position.x}px`)
             this.translate = {x: '-50%'}
         }
         if (val.exists(value.y)) {
-            this._setCss('top', '50%')
+            this._setCss('top', `${value.y - this.rect.position.y}px`)
             this.translate = {y: '-50%'}
         }
     }

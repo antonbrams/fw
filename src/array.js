@@ -1,6 +1,8 @@
 
 
 
+import {val} from './fw'
+
 export default {
     
     // _splitQuery('parent.child.element')
@@ -45,8 +47,14 @@ export default {
 
     // var deleted = del(workspaces, {'title.color': color});
     delete (array, query) {
-        var deleted = this.find(array, query)
-        deleted.forEach(found => array.splice(array.indexOf(found), 1))
+        var deleted
+        if (val.isObj(query)) {
+            deleted = this.find(array, query)
+            deleted.forEach(found => array.splice(array.indexOf(found), 1))
+        } else {
+            var i = array.indexOf(query)
+            deleted = array.splice(i, 1)
+        }
         return deleted
     },
 

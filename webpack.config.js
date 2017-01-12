@@ -2,17 +2,16 @@
 
 
 var webpack	= require('webpack')
-var config	= {add:function(o){for(var i in o)this[i]=o[i]}}
 var env		= process.env.NODE_ENV.split('.')
 	env		= {target: env[0], mode: env[1]}
 
-config.add({
-	entry : {'./index.js' : './libs/fw.js'},
+var config = {
+	entry   : {'./index.js' : './src/fw.js'},
 	devtool : 'source-map',
-    output : {
-		filename: '[name]',
-        libraryTarget: "umd",
-        library: "fw"
+    output  : {
+		filename      : '[name]',
+        libraryTarget : 'umd',
+        library       : 'fw'
 	},
     module : {
 		loaders	: [
@@ -40,20 +39,18 @@ config.add({
 			}
 		]
     },
-})
+}
 
-if (env.mode == 'build') config.add({
-		plugins : [
-			new webpack.optimize.UglifyJsPlugin({
-      			output: {comments: false},
-      			sourceMap: true
-			})
-	    ]
-	})
-else
-	if (env.mode == 'watch') config.add({
-		watch : true
-	})
+if (env.mode == 'build') Object.assign(config, {
+	plugins : [
+		new webpack.optimize.UglifyJsPlugin({
+  			output: {comments: false},
+  			sourceMap: true
+		})
+    ]
+}); else if (env.mode == 'watch') Object.assign(config, {
+	watch : true
+})
 
 module.exports = config
 

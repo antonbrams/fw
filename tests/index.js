@@ -1,14 +1,13 @@
-var Layer, Screen, Scroller, animation, background, button, decay, dom, etc, event, foreground, knob, layer, layer1, matrix, mockup, mod, model, move, onDrag, onRotate, onZoom, out, scroller, states, toggle, vec;
+var Layer, Screen, Scroller, animation, background, button, decay, dom, etc, event, foreground, knob, layer, layer1, m, matrix, mockup, mod, model, move, onDrag, onRotate, onZoom, out, scroller, states, toggle, vec;
 
 dom = fw.dom, Layer = fw.Layer, Screen = fw.Screen, Scroller = fw.Scroller, vec = fw.vec, etc = fw.etc, model = fw.model, matrix = fw.matrix, animation = fw.animation, event = fw.event;
 
 if (1) {
   layer = new Layer({
-    position: 'relative',
-    dom: '<video></video>',
     center: Screen.center,
     src: 'test'
-  }).on('resize');
+  });
+  layer.on('resize');
 }
 
 if (0) {
@@ -97,7 +96,7 @@ if (0) {
 }
 
 if (0) {
-  model = model.put({
+  m = model.put({
     count: 1,
     model: {
       image: '{type: image}'
@@ -108,7 +107,7 @@ if (0) {
     zIndex: 1,
     size: new vec(300, 300),
     center: Screen.center
-  }).bind(model[0], {
+  }).bind(m[0], {
     image: 'image'
   });
   onDrag = layer1.on('drag', {
