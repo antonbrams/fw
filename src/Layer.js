@@ -5,7 +5,7 @@ import {
     dom, css, val, geo, vec, matrix,
     animation, event, text, gesture,
     Screen
-} from './fw'
+} from './index'
 
 export default class Layer {
     

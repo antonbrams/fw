@@ -2,7 +2,6 @@
 
 
 import './style.sass'
-export var debug = {enable: false}
 
 export {default as animation} from './animation'
 export {default as val}       from './value'

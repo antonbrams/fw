@@ -1,7 +1,7 @@
 
 
 
-import {val, text, math, etc, arr} from './fw'
+import {val, text, math, etc, arr} from './index'
 
 var assets = {
     signs : ['', ',', '.', '?', '!'],

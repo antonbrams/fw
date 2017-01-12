@@ -1,7 +1,7 @@
 
 
 
-import {Layer} from './fw'
+import {Layer} from './index'
 
 export default class Scroller extends Layer {
     

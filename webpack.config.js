@@ -6,7 +6,7 @@ var env		= process.env.NODE_ENV.split('.')
 	env		= {target: env[0], mode: env[1]}
 
 var config = {
-	entry   : {'./index.js' : './src/fw.js'},
+	entry   : {'./index.js' : './src/index.js'},
 	devtool : 'source-map',
     output  : {
 		filename      : '[name]',

@@ -5,7 +5,7 @@ import {
     animation, vec, event, math, 
     Screen, matrix, Layer, val,
     geo, etc
-} from './fw'
+} from './index'
 
 var animationPreset = {
     time : .3, 

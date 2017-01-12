@@ -1,7 +1,7 @@
 
 
 
-import {vec, event, gesture, Layer} from './fw'
+import {vec, event, gesture, Layer} from './index'
 
 class Screen extends Layer {
     

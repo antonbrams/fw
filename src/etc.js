@@ -1,7 +1,7 @@
 
 
 
-import {val} from './fw'
+import {val} from './index'
 
 export default {
 	

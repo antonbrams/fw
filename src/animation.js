@@ -1,7 +1,7 @@
 
 
 
-import {css, vec, math, val, event} from './fw'
+import {css, vec, math, val, event} from './index'
 
 
 export default {

@@ -1,7 +1,7 @@
 
 
 
-import {arr, val, vec, debug, array, Layer} from './fw'
+import {arr, val, vec, debug, array, Layer} from './index'
 
 export default {
     

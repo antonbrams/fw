@@ -1,7 +1,7 @@
 
 
 
-import {css, val} from './fw'
+import {css, val} from './index'
 
 export default {
     

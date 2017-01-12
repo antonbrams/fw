@@ -1,7 +1,7 @@
 
 
 
-import {val, math} from './fw'
+import {val, math} from './index'
 
 export default class Vec {
 

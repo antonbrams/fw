@@ -1,7 +1,7 @@
 
 
 
-import {val, vec} from './fw'
+import {val, vec} from './index'
 
 /*
     // TODO: http://franklinta.com/2014/09/08/computing-css-matrix3d-transforms/
