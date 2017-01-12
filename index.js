@@ -84,7 +84,7 @@ return /******/ (function(modules) { // webpackBootstrap
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.gesture = exports.model = exports.Scroller = exports.Screen = exports.Layer = exports.css = exports.text = exports.etc = exports.event = exports.dom = exports.color = exports.math = exports.matrix = exports.vec = exports.arr = exports.geo = exports.val = exports.animation = exports.debug = undefined;
+exports.gesture = exports.model = exports.Scroller = exports.Screen = exports.Layer = exports.css = exports.text = exports.etc = exports.event = exports.dom = exports.color = exports.math = exports.matrix = exports.vec = exports.arr = exports.geo = exports.val = exports.animation = undefined;
 
 var _animation = __webpack_require__(4);
 
@@ -252,8 +252,6 @@ __webpack_require__(19);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var debug = exports.debug = { enable: false };
-
 /***/ },
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
@@ -267,7 +265,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _fw = __webpack_require__(0);
+var _index = __webpack_require__(0);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -276,44 +274,44 @@ var Layer = function () {
         _classCallCheck(this, Layer);
 
         this.identifier = new Date().getTime();
-        this.event = _fw.event.Machine('Layer');
+        this.event = _index.event.Machine('Layer');
         this.data = null;
         this._dom = null;
         this._props = {
             transformation: {
-                origin: new _fw.vec(),
-                translate: new _fw.vec(),
-                scale: new _fw.vec().fill(1),
+                origin: new _index.vec(),
+                translate: new _index.vec(),
+                scale: new _index.vec().fill(1),
                 rotate: 0,
-                matrix3d: new _fw.matrix()
+                matrix3d: new _index.matrix()
             },
             pop: {},
             templateUpdater: null,
             transformationTouchEventLink: null
         };
         // if no options at all
-        if (!_fw.val.exists(options)) {
-            this.dom = _fw.dom.create('.default');
-            this.parent = _fw.Screen;
+        if (!_index.val.exists(options)) {
+            this.dom = _index.dom.create('.default');
+            this.parent = _index.Screen;
             // if options are an tulpet
-        } else if (_fw.val.isObj(options)) {
+        } else if (_index.val.isObj(options)) {
             // apply dom element
             if ('dom' in options) {
                 this.dom = options.dom;
                 delete options.dom;
                 // if no dom, create just div with .layer
-            } else this.dom = _fw.dom.create('.default');
+            } else this.dom = _index.dom.create('.default');
             // parent
             if ('parent' in options) {
                 if (options.parent === null) delete options.parent;
-            } else this.parent = _fw.Screen;
+            } else this.parent = _index.Screen;
             // set other options
             this.set(options);
             // if options is a single parameter
-        } else if (_fw.val.isDom(options) || _fw.val.isStr(options)) {
+        } else if (_index.val.isDom(options) || _index.val.isStr(options)) {
             this.dom = options;
             // add if not added
-            if (_fw.val.isDom(options) && !options.parentNode) this.parent = _fw.Screen;
+            if (_index.val.isDom(options) && !options.parentNode) this.parent = _index.Screen;
         }
     }
 
@@ -324,11 +322,11 @@ var Layer = function () {
         key: 'on',
         value: function on(topic, fn, options) {
             // gestures
-            if (topic in _fw.gesture) return _fw.gesture[topic](this, fn).on();
+            if (topic in _index.gesture) return _index.gesture[topic](this, fn).on();
             // dom events
-            else if (_fw.event.support(this.dom, topic)) return _fw.event.listener(this.dom, topic, fn, options).on();
+            else if (_index.event.support(this.dom, topic)) return _index.event.listener(this.dom, topic, fn, options).on();
                 // custom events
-                else if (topic in _fw.event) return _fw.event[topic](this, fn).on();
+                else if (topic in _index.event) return _index.event[topic](this, fn).on();
                     // dom css
                     else return this.event.on(topic, fn);
         }
@@ -342,7 +340,7 @@ var Layer = function () {
                 var value = options[key];
                 // use methods
                 if (key in this) {
-                    if (_fw.val.isFn(this[key])) this[key](value);else this[key] = value;
+                    if (_index.val.isFn(this[key])) this[key](value);else this[key] = value;
                     // set attributes
                 } else if (key in this.dom) this._setAttribute(key, value);
                 // set css parameters
@@ -357,9 +355,9 @@ var Layer = function () {
 
             var set = function set(key, value) {
                 _this.event.emit(key, value);
-                if (_fw.val.exists(value)) _this.dom.setAttribute(key, value);else _this.dom.removeAttribute(key);
+                if (_index.val.exists(value)) _this.dom.setAttribute(key, value);else _this.dom.removeAttribute(key);
             };
-            if (_fw.val.isStr(option)) set(option, value);else if (_fw.val.isObj(option)) for (var key in option) {
+            if (_index.val.isStr(option)) set(option, value);else if (_index.val.isObj(option)) for (var key in option) {
                 set(key, option[key]);
             }
         }
@@ -372,14 +370,14 @@ var Layer = function () {
                 _this2.event.emit(key, value);
                 _this2.dom.style[key] = value;
             };
-            if (_fw.val.isStr(options)) set(options, value);else if (_fw.val.isObj(options)) for (var key in options) {
+            if (_index.val.isStr(options)) set(options, value);else if (_index.val.isObj(options)) for (var key in options) {
                 set(key, options[key]);
             }
         }
     }, {
         key: '_getCss',
         value: function _getCss(key) {
-            return _fw.css.computed(this.dom, key);
+            return _index.css.computed(this.dom, key);
         }
     }, {
         key: 'bind',
@@ -447,14 +445,14 @@ var Layer = function () {
             this.event.emit('pop', this._props.pop);
             this._props.pop = {
                 parent: this.dom.parentNode,
-                pos: new _fw.vec(this.dom.style.left, this.dom.style.top),
-                size: new _fw.vec(this.dom.style.width, this.dom.style.height),
-                offset: _fw.geo.vpo(this.dom)
+                pos: new _index.vec(this.dom.style.left, this.dom.style.top),
+                size: new _index.vec(this.dom.style.width, this.dom.style.height),
+                offset: _index.geo.vpo(this.dom)
             };
             this.set({
                 position: 'fixed',
-                pos: new _fw.vec(),
-                size: new _fw.vec(this.dom.offsetWidth + .5, this.dom.offsetHeight + .5).unit('px'),
+                pos: new _index.vec(),
+                size: new _index.vec(this.dom.offsetWidth + .5, this.dom.offsetHeight + .5).unit('px'),
                 translate: this._props.pop.offset.position.unit('px')
             });
             document.body.appendChild(this.dom);
@@ -469,8 +467,8 @@ var Layer = function () {
                 position: null,
                 pos: this._props.pop.pos,
                 size: this._props.pop.size,
-                translate: new _fw.vec(),
-                scale: new _fw.vec(1, 1, 1),
+                translate: new _index.vec(),
+                scale: new _index.vec(1, 1, 1),
                 origin: { x: 'center', y: 'center' }
             });
             this._props.pop = null;
@@ -480,7 +478,7 @@ var Layer = function () {
         key: 'animate',
         value: function animate(options, next, end) {
             this.event.emit('animate', options);
-            _fw.animation.flow(this, options.time || .5, options.ease || 'ease-in-out', options.delay || 0, next, end);
+            _index.animation.flow(this, options.time || .5, options.ease || 'ease-in-out', options.delay || 0, next, end);
             return this;
         }
     }, {
@@ -495,9 +493,9 @@ var Layer = function () {
     }, {
         key: 'collision',
         value: function collision(layer) {
-            var a = _fw.geo.vpo(this.dom);
-            var b = _fw.geo.vpo(layer.dom);
-            return _fw.geo.boxCollision(_fw.geo.vecdim(a.position, a.size), _fw.geo.vecdim(b.position, b.size));
+            var a = _index.geo.vpo(this.dom);
+            var b = _index.geo.vpo(layer.dom);
+            return _index.geo.boxCollision(_index.geo.vecdim(a.position, a.size), _index.geo.vecdim(b.position, b.size));
         }
 
         // dom structure
@@ -526,7 +524,7 @@ var Layer = function () {
             var append = function append(el) {
                 _this4.dom.appendChild(el instanceof Layer ? el.dom : el);
             };
-            if (_fw.val.isArr(value)) value.forEach(function (item) {
+            if (_index.val.isArr(value)) value.forEach(function (item) {
                 return append(item);
             });else append(value);
         }
@@ -534,7 +532,7 @@ var Layer = function () {
         key: 'prepend',
         value: function prepend(value) {
             this.event.emit('prepend', value);
-            _fw.dom.prepend(this.dom, value instanceof Layer ? value.dom : value);
+            _index.dom.prepend(this.dom, value instanceof Layer ? value.dom : value);
         }
     }, {
         key: 'detach',
@@ -562,7 +560,7 @@ var Layer = function () {
             var _this5 = this;
 
             this.event.emit('addClass', value);
-            if (_fw.val.isArr(value)) value.forEach(function (item) {
+            if (_index.val.isArr(value)) value.forEach(function (item) {
                 return _this5.dom.classList.add(item);
             });else this.dom.classList.add(value);
         }
@@ -572,7 +570,7 @@ var Layer = function () {
             var _this6 = this;
 
             this.event.emit('deleteClass', value);
-            if (_fw.val.isArr(value)) value.forEach(function (item) {
+            if (_index.val.isArr(value)) value.forEach(function (item) {
                 return _this6.dom.classList.remove(item);
             });else this.dom.classList.remove(value);
         }
@@ -587,12 +585,12 @@ var Layer = function () {
     }, {
         key: 'bg',
         value: function bg(value) {
-            if (_fw.val.isStr(value)) this._setCss('background', value);else if (_fw.val.isObj(value)) {
+            if (_index.val.isStr(value)) this._setCss('background', value);else if (_index.val.isObj(value)) {
                 var params = {};
                 if ('image' in value) params.backgroundImage = 'url(' + value.image + ')';
-                if ('origin' in value) params.backgroundOrigin = _fw.val.isObj(value.origin) ? value.origin.x + ' ' + value.origin.y : value.origin;
-                if ('position' in value) params.backgroundPosition = _fw.val.isObj(value.position) ? value.position.x + ' ' + value.position.y : value.position;
-                if ('size' in value) params.backgroundSize = _fw.val.isObj(value.size) ? value.size.x + ' ' + value.size.y : value.size;
+                if ('origin' in value) params.backgroundOrigin = _index.val.isObj(value.origin) ? value.origin.x + ' ' + value.origin.y : value.origin;
+                if ('position' in value) params.backgroundPosition = _index.val.isObj(value.position) ? value.position.x + ' ' + value.position.y : value.position;
+                if ('size' in value) params.backgroundSize = _index.val.isObj(value.size) ? value.size.x + ' ' + value.size.y : value.size;
                 if ('repeat' in value) params.backgroundRepeat = value.repeat == 'x' ? 'repeat-x' : value.repeat == 'y' ? 'repeat-y' : value.repeat == 'no' ? 'no-repeat' : value.repeat == 'yes' ? 'repeat' : value.repeat;
                 if ('color' in value) params.backgroundColor = value.color;
                 this._setCss(params);
@@ -601,7 +599,7 @@ var Layer = function () {
     }, {
         key: 'text',
         value: function text(value) {
-            if (_fw.val.isStr(value)) this._setCss('font', value);else if (_fw.val.isObj(value)) {
+            if (_index.val.isStr(value)) this._setCss('font', value);else if (_index.val.isObj(value)) {
                 var props = {
                     style: 'fontStyle',
                     variant: 'fontVariant',
@@ -624,7 +622,7 @@ var Layer = function () {
         value: function border(value) {
             var _this7 = this;
 
-            if (_fw.val.isStr(value)) this._setCss('border', value);else if (_fw.val.isObj(value)) {
+            if (_index.val.isStr(value)) this._setCss('border', value);else if (_index.val.isObj(value)) {
                 var set = function set(value, side) {
                     var props = {
                         color: 'Color',
@@ -660,13 +658,13 @@ var Layer = function () {
         set: function set(value) {
             var old = this.dom && this.dom.parentNode ? this.dom : null;
             // if dom
-            if (_fw.val.isDom(value)) this._dom = value;
+            if (_index.val.isDom(value)) this._dom = value;
             // string a string
-            else if (_fw.val.isStr(value))
+            else if (_index.val.isStr(value))
                     // template
-                    if (value.match(/<.*>.*<\/.*>/)) this._dom = _fw.dom.fromString(value);
+                    if (value.match(/<.*>.*<\/.*>/)) this._dom = _index.dom.fromString(value);
                     // create new element
-                    else this._dom = _fw.dom.create(value);
+                    else this._dom = _index.dom.create(value);
             // link dom with layer
             this._dom.layer = this;
             this.addClass('layer');
@@ -694,7 +692,7 @@ var Layer = function () {
                 _this8.event.emit('content', string);
                 _this8.dom.innerHTML = string;
             };
-            if (_fw.val.isObj(value)) this._props.templateUpdater = _fw.dom.template(value.bind, value.html, set);else {
+            if (_index.val.isObj(value)) this._props.templateUpdater = _index.dom.template(value.bind, value.html, set);else {
                 set(value);
                 if (this._props.templateUpdater) this._props.templateUpdater.off();
             }
@@ -709,7 +707,7 @@ var Layer = function () {
             if ('y' in value) this._setCss('top', value.y);
         },
         get: function get() {
-            return new _fw.vec(this.dom.offsetLeft, this.dom.offsetTop);
+            return new _index.vec(this.dom.offsetLeft, this.dom.offsetTop);
         }
     }, {
         key: 'size',
@@ -718,12 +716,12 @@ var Layer = function () {
             if ('y' in value) this._setCss('height', value.y);
         },
         get: function get() {
-            return new _fw.vec(this.dom.offsetWidth, this.dom.offsetHeight);
+            return new _index.vec(this.dom.offsetWidth, this.dom.offsetHeight);
         }
     }, {
         key: 'padding',
         set: function set(value) {
-            if (_fw.val.isObj(value)) {
+            if (_index.val.isObj(value)) {
                 if ('x' in value && 'y' in value) {
                     this._setCss('padding', value.y + ' ' + value.x);
                 } else {
@@ -740,16 +738,16 @@ var Layer = function () {
         },
         get: function get() {
             return {
-                l: _fw.css.computed(this.dom, 'padding-left'),
-                t: _fw.css.computed(this.dom, 'padding-top'),
-                r: _fw.css.computed(this.dom, 'padding-right'),
-                b: _fw.css.computed(this.dom, 'padding-bottom')
+                l: _index.css.computed(this.dom, 'padding-left'),
+                t: _index.css.computed(this.dom, 'padding-top'),
+                r: _index.css.computed(this.dom, 'padding-right'),
+                b: _index.css.computed(this.dom, 'padding-bottom')
             };
         }
     }, {
         key: 'margin',
         set: function set(value) {
-            if (_fw.val.isObj(value)) {
+            if (_index.val.isObj(value)) {
                 if ('x' in value && 'y' in value) {
                     this._setCss('margin', value.y + ' ' + value.x);
                 } else {
@@ -766,10 +764,10 @@ var Layer = function () {
         },
         get: function get() {
             return {
-                l: _fw.css.computed(this.dom, 'margin-left'),
-                t: _fw.css.computed(this.dom, 'margin-top'),
-                r: _fw.css.computed(this.dom, 'margin-right'),
-                b: _fw.css.computed(this.dom, 'margin-bottom')
+                l: _index.css.computed(this.dom, 'margin-left'),
+                t: _index.css.computed(this.dom, 'margin-top'),
+                r: _index.css.computed(this.dom, 'margin-right'),
+                b: _index.css.computed(this.dom, 'margin-bottom')
             };
         }
     }, {
@@ -781,7 +779,7 @@ var Layer = function () {
             ['x', 'y'].forEach(function (axis) {
                 if (axis in value) _this9._props.transformation.origin[axis] = value[axis];
             });
-            _fw.css.applyTransformation(this.dom, this._props.transformation, 'origin');
+            _index.css.applyTransformation(this.dom, this._props.transformation, 'origin');
         },
         get: function get() {
             return this._props.transformation.origin;
@@ -795,7 +793,7 @@ var Layer = function () {
             ['x', 'y'].forEach(function (axis) {
                 if (axis in value) _this10._props.transformation.translate[axis] = value[axis];
             });
-            _fw.css.applyTransformation(this.dom, this._props.transformation);
+            _index.css.applyTransformation(this.dom, this._props.transformation);
         },
         get: function get() {
             return this._props.transformation.translate;
@@ -806,12 +804,12 @@ var Layer = function () {
             var _this11 = this;
 
             this.event.emit('scale', value);
-            if (_fw.val.isNum(value)) {
+            if (_index.val.isNum(value)) {
                 this._props.transformation.scale.x = this._props.transformation.scale.y = this._props.transformation.scale.z = value;
             } else ['x', 'y'].forEach(function (axis) {
                 if (axis in value) _this11._props.transformation.scale[axis] = value[axis];
             });
-            _fw.css.applyTransformation(this.dom, this._props.transformation);
+            _index.css.applyTransformation(this.dom, this._props.transformation);
         },
         get: function get() {
             return this._props.transformation.scale;
@@ -820,8 +818,8 @@ var Layer = function () {
         key: 'rotate',
         set: function set(value) {
             this.event.emit('rotate', value);
-            this._props.transformation.rotate = '' + value + (_fw.val.isNum(value) ? 'deg' : '');
-            _fw.css.applyTransformation(this.dom, this._props.transformation);
+            this._props.transformation.rotate = '' + value + (_index.val.isNum(value) ? 'deg' : '');
+            _index.css.applyTransformation(this.dom, this._props.transformation);
         },
         get: function get() {
             return this._props.transformation.rotate;
@@ -831,7 +829,7 @@ var Layer = function () {
         set: function set(matrix) {
             this.event.emit('matrix', matrix.value);
             this._props.transformation.matrix3d = matrix;
-            _fw.css.applyTransformation(this.dom, this._props.transformation);
+            _index.css.applyTransformation(this.dom, this._props.transformation);
         },
         get: function get() {
             return this._props.transformation.matrix3d;
@@ -842,17 +840,17 @@ var Layer = function () {
     }, {
         key: 'center',
         set: function set(value) {
-            if (_fw.val.exists(value.x)) {
+            if (_index.val.exists(value.x)) {
                 this._setCss('left', value.x - this.rect.position.x + 'px');
                 this.translate = { x: '-50%' };
             }
-            if (_fw.val.exists(value.y)) {
+            if (_index.val.exists(value.y)) {
                 this._setCss('top', value.y - this.rect.position.y + 'px');
                 this.translate = { y: '-50%' };
             }
         },
         get: function get() {
-            return _fw.geo.center(this.rect);
+            return _index.geo.center(this.rect);
         }
 
         // offset
@@ -860,7 +858,7 @@ var Layer = function () {
     }, {
         key: 'rect',
         get: function get() {
-            return _fw.geo.vpo(this.dom);
+            return _index.geo.vpo(this.dom);
         }
     }]);
 
@@ -882,7 +880,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _fw = __webpack_require__(0);
+var _index = __webpack_require__(0);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -906,16 +904,16 @@ var Screen = function (_Layer) {
         // external event interface
         value: function on(topic, fn, options) {
             // gestures
-            if (topic in _fw.event) return _fw.gesture[topic](this, fn).on();
+            if (topic in _index.event) return _index.gesture[topic](this, fn).on();
             // dom events
-            else if (_fw.event.support(document, topic)) return _fw.event.listener(document, topic, fn, options).on();
+            else if (_index.event.support(document, topic)) return _index.event.listener(document, topic, fn, options).on();
                 // dom css
                 else return this.event.on(topic, fn);
         }
     }, {
         key: 'size',
         get: function get() {
-            return new _fw.vec(window.innerWidth, window.innerHeight);
+            return new _index.vec(window.innerWidth, window.innerHeight);
         }
     }, {
         key: 'center',
@@ -925,7 +923,7 @@ var Screen = function (_Layer) {
     }]);
 
     return Screen;
-}(_fw.Layer);
+}(_index.Layer);
 
 exports.default = new Screen(document.body);
 
@@ -942,7 +940,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _fw = __webpack_require__(0);
+var _index = __webpack_require__(0);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -969,7 +967,7 @@ var Scroller = function (_Layer) {
     }]);
 
     return Scroller;
-}(_fw.Layer);
+}(_index.Layer);
 
 exports.default = Scroller;
 
@@ -984,7 +982,7 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _fw = __webpack_require__(0);
+var _index = __webpack_require__(0);
 
 exports.default = {
 
@@ -1026,16 +1024,16 @@ exports.default = {
 		// will be deprecated
 		var bang = function bang() {
 			layer.dom.removeEventListener('transitionend', bang);
-			layer.dom.style[_fw.css.vendor.transition] = null;
+			layer.dom.style[_index.css.vendor.transition] = null;
 			if (end) {
-				if (_fw.val.isFn(end)) end();else if (_fw.val.isObj(end)) layer.set(end);
+				if (_index.val.isFn(end)) end();else if (_index.val.isObj(end)) layer.set(end);
 				end = null;
 			}
 		};
 		layer.dom.addEventListener('transitionend', bang);
-		layer.dom.style[_fw.css.vendor.transition] = time + 's ' + ease + ' ' + delay + 's';
+		layer.dom.style[_index.css.vendor.transition] = time + 's ' + ease + ' ' + delay + 's';
 		setTimeout(function () {
-			if (_fw.val.isFn(next)) next();else if (_fw.val.isObj(next)) layer.set(next);
+			if (_index.val.isFn(next)) next();else if (_index.val.isObj(next)) layer.set(next);
 		}, 0);
 	},
 
@@ -1066,7 +1064,7 @@ exports.default = {
 	getSinus: function getSinus(from, to, speed) {
 		var time = new Date().getTime() * 0.001;
 		var sin = Math.sin(time * (speed || 1));
-		return _fw.math.map(sin, -1, 1, from, to);
+		return _index.math.map(sin, -1, 1, from, to);
 	},
 
 
@@ -1086,7 +1084,7 @@ exports.default = {
 		var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
 		var id = window.performance.now();
-		var e = new _fw.event.Machine('Decay', false);
+		var e = new _index.event.Machine('Decay', false);
 		var job, _stop;
 		var types = {
 			vec: {
@@ -1094,7 +1092,7 @@ exports.default = {
 					return a.add(b.sub(a).scale(c), 1);
 				},
 				isEqual: function isEqual(a, b, c) {
-					return _fw.math.isEqual(b.sub(a).len(), 0);
+					return _index.math.isEqual(b.sub(a).len(), 0);
 				}
 			},
 			num: {
@@ -1102,16 +1100,16 @@ exports.default = {
 					return a += (b - a) * c;
 				},
 				isEqual: function isEqual(a, b, c) {
-					return _fw.math.isEqual(a, set);
+					return _index.math.isEqual(a, set);
 				}
 			}
 		};
 		var out = {
 			to: function to(value) {
-				if (!_fw.val.exists(job)) {
+				if (!_index.val.exists(job)) {
 					job = {
 						value: value,
-						type: types[value instanceof _fw.vec ? 'vec' : 'num']
+						type: types[value instanceof _index.vec ? 'vec' : 'num']
 					};
 					_stop = false;
 					e.emit('start');
@@ -1160,7 +1158,7 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _fw = __webpack_require__(0);
+var _index = __webpack_require__(0);
 
 exports.default = {
 
@@ -1211,7 +1209,7 @@ exports.default = {
     // var deleted = del(workspaces, {'title.color': color});
     delete: function _delete(array, query) {
         var deleted;
-        if (_fw.val.isObj(query)) {
+        if (_index.val.isObj(query)) {
             deleted = this.find(array, query);
             deleted.forEach(function (found) {
                 return array.splice(array.indexOf(found), 1);
@@ -1309,7 +1307,7 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _fw = __webpack_require__(0);
+var _index = __webpack_require__(0);
 
 exports.default = {
     applyTransformation: function applyTransformation(element, p, type) {
@@ -1325,13 +1323,13 @@ exports.default = {
 
     vendor: function (props) {
         var out = {};
-        if (!_fw.val.exists(document)) return out;
+        if (!_index.val.exists(document)) return out;
         var prefix = [null, 'ms', 'webkit', 'moz', 'o'];
         var div = document.createElement('div');
         props.forEach(function (prop) {
             for (var i = 0; i < prefix.length; i++) {
-                var p = prefix[i] + prefix[i] ? _fw.text.capitalize(prop) : prop;
-                if (_fw.val.exists(div.style[p])) {
+                var p = prefix[i] + prefix[i] ? _index.text.capitalize(prop) : prop;
+                if (_index.val.exists(div.style[p])) {
                     out[prop] = p;break;
                 }
             }
@@ -1352,7 +1350,7 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _fw = __webpack_require__(0);
+var _index = __webpack_require__(0);
 
 exports.default = {
 
@@ -1446,7 +1444,7 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _fw = __webpack_require__(0);
+var _index = __webpack_require__(0);
 
 exports.default = {
 	clone: function clone(object, methods) {
@@ -1488,7 +1486,7 @@ exports.default = {
 			};
 			image.src = url;
 		};
-		if (_fw.val.isArr(list)) list.forEach(function (url, i) {
+		if (_index.val.isArr(list)) list.forEach(function (url, i) {
 			compressor(url, function (scaled) {
 				list[i] = scaled;
 				if (i == list.length - 1) onload(urls);
@@ -1583,7 +1581,7 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _fw = __webpack_require__(0);
+var _index = __webpack_require__(0);
 
 exports.default = {
     Machine: function Machine() {
@@ -1596,7 +1594,7 @@ exports.default = {
                     topic: topic,
                     timestamp: new Date().getTime()
                 };
-                if (_fw.val.exists(payload)) Object.assign(obj, { payload: payload });
+                if (_index.val.exists(payload)) Object.assign(obj, { payload: payload });
                 console.log('[' + namespace + '] ' + msg, obj);
             }
         };
@@ -1619,7 +1617,7 @@ exports.default = {
                     off: function off() {
                         if (this.active) {
                             log('unsubscribed from', topic);
-                            _fw.array.delete(topics[topic], callback);
+                            _index.array.delete(topics[topic], callback);
                         }
                         return this;
                     }
@@ -1677,7 +1675,7 @@ exports.default = {
 
 
     types: function () {
-        if (_fw.val.exists(window)) {
+        if (_index.val.exists(window)) {
             var isTouch = 'ontouchstart' in window; // window.PointerEvent
             return {
                 isTouch: isTouch,
@@ -1773,7 +1771,7 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _fw = __webpack_require__(0);
+var _index = __webpack_require__(0);
 
 exports.default = {
 
@@ -1781,26 +1779,26 @@ exports.default = {
 	vpo: function vpo(dom) {
 		var rect = dom.getBoundingClientRect();
 		return {
-			position: new _fw.vec(rect.left, rect.top),
-			opposite: new _fw.vec(rect.right, rect.bottom),
-			size: new _fw.vec(rect.width, rect.height)
+			position: new _index.vec(rect.left, rect.top),
+			opposite: new _index.vec(rect.right, rect.bottom),
+			size: new _index.vec(rect.width, rect.height)
 		};
 	},
 	vp: function vp() {
-		return new _fw.vec(document.documentElement.clientWidth, document.documentElement.clientHeight);
+		return new _index.vec(document.documentElement.clientWidth, document.documentElement.clientHeight);
 	},
 	center: function center(params) {
 		// for regular vector system
-		if (_fw.val.isVec(params)) return params.position.add(params.size.scale(.5));
+		if (_index.val.isVec(params)) return params.position.add(params.size.scale(.5));
 		// for dimension system
-		else if (_fw.val.isDim(params)) {
+		else if (_index.val.isDim(params)) {
 				var rect = this.dimvec(params);
 				return rect.position.add(rect.size.scale(.5));
 			}
 	},
 	dimvec: function dimvec(dims) {
-		var size = dims.w ? new _fw.vec(dims.w, dims.h) : dims.r ? new _fw.vec(dims.r - dims.l, dims.b - dims.t) : null;
-		return { size: size, position: new _fw.vec(dims.l, dims.t) };
+		var size = dims.w ? new _index.vec(dims.w, dims.h) : dims.r ? new _index.vec(dims.r - dims.l, dims.b - dims.t) : null;
+		return { size: size, position: new _index.vec(dims.l, dims.t) };
 	},
 	vecdim: function vecdim(position, size) {
 		var box = {
@@ -1847,7 +1845,7 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _fw = __webpack_require__(0);
+var _index = __webpack_require__(0);
 
 var animationPreset = {
     time: .3,
@@ -1935,22 +1933,22 @@ exports.default = {
     drag: function drag(layer) {
         var transport = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-        var translate = new _fw.vec();
-        var method = _fw.event.types.isTouch ? '_initMultitouchGesture' : '_dragMouse';
-        return this[method](layer, _fw.etc.clone(transport, {
+        var translate = new _index.vec();
+        var method = _index.event.types.isTouch ? '_initMultitouchGesture' : '_dragMouse';
+        return this[method](layer, _index.etc.clone(transport, {
             move: function move(t) {
                 if (transport.move && transport.move(t) !== false || !transport.move) {
                     translate = t.translate;
                     if (t.constraints) translate.range(t.constraints, true);
-                    _fw.animation.draw(layer.identifier + ': translate.move', function () {
-                        return layer.matrix = new _fw.matrix().translate(translate);
+                    _index.animation.draw(layer.identifier + ': translate.move', function () {
+                        return layer.matrix = new _index.matrix().translate(translate);
                     });
                 }
             },
             cancel: function cancel(t) {
                 t.translate = translate;
-                if (transport.cancel && transport.cancel(t) !== false || !transport.cancel) _fw.animation.draw(layer.identifier + ': translate.cancel', function () {
-                    return layer.animate(animationPreset, { matrix: new _fw.matrix() });
+                if (transport.cancel && transport.cancel(t) !== false || !transport.cancel) _index.animation.draw(layer.identifier + ': translate.cancel', function () {
+                    return layer.animate(animationPreset, { matrix: new _index.matrix() });
                 });
             }
         }), 'translate');
@@ -1958,14 +1956,14 @@ exports.default = {
     pinchToRotate: function pinchToRotate(layer) {
         var transport = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-        return this._initMultitouchGesture(layer, _fw.etc.clone(transport, {
+        return this._initMultitouchGesture(layer, _index.etc.clone(transport, {
             move: function move(t) {
-                if (transport.move && transport.move(t) !== false || !transport.move) _fw.animation.draw(layer.identifier + ': rotate.move', function () {
+                if (transport.move && transport.move(t) !== false || !transport.move) _index.animation.draw(layer.identifier + ': rotate.move', function () {
                     return layer.rotate = t.rotate;
                 });
             },
             cancel: function cancel(t) {
-                if (transport.cancel && transport.cancel(t) !== false || !transport.cancel) _fw.animation.draw(layer.identifier + ': rotate.cancel', function () {
+                if (transport.cancel && transport.cancel(t) !== false || !transport.cancel) _index.animation.draw(layer.identifier + ': rotate.cancel', function () {
                     return layer.animate(animationPreset, { rotate: 0 });
                 });
             }
@@ -1974,14 +1972,14 @@ exports.default = {
     pinchToZoom: function pinchToZoom(layer) {
         var transport = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-        return this._initMultitouchGesture(layer, _fw.etc.clone(transport, {
+        return this._initMultitouchGesture(layer, _index.etc.clone(transport, {
             move: function move(t) {
-                if (transport.move && transport.move(t) !== false || !transport.move) _fw.animation.draw(layer.identifier + ': scale.move', function () {
+                if (transport.move && transport.move(t) !== false || !transport.move) _index.animation.draw(layer.identifier + ': scale.move', function () {
                     layer.scale = t.scale;
                 });
             },
             cancel: function cancel(t) {
-                if (transport.cancel && transport.cancel(t) !== false || !transport.cancel) _fw.animation.draw(layer.identifier + ': scale.cancel', function () {
+                if (transport.cancel && transport.cancel(t) !== false || !transport.cancel) _index.animation.draw(layer.identifier + ': scale.cancel', function () {
                     layer.animate(animationPreset, {
                         scale: 1
                     });
@@ -1998,9 +1996,9 @@ exports.default = {
     */
 
     _dragMouse: function _dragMouse(layer, transport) {
-        var _down = new _fw.vec();
-        var velocity = new _fw.vec();
-        return this._dragMouseEventPattern(layer, _fw.etc.clone(transport, {
+        var _down = new _index.vec();
+        var velocity = new _index.vec();
+        return this._dragMouseEventPattern(layer, _index.etc.clone(transport, {
             down: function down(t) {
                 velocity;
                 _down = velocity = t.pointer;
@@ -2028,7 +2026,7 @@ exports.default = {
     _initMultitouchGesture: function _initMultitouchGesture(layer, transport, type) {
         var address = 'transformationTouchEventLink';
         if (!layer._props[address]) {
-            var listener = new _fw.event.Machine('transformationTouchEventLink');
+            var listener = new _index.event.Machine('transformationTouchEventLink');
             var transport_ = { constraints: {} };['init', 'down', 'move', 'up', 'cancel'].forEach(function (key) {
                 return transport_[key] = function (t) {
                     return listener.emit(key, t);
@@ -2087,11 +2085,11 @@ exports.default = {
     _multitouch: function _multitouch(layer, transport) {
         // some shared values
         var touches = {};
-        var scale_rotate = new _fw.matrix();
-        var lastState = new _fw.matrix();
-        var origin = new _fw.vec();
-        var center = new _fw.vec();
-        var translate = new _fw.vec();
+        var scale_rotate = new _index.matrix();
+        var lastState = new _index.matrix();
+        var origin = new _index.vec();
+        var center = new _index.vec();
+        var translate = new _index.vec();
         // export control interface for gesture events
         return this._dragTouchEventPattern(layer, {
             init: function init(t) {
@@ -2104,7 +2102,7 @@ exports.default = {
                 transport.down && transport.down(t);
                 // calculate average vector aka origin and
                 // bring this origin on rotated and scaled object back
-                origin = _fw.vec.prototype.mix(t.pointers).sub(center).sub(translate);
+                origin = _index.vec.prototype.mix(t.pointers).sub(center).sub(translate);
             },
             move: function move(t) {
                 // define max and min movement for rotation and scale
@@ -2113,16 +2111,16 @@ exports.default = {
                 var rConst = transport.constraints.rotate;
                 if (rConst) {
                     var last = lastState.getRotation().z;
-                    rotate = _fw.math.rubberRange(rotate + last, rConst.min, rConst.max, rConst.length || 10, rConst.onLimit) - last;
+                    rotate = _index.math.rubberRange(rotate + last, rConst.min, rConst.max, rConst.length || 10, rConst.onLimit) - last;
                 }
                 var scale = t.event.scale;
                 var sConst = transport.constraints.scale;
                 if (sConst) {
                     var last = lastState.getScale().z;
-                    scale = _fw.math.rubberRange(scale + last, sConst.min + 1, sConst.max + 1, sConst.length || .2, sConst.onLimit) - last;
+                    scale = _index.math.rubberRange(scale + last, sConst.min + 1, sConst.max + 1, sConst.length || .2, sConst.onLimit) - last;
                 }
                 // calculate drag difference
-                var velocity = new _fw.vec();
+                var velocity = new _index.vec();
                 for (var id in t.pointers) {
                     // if a touch is not initialized, 
                     // save its vector to the list
@@ -2133,12 +2131,12 @@ exports.default = {
                     touches[id] = t.pointers[id];
                 }
                 // calculate average difference between every dragged touch
-                velocity.div(new _fw.vec().fill(t.event.targetTouches.length), true);
+                velocity.div(new _index.vec().fill(t.event.targetTouches.length), true);
                 // apply difference to persistent translation vector
                 translate.add(velocity, true);
                 // modify scale and rotation matrix
-                var drag = new _fw.matrix();
-                var pinch = new _fw.matrix().translate(origin.scale(-1));
+                var drag = new _index.matrix();
+                var pinch = new _index.matrix().translate(origin.scale(-1));
                 if (transport.translate) drag.translate(translate, true);
                 if (transport.rotate) pinch.rotate(rotate, true);
                 if (transport.scale) pinch.scale(scale, true);
@@ -2175,28 +2173,28 @@ exports.default = {
     */
 
     _dragMouseEventPattern: function _dragMouseEventPattern(layer, transport) {
-        var down = _fw.event.listener(layer.dom, 'mousedown', function (e) {
+        var down = _index.event.listener(layer.dom, 'mousedown', function (e) {
             if (!move.active) {
                 move.on();
                 up.on();
             }
             transport.down && transport.down({
                 event: e,
-                pointer: new _fw.vec(e.clientX, e.clientY)
+                pointer: new _index.vec(e.clientX, e.clientY)
             });
             e.preventDefault();
         });
-        var move = _fw.event.listener(document, 'mousemove', function (e) {
+        var move = _index.event.listener(document, 'mousemove', function (e) {
             transport.move && transport.move({
                 event: e,
-                pointer: new _fw.vec(e.clientX, e.clientY)
+                pointer: new _index.vec(e.clientX, e.clientY)
             });
             e.preventDefault();
         });
-        var up = _fw.event.listener(document, 'mouseup', function (e) {
+        var up = _index.event.listener(document, 'mouseup', function (e) {
             var t = {
                 event: e,
-                pointer: new _fw.vec(e.clientX, e.clientY)
+                pointer: new _index.vec(e.clientX, e.clientY)
             };
             transport.up && transport.up(t);
             cancel(t);
@@ -2230,10 +2228,10 @@ exports.default = {
         var convertTouches = function convertTouches(fingers) {
             var out = {};
             for (var i = 0; i < fingers.length; i++) {
-                out[fingers[i].identifier] = new _fw.vec(fingers[i].clientX, fingers[i].clientY);
+                out[fingers[i].identifier] = new _index.vec(fingers[i].clientX, fingers[i].clientY);
             }return out;
         };
-        var down = _fw.event.listener(layer.dom, 'touchstart', function (e) {
+        var down = _index.event.listener(layer.dom, 'touchstart', function (e) {
             if (!move.active) {
                 move.on();
                 up.on();
@@ -2245,14 +2243,14 @@ exports.default = {
             });
             e.preventDefault();
         });
-        var move = _fw.event.listener(layer.dom, 'touchmove', function (e) {
+        var move = _index.event.listener(layer.dom, 'touchmove', function (e) {
             transport.move && transport.move({
                 event: e,
                 pointers: convertTouches(e.targetTouches)
             });
             e.preventDefault();
         });
-        var up = _fw.event.listener(layer.dom, 'touchend', function (e) {
+        var up = _index.event.listener(layer.dom, 'touchend', function (e) {
             var t = { event: e };
             transport.up && transport.up(t);
             if (e.targetTouches.length == 0) cancel(t);
@@ -2297,7 +2295,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _fw = __webpack_require__(0);
+var _index = __webpack_require__(0);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -2363,8 +2361,8 @@ exports.default = {
 		// https://www.desmos.com/calculator
 		// Based on 1-pow(1+x,-1)
 		var factor = 1.3;
-		var isMax = _fw.val.exists(min);
-		var isMin = _fw.val.exists(max);
+		var isMax = _index.val.exists(min);
+		var isMin = _index.val.exists(max);
 		if (isMax || isMin) {
 			var dir = value < min;
 			var range = (dir ? 1 : -1) * range;
@@ -2418,7 +2416,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _fw = __webpack_require__(0);
+var _index = __webpack_require__(0);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -2436,7 +2434,7 @@ var Matrix = function () {
     function Matrix(value) {
         _classCallCheck(this, Matrix);
 
-        this.value = !_fw.val.exists(value) ? init : _fw.val.isStr(value) ? this.fromString(value) : value;
+        this.value = !_index.val.exists(value) ? init : _index.val.isStr(value) ? this.fromString(value) : value;
     }
 
     _createClass(Matrix, [{
@@ -2485,12 +2483,12 @@ var Matrix = function () {
     }, {
         key: 'getTranslation',
         value: function getTranslation() {
-            return new _fw.vec(this.value[12], this.value[13], this.value[14]);
+            return new _index.vec(this.value[12], this.value[13], this.value[14]);
         }
     }, {
         key: 'scale',
         value: function scale(v, set) {
-            if (_fw.val.isNum(v)) return this.scale(new _fw.vec().fill(v), set);else {
+            if (_index.val.isNum(v)) return this.scale(new _index.vec().fill(v), set);else {
                 var x = v.x;
                 var y = v.y;
                 var z = v.z;
@@ -2501,7 +2499,7 @@ var Matrix = function () {
     }, {
         key: 'getScale',
         value: function getScale() {
-            return new _fw.vec(this.value[0], this.value[5], this.value[10]);
+            return new _index.vec(this.value[0], this.value[5], this.value[10]);
         }
     }, {
         key: 'rotateX',
@@ -2533,14 +2531,14 @@ var Matrix = function () {
     }, {
         key: 'rotate',
         value: function rotate(v, set) {
-            if (_fw.val.isNum(v)) return this.rotateZ(v, set);else {
+            if (_index.val.isNum(v)) return this.rotateZ(v, set);else {
                 return this.rotateX(v.x, set).rotateY(v.y, set).rotateZ(v.z, set);
             }
         }
     }, {
         key: 'getRotation',
         value: function getRotation() {
-            return new _fw.vec(Math.atan2(this.value[9], this.value[10]), Math.asin(-this.value[8]), Math.atan2(this.value[4], this.value[0])).apply(function (axis) {
+            return new _index.vec(Math.atan2(this.value[9], this.value[10]), Math.asin(-this.value[8]), Math.atan2(this.value[4], this.value[0])).apply(function (axis) {
                 return -axis.value * 180 / Math.PI;
             });
         }
@@ -2633,7 +2631,7 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _fw = __webpack_require__(0);
+var _index = __webpack_require__(0);
 
 var assets = {
     signs: ['', ',', '.', '?', '!'],
@@ -2652,7 +2650,7 @@ var expressions = {
     // {type: int, mode: random, min: 1, max: 10}
     int: function int(opt) {
         return { i: 0, method: 'int', mode: opt.mode, render: function render() {
-                return opt.mode == 'forward' || opt.mode == 'loop' ? opt.from + this.i++ : opt.mode == 'random' ? Math.floor(_fw.math.to(Math.random(), opt.min, opt.max)) : this.i;
+                return opt.mode == 'forward' || opt.mode == 'loop' ? opt.from + this.i++ : opt.mode == 'random' ? Math.floor(_index.math.to(Math.random(), opt.min, opt.max)) : this.i;
             }
         };
     },
@@ -2663,14 +2661,14 @@ var expressions = {
     string: function string(opt) {
         return {
             render: function render() {
-                var count = opt.count ? opt.count : Math.floor(_fw.math.to(Math.random(), opt.min, opt.max));
+                var count = opt.count ? opt.count : Math.floor(_index.math.to(Math.random(), opt.min, opt.max));
                 var capitalize = true;
                 var sentence = '';
                 for (var i = 0; i < count; i++) {
                     var randomWord = assets.words[Math.floor(Math.random() * assets.words.length)];
                     var signIndex = Math.floor(Math.pow(Math.random(), 20) * assets.signs.length);
-                    var sign = assets.signs[_fw.math.min(signIndex, i < count - 1 ? 0 : 2)] + ' ';
-                    var word = capitalize ? _fw.text.capitalize(randomWord) : randomWord;
+                    var sign = assets.signs[_index.math.min(signIndex, i < count - 1 ? 0 : 2)] + ' ';
+                    var word = capitalize ? _index.text.capitalize(randomWord) : randomWord;
                     sentence += word + sign;
                     capitalize = signIndex > 1;
                 }
@@ -2690,7 +2688,7 @@ var expressions = {
                 return 'file:///Library/Desktop%20Pictures/' + escape(assets.image.mac[i % assets.image.mac.length]) + '.jpg';
             }
         };
-        var seed = _fw.math.randInt(0, 1000);
+        var seed = _index.math.randInt(0, 1000);
         return { i: 0, render: function render() {
                 return source[opt.source || 'local'](seed + this.i++);
             }
@@ -2760,13 +2758,13 @@ exports.default = {
                 return deleted;
             },
             find: function find(query) {
-                return _fw.arr.find(model, query);
+                return _index.arr.find(model, query);
             },
             delete: function _delete(query) {
-                return _fw.arr.delete(model, query);
+                return _index.arr.delete(model, query);
             },
             filterMap: function filterMap(query) {
-                return _fw.arr.filterMap(model, query);
+                return _index.arr.filterMap(model, query);
             }
         };
         for (var key in methods) {
@@ -2808,7 +2806,7 @@ exports.default = {
             var property = this.render(opt.model);
             // make shuffle on model
             if ('shuffle' in opt) {
-                var index = _fw.math.randInt(0, opt.shuffle.length);
+                var index = _index.math.randInt(0, opt.shuffle.length);
                 Object.assign(property, this.render(opt.shuffle[index]));
             }
             // add rendered version of model to the output list
@@ -2821,7 +2819,7 @@ exports.default = {
         var out = {};
         for (var key in model) {
             // init expression
-            if (_fw.val.isStr(model[key]) && model[key].match(/{.*?}/)) model[key] = this._parseExpressions(model[key]);
+            if (_index.val.isStr(model[key]) && model[key].match(/{.*?}/)) model[key] = this._parseExpressions(model[key]);
             // render value if expression
             if (model[key].type == 'expression') out[key] = model[key].render();
             // transfer value
@@ -2870,14 +2868,14 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _fw = __webpack_require__(0);
+var _index = __webpack_require__(0);
 
 exports.default = {
     ellipsis: function ellipsis(dom, lineCount, symbol) {
         // set target height
         dom.style.height = this.getLineHeight(dom) * lineCount + 'px';
         var domRect = dom.getBoundingClientRect();
-        var multiColumn = _fw.css.computed(dom, 'column-count') > 1;
+        var multiColumn = _index.css.computed(dom, 'column-count') > 1;
         // check if iteration is necessary
         if (multiColumn && dom.scrollWidth > domRect.width + 1 || dom.scrollHeight > domRect.height + 1) {
             // init range selection
@@ -2886,7 +2884,7 @@ exports.default = {
             var range = document.createRange();
             range.setEnd(string, length);
             // search for position
-            _fw.math.binarySearch(length, function (i, end) {
+            _index.math.binarySearch(length, function (i, end) {
                 // make selection
                 range.setStart(string, end ? i - 3 : i);
                 // return check
@@ -2986,7 +2984,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _fw = __webpack_require__(0);
+var _index = __webpack_require__(0);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -3103,33 +3101,33 @@ var Vec = function () {
         key: 'unit',
         value: function unit(_unit) {
             var data = {};
-            if (_fw.val.exists(this.x)) data.x = this.x + _unit;
-            if (_fw.val.exists(this.y)) data.y = this.y + _unit;
-            if (_fw.val.exists(this.z)) data.z = this.z + _unit;
+            if (_index.val.exists(this.x)) data.x = this.x + _unit;
+            if (_index.val.exists(this.y)) data.y = this.y + _unit;
+            if (_index.val.exists(this.z)) data.z = this.z + _unit;
             return data;
         }
     }, {
         key: 'ununit',
         value: function ununit() {
-            if (_fw.val.exists(this.x)) this.x = parseFloat(this.x);
-            if (_fw.val.exists(this.y)) this.y = parseFloat(this.y);
-            if (_fw.val.exists(this.z)) this.z = parseFloat(this.z);
+            if (_index.val.exists(this.x)) this.x = parseFloat(this.x);
+            if (_index.val.exists(this.y)) this.y = parseFloat(this.y);
+            if (_index.val.exists(this.z)) this.z = parseFloat(this.z);
             return this;
         }
     }, {
         key: 'reset',
         value: function reset() {
-            if (_fw.val.exists(this.x)) this.x = 0;
-            if (_fw.val.exists(this.y)) this.y = 0;
-            if (_fw.val.exists(this.z)) this.z = 0;
+            if (_index.val.exists(this.x)) this.x = 0;
+            if (_index.val.exists(this.y)) this.y = 0;
+            if (_index.val.exists(this.z)) this.z = 0;
             return this;
         }
     }, {
         key: 'log',
         value: function log(name) {
             var data = { x: this.x };
-            if (_fw.val.exists(this.y)) data.y = this.y;
-            if (_fw.val.exists(this.z)) data.z = this.z;
+            if (_index.val.exists(this.y)) data.y = this.y;
+            if (_index.val.exists(this.z)) data.z = this.z;
             if (typeof name === 'undefined') console.log(data);else console.log(name, data);
         }
     }, {
@@ -3157,12 +3155,12 @@ var Vec = function () {
         value: function mix(list) {
             var sum = new Vec();
             var len = 1;
-            if (_fw.val.isArr(list)) {
+            if (_index.val.isArr(list)) {
                 len = list.length;
                 for (var i = 0; i < len; i++) {
                     sum.add(list[i], true);
                 }
-            } else if (_fw.val.isObj(list)) {
+            } else if (_index.val.isObj(list)) {
                 len = Object.keys(list).length;
                 for (var v in list) {
                     sum.add(list[v], true);
@@ -3173,9 +3171,9 @@ var Vec = function () {
     }, {
         key: 'range',
         value: function range(rect, set) {
-            var range = _fw.val.exists(rect.length) ? _fw.val.isNum(rect.length) ? { x: rect.length, y: rect.length } : rect.length : { x: 100, y: 100 };
+            var range = _index.val.exists(rect.length) ? _index.val.isNum(rect.length) ? { x: rect.length, y: rect.length } : rect.length : { x: 100, y: 100 };
             rect.onLimit = rect.onLimit || {};
-            var vec = new Vec(_fw.math.rubberRange(this.x, rect.l, rect.r, range.x, rect.onLimit.x), _fw.math.rubberRange(this.y, rect.t, rect.b, range.y, rect.onLimit.y));
+            var vec = new Vec(_index.math.rubberRange(this.x, rect.l, rect.r, range.x, rect.onLimit.x), _index.math.rubberRange(this.y, rect.t, rect.b, range.y, rect.onLimit.y));
             if (set) {
                 this.x = vec.x;
                 this.y = vec.y;
