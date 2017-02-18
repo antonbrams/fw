@@ -1,15 +1,19 @@
 
 
 
+$blue : hsl(200, 100%, 50%)
+
 * 
     margin     : 0
     box-sizing : border-box
 
 html
+    width  : 100%
     height : 100%
     body
         background-color : hsl(210,13%,14%)
         perspective      : 500px
+        width            : 100%
         height           : 100%
 
 .layer
@@ -26,6 +30,47 @@ html
         background-position : center
     &.drag
         box-shadow: 0 0 100px 0 rgba(black, .5) !important
+    &.resize
+        background: red
+    .edge
+        position      : absolute
+        width         : 12px
+        height        : 12px
+        background    : $blue
+        border-radius : 6px
+        margin-left   : -6px
+        margin-top    : -6px
+        // border        : 1px white solid
+        // box-shadow    : 0px 0px 5px 0px rgba(0,0,0, .3)
+        &.lt, &.l, &.lb
+            left : 0%
+        &.t, &.b
+            left : 50%
+        &.rt, &.r, &.rb
+            left : 100%
+        &.lt, &.t, &.rt
+            top : 0%
+        &.l, &.r
+            top : 50%
+        &.lb, &.b, &.rb
+            top : 100%
+        &.l
+            cursor: w-resize
+        &.lt
+            cursor: nw-resize
+        &.t
+            cursor: n-resize
+        &.rt
+            cursor: ne-resize
+        &.r
+            cursor: e-resize
+        &.rb
+            cursor: se-resize
+        &.b
+            cursor: s-resize
+        &.lb
+            cursor: sw-resize
+        
 
 .scroller
     width  : 100%

@@ -95,7 +95,7 @@ export default {
         })
     */
     
-    init (model) {
+    init (model = []) {
         var destroy = layer => {layer.destroy()}
         var make    = item  => {/* no initial value */}
         var methods = {
@@ -123,15 +123,10 @@ export default {
                 deleted.forEach(a => destroy(a.layer))
                 return deleted
             },
-            find (query) {
-                return arr.find(model, query)
-            },
-            delete (query) {
-                return arr.delete(model, query)
-            },
-            filterMap (query) {
-                return arr.filterMap(model, query)
-            },
+            find      (query) {return arr.find(model, query)},
+            delete    (query) {return arr.delete(model, query)},
+            filterMap (query) {return arr.filterMap(model, query)},
+            reset     () {return model.splice(0, model.length)},
         }
         for (var key in methods)
             Object.defineProperty(model, key,

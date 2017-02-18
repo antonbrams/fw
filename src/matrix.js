@@ -97,7 +97,7 @@ export default class Matrix {
         if (val.isNum(v))
             return this.scale(new vec().fill(v), set)
         else {
-            var {x,y,z} = v
+            var {x, y, z} = v
             return this.multiply([
                 x, 0, 0, 0, 
                 0, y, 0, 0,

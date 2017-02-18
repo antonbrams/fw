@@ -42,7 +42,8 @@ export default {
         'transformOrigin',
         'perspectiveOrigin',
         'columnCount',
-        'transition'
+        'transition',
+        'animation'
     ]),
     
 }

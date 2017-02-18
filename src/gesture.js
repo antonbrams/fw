@@ -9,7 +9,7 @@ import {
 
 var animationPreset = {
     time : .3, 
-    ease : 'cubic-bezier(.1, .5, .1, 1.2)'
+    ease : 'cubic-bezier(.1, .5, .1, 1.2)',
 }
 
 export default {
@@ -31,64 +31,101 @@ export default {
     },
     
     resize (layer, transport = {}) {
-        
+        var edge = ['lt', 't', 'rt', 'l', 'r', 'lb', 'b', 'rb']
+        var t    = {}
+        var out  = {global: {min: {}, max: {}}}
+        var Corner = side => {
+            var div = document.createElement('div')
+            div.classList.add('edge', side)
+            var down = event.listener(div, event.types.down, e => {
+                t.down = new vec(e.clientX, e.clientY)
+                t.rect = layer.rect
+                move.on()
+                up.on()
+                e.stop()
+            })
+            var move = event.listener(document, event.types.move, e => {
+                var drag  = new vec(e.clientX, e.clientY).sub(t.down)
+                var lSide = side == 'lt' || side == 'l' || side == 'lb'
+                var tSide = side == 'lt' || side == 't' || side == 'rt'
+                var size  = out.global? globalRange(out.global, drag, lSide || tSide): drag
+                if (lSide) size.x *= -1
+                if (tSide) size.y *= -1
+                size = out.local? localRange(out.local, size): size
+                if (side == 't' || side == 'b') size.x = 0
+                if (side == 'l' || side == 'r') size.y = 0
+                if (lSide) move.x = -size.x
+                if (tSide) move.y = -size.y
+                // export
+                out.move = move
+                out.size = size
+                // move and resize
+                if (transport.move && transport.move(out) !== false || !transport.move) {
+                    layer.size = t.rect.size.add(size).unit('px')
+                    layer.move = t.rect.position.add(move).unit('px')
+                }
+                e.stop()
+            })
+            var up = event.listener(document, event.types.up, e => {
+                move.off()
+                up.off()
+                e.stop()
+            })
+            var globalRange = (range, drag, opposite) => {
+                if (opposite) {
+                    drag = drag
+                        .add(t.rect.position)
+                        .range({l: range.max.l, t: range.max.t, r: range.min.l, b: range.min.t})
+                        .sub(t.rect.position)
+                } else {
+                    drag = drag
+                        .add(t.rect.opposite)
+                        .range({l: range.min.r, t: range.min.b, r: range.max.r, b: range.max.b})
+                        .sub(t.rect.opposite)
+                }
+                return drag
+            }
+            var localRange = (range, size) => {
+                size = size
+                    .add(t.rect.size)
+                    .range({l: range.min.x, t: range.min.y, r: range.max.x, b: range.max.y})
+                    .sub(t.rect.size)
+                return size
+            }
+            return {
+                get active () {
+                    return down.active
+                },
+                on () {
+                    layer.dom.appendChild(div)
+                    down.on()
+                },
+                off () {
+                    layer.dom.removeChild(div)
+                    down.off()
+                },
+            }
+        }
         return {
             get active () {
+                return edge[0].down.active
             },
             on () {
+                edge.forEach(edge => {
+                    if (val.isStr(edge)) edge = Corner(edge)
+                    edge.on()
+                })
                 return this
             },
             off () {
+                edge.forEach(edge => edge.off())
                 return this
             },
             cancel () {
-                
-            }
+                return this
+            },
         }
     },
-    
-    // resize (layer, transport = {}) {
-    //     var border = 20
-    //     var side = {x: null, y: null}
-    //     var cursorHover = event.listener(layer.dom, 'mousemove', e => {
-    //         var rect    = layer.rect
-    //         var pointer = new vec(e.clientX, e.clientY)
-    //         side = geo.getSide(pointer.sub(rect.position), rect.size, border)
-    //         layer.dom.style.cursor = geo.getCursor(side)
-    //     })
-    //     var drag = this._dragMouse(layer, {
-    //         down (t) {
-    //             cursorHover.off()
-    //         },
-    //         move (t) {
-    // 
-    //         },
-    //         up (t) {
-    //             
-    //         },
-    //         cancel (t) {
-    //             cursorHover.on()
-    //         }
-    //     })
-    //     return {
-    //         get active () {
-    //             return cursorHover.status
-    //         },
-    //         on () {
-    //             drag.on()
-    //             cursorHover.on()
-    //             return this
-    //         },
-    //         off () {
-    //             drag.off()
-    //             cursorHover.off()
-    //             return this
-    //         },
-    //         cancel () {
-    //             
-    //         },
-    //     }
-    // },
     
     drag (layer, transport = {}) {
         var translate = new vec()
@@ -263,7 +300,7 @@ export default {
             move (t) {
                 // define max and min movement for rotation and scale
                 // translation constraints happens later on touch and mouse together
-                var rotate = t.event.rotation
+                var rotate = t.event.rotation || 0
                 var rConst = transport.constraints.rotate
                 if (rConst) {
                     var last = lastState.getRotation().z
@@ -271,7 +308,7 @@ export default {
                     rotate + last, rConst.min, rConst.max,
                     rConst.length || 10, rConst.onLimit) - last
                 }
-                var scale  = t.event.scale
+                var scale  = t.event.scale || 1
                 var sConst = transport.constraints.scale
                 if (sConst) {
                     var last = lastState.getScale().z
@@ -323,6 +360,8 @@ export default {
                 center.reset()
                 lastState.reset()
                 translate.reset()
+                scale_rotate.reset()
+                origin.reset()
                 touches = {}
             },
         })

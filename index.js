@@ -296,13 +296,13 @@ var Layer = function () {
             // if options are an tulpet
         } else if (_index.val.isObj(options)) {
             // apply dom element
-            if ('dom' in options) {
+            if (_index.val.exists(options.dom)) {
                 this.dom = options.dom;
                 delete options.dom;
                 // if no dom, create just div with .layer
             } else this.dom = _index.dom.create('.default');
             // parent
-            if ('parent' in options) {
+            if (_index.val.exists(options.parent)) {
                 if (options.parent === null) delete options.parent;
             } else this.parent = _index.Screen;
             // set other options
@@ -375,8 +375,8 @@ var Layer = function () {
             }
         }
     }, {
-        key: '_getCss',
-        value: function _getCss(key) {
+        key: 'getCss',
+        value: function getCss(key) {
             return _index.css.computed(this.dom, key);
         }
     }, {
@@ -524,9 +524,7 @@ var Layer = function () {
             var append = function append(el) {
                 _this4.dom.appendChild(el instanceof Layer ? el.dom : el);
             };
-            if (_index.val.isArr(value)) value.forEach(function (item) {
-                return append(item);
-            });else append(value);
+            if (_index.val.isArr(value)) value.forEach(append);else append(value);
         }
     }, {
         key: 'prepend',
@@ -660,11 +658,12 @@ var Layer = function () {
             // if dom
             if (_index.val.isDom(value)) this._dom = value;
             // string a string
-            else if (_index.val.isStr(value))
+            else if (_index.val.isStr(value)) {
                     // template
                     if (value.match(/<.*>.*<\/.*>/)) this._dom = _index.dom.fromString(value);
                     // create new element
                     else this._dom = _index.dom.create(value);
+                }
             // link dom with layer
             this._dom.layer = this;
             this.addClass('layer');
@@ -676,12 +675,14 @@ var Layer = function () {
         }
     }, {
         key: 'parent',
+        get: function get() {
+            if (this.dom.parentNode && this.dom.parentNode.layer) {
+                return this.dom.parentNode.layer instanceof Layer ? this.dom.parentNode.layer : new Layer(this.dom.parentNode);
+            }
+        },
         set: function set(value) {
             this.event.emit('parent', value);
-            if (value instanceof Layer) value.append(this.dom);else value.appendChild(this.dom);
-        },
-        get: function get() {
-            if (this.dom.parentNode) if (this.dom.parentNode.layer instanceof Layer) return this.dom.parentNode.layer;else return new Layer(this.dom.parentNode);
+            if (value instanceof Layer) value.append(this);else value.appendChild(this.dom);
         }
     }, {
         key: 'content',
@@ -985,6 +986,22 @@ Object.defineProperty(exports, "__esModule", {
 var _index = __webpack_require__(0);
 
 exports.default = {
+	animate: function animate(dom) {
+		var name = '_' + new Date().getTime();
+		var keyframes = '@keyframes ' + name + ' {\n            to   {transform : translate(100%)}\n        }';
+		// from {transform : rotate(0.0deg)}
+		document.styleSheets[0].insertRule(keyframes, 0);
+		dom.style[_index.css.vendor.animation] = name + ' 1s';
+		var end = function end(e) {
+			if (e.animationName == name) {
+				document.styleSheets[0].removeRule(name);
+				dom.style[_index.css.vendor.animation] = null;
+				dom.removeEventListener('animationend', end);
+			}
+		};
+		dom.addEventListener('animationend', end);
+	},
+
 
 	/*
  	fw.animation.request.on('move', () => {
@@ -1335,7 +1352,7 @@ exports.default = {
             }
         });
         return out;
-    }(['transform', 'transformOrigin', 'perspectiveOrigin', 'columnCount', 'transition'])
+    }(['transform', 'transformOrigin', 'perspectiveOrigin', 'columnCount', 'transition', 'animation'])
 
 };
 
@@ -1641,7 +1658,7 @@ exports.default = {
             e.stop = function () {
                 e.stopPropagation();return e;
             };
-            e.both = function () {
+            e.block = function () {
                 return e.undef().stop();
             };
             return callback(e);
@@ -1873,63 +1890,94 @@ exports.default = {
     resize: function resize(layer) {
         var transport = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-
+        var edge = ['lt', 't', 'rt', 'l', 'r', 'lb', 'b', 'rb'];
+        var t = {};
+        var out = { global: { min: {}, max: {} } };
+        var Corner = function Corner(side) {
+            var div = document.createElement('div');
+            div.classList.add('edge', side);
+            var down = _index.event.listener(div, _index.event.types.down, function (e) {
+                t.down = new _index.vec(e.clientX, e.clientY);
+                t.rect = layer.rect;
+                move.on();
+                up.on();
+                e.stop();
+            });
+            var move = _index.event.listener(document, _index.event.types.move, function (e) {
+                var drag = new _index.vec(e.clientX, e.clientY).sub(t.down);
+                var lSide = side == 'lt' || side == 'l' || side == 'lb';
+                var tSide = side == 'lt' || side == 't' || side == 'rt';
+                var size = out.global ? globalRange(out.global, drag, lSide || tSide) : drag;
+                if (lSide) size.x *= -1;
+                if (tSide) size.y *= -1;
+                size = out.local ? localRange(out.local, size) : size;
+                if (side == 't' || side == 'b') size.x = 0;
+                if (side == 'l' || side == 'r') size.y = 0;
+                if (lSide) move.x = -size.x;
+                if (tSide) move.y = -size.y;
+                // export
+                out.move = move;
+                out.size = size;
+                // move and resize
+                if (transport.move && transport.move(out) !== false || !transport.move) {
+                    layer.size = t.rect.size.add(size).unit('px');
+                    layer.move = t.rect.position.add(move).unit('px');
+                }
+                e.stop();
+            });
+            var up = _index.event.listener(document, _index.event.types.up, function (e) {
+                move.off();
+                up.off();
+                e.stop();
+            });
+            var globalRange = function globalRange(range, drag, opposite) {
+                if (opposite) {
+                    drag = drag.add(t.rect.position).range({ l: range.max.l, t: range.max.t, r: range.min.l, b: range.min.t }).sub(t.rect.position);
+                } else {
+                    drag = drag.add(t.rect.opposite).range({ l: range.min.r, t: range.min.b, r: range.max.r, b: range.max.b }).sub(t.rect.opposite);
+                }
+                return drag;
+            };
+            var localRange = function localRange(range, size) {
+                size = size.add(t.rect.size).range({ l: range.min.x, t: range.min.y, r: range.max.x, b: range.max.y }).sub(t.rect.size);
+                return size;
+            };
+            return {
+                get active() {
+                    return down.active;
+                },
+                on: function on() {
+                    layer.dom.appendChild(div);
+                    down.on();
+                },
+                off: function off() {
+                    layer.dom.removeChild(div);
+                    down.off();
+                }
+            };
+        };
         return {
-            get active() {},
+            get active() {
+                return edge[0].down.active;
+            },
             on: function on() {
+                edge.forEach(function (edge) {
+                    if (_index.val.isStr(edge)) edge = Corner(edge);
+                    edge.on();
+                });
                 return this;
             },
             off: function off() {
+                edge.forEach(function (edge) {
+                    return edge.off();
+                });
                 return this;
             },
-            cancel: function cancel() {}
+            cancel: function cancel() {
+                return this;
+            }
         };
     },
-
-
-    // resize (layer, transport = {}) {
-    //     var border = 20
-    //     var side = {x: null, y: null}
-    //     var cursorHover = event.listener(layer.dom, 'mousemove', e => {
-    //         var rect    = layer.rect
-    //         var pointer = new vec(e.clientX, e.clientY)
-    //         side = geo.getSide(pointer.sub(rect.position), rect.size, border)
-    //         layer.dom.style.cursor = geo.getCursor(side)
-    //     })
-    //     var drag = this._dragMouse(layer, {
-    //         down (t) {
-    //             cursorHover.off()
-    //         },
-    //         move (t) {
-    // 
-    //         },
-    //         up (t) {
-    //             
-    //         },
-    //         cancel (t) {
-    //             cursorHover.on()
-    //         }
-    //     })
-    //     return {
-    //         get active () {
-    //             return cursorHover.status
-    //         },
-    //         on () {
-    //             drag.on()
-    //             cursorHover.on()
-    //             return this
-    //         },
-    //         off () {
-    //             drag.off()
-    //             cursorHover.off()
-    //             return this
-    //         },
-    //         cancel () {
-    //             
-    //         },
-    //     }
-    // },
-
     drag: function drag(layer) {
         var transport = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
@@ -2107,13 +2155,13 @@ exports.default = {
             move: function move(t) {
                 // define max and min movement for rotation and scale
                 // translation constraints happens later on touch and mouse together
-                var rotate = t.event.rotation;
+                var rotate = t.event.rotation || 0;
                 var rConst = transport.constraints.rotate;
                 if (rConst) {
                     var last = lastState.getRotation().z;
                     rotate = _index.math.rubberRange(rotate + last, rConst.min, rConst.max, rConst.length || 10, rConst.onLimit) - last;
                 }
-                var scale = t.event.scale;
+                var scale = t.event.scale || 1;
                 var sConst = transport.constraints.scale;
                 if (sConst) {
                     var last = lastState.getScale().z;
@@ -2161,6 +2209,8 @@ exports.default = {
                 center.reset();
                 lastState.reset();
                 translate.reset();
+                scale_rotate.reset();
+                origin.reset();
                 touches = {};
             }
         });
@@ -2726,7 +2776,9 @@ exports.default = {
         })
     */
 
-    init: function init(model) {
+    init: function init() {
+        var model = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
+
         var destroy = function destroy(layer) {
             layer.destroy();
         };
@@ -2765,6 +2817,9 @@ exports.default = {
             },
             filterMap: function filterMap(query) {
                 return _index.arr.filterMap(model, query);
+            },
+            reset: function reset() {
+                return model.splice(0, model.length);
             }
         };
         for (var key in methods) {
@@ -3037,6 +3092,16 @@ var Vec = function () {
             } else return new Vec(this.x / (vec.x || 1), this.y / (vec.y || 1), this.z / (vec.z || 1));
         }
     }, {
+        key: 'mult',
+        value: function mult(vec, set) {
+            if (set) {
+                this.x *= vec.x || 1;
+                this.y *= vec.y || 1;
+                this.z *= vec.z || 1;
+                return this;
+            } else return new Vec(this.x * (vec.x || 1), this.y * (vec.y || 1), this.z * (vec.z || 1));
+        }
+    }, {
         key: 'len',
         value: function len() {
             return Math.sqrt(Math.pow(this.x || 0, 2) + Math.pow(this.y || 0, 2) + Math.pow(this.z || 0, 2));
@@ -3221,7 +3286,7 @@ exports = module.exports = __webpack_require__(21)();
 
 
 // module
-exports.push([module.i, "* {\n  margin: 0;\n  box-sizing: border-box; }\n\nhtml {\n  height: 100%; }\n  html body {\n    background-color: #1f2428;\n    perspective: 500px;\n    height: 100%; }\n\n.layer {\n  font-family: 'arial';\n  font-size: 13;\n  transition: box-shadow .2s; }\n  .layer.default {\n    position: relative;\n    display: inline-block;\n    width: 100px;\n    height: 100px;\n    background-color: rgba(255, 255, 255, 0.7);\n    background-size: cover;\n    background-position: center; }\n  .layer.drag {\n    box-shadow: 0 0 100px 0 rgba(0, 0, 0, 0.5) !important; }\n\n.scroller {\n  width: 100%;\n  height: 100%;\n  -webkit-scroll-snap-type: mandatory;\n  -webkit-scroll-snap-destination: 50% 50%; }\n  .scroller > .layer {\n    width: 100%;\n    height: 100%;\n    -webkit-scroll-snap-coordinate: 50% 50%; }\n  .scroller.x {\n    overflow-y: hidden;\n    white-space: nowrap; }\n    .scroller.x > .layer {\n      display: inline-block;\n      white-space: normal; }\n  .scroller.y {\n    overflow-x: hidden; }\n", ""]);
+exports.push([module.i, "* {\n  margin: 0;\n  box-sizing: border-box; }\n\nhtml {\n  width: 100%;\n  height: 100%; }\n  html body {\n    background-color: #1f2428;\n    perspective: 500px;\n    width: 100%;\n    height: 100%; }\n\n.layer {\n  font-family: 'arial';\n  font-size: 13;\n  transition: box-shadow .2s; }\n  .layer.default {\n    position: relative;\n    display: inline-block;\n    width: 100px;\n    height: 100px;\n    background-color: rgba(255, 255, 255, 0.7);\n    background-size: cover;\n    background-position: center; }\n  .layer.drag {\n    box-shadow: 0 0 100px 0 rgba(0, 0, 0, 0.5) !important; }\n  .layer.resize {\n    background: red; }\n  .layer .edge {\n    position: absolute;\n    width: 12px;\n    height: 12px;\n    background: #00aaff;\n    border-radius: 6px;\n    margin-left: -6px;\n    margin-top: -6px; }\n    .layer .edge.lt, .layer .edge.l, .layer .edge.lb {\n      left: 0%; }\n    .layer .edge.t, .layer .edge.b {\n      left: 50%; }\n    .layer .edge.rt, .layer .edge.r, .layer .edge.rb {\n      left: 100%; }\n    .layer .edge.lt, .layer .edge.t, .layer .edge.rt {\n      top: 0%; }\n    .layer .edge.l, .layer .edge.r {\n      top: 50%; }\n    .layer .edge.lb, .layer .edge.b, .layer .edge.rb {\n      top: 100%; }\n    .layer .edge.l {\n      cursor: w-resize; }\n    .layer .edge.lt {\n      cursor: nw-resize; }\n    .layer .edge.t {\n      cursor: n-resize; }\n    .layer .edge.rt {\n      cursor: ne-resize; }\n    .layer .edge.r {\n      cursor: e-resize; }\n    .layer .edge.rb {\n      cursor: se-resize; }\n    .layer .edge.b {\n      cursor: s-resize; }\n    .layer .edge.lb {\n      cursor: sw-resize; }\n\n.scroller {\n  width: 100%;\n  height: 100%;\n  -webkit-scroll-snap-type: mandatory;\n  -webkit-scroll-snap-destination: 50% 50%; }\n  .scroller > .layer {\n    width: 100%;\n    height: 100%;\n    -webkit-scroll-snap-coordinate: 50% 50%; }\n  .scroller.x {\n    overflow-y: hidden;\n    white-space: nowrap; }\n    .scroller.x > .layer {\n      display: inline-block;\n      white-space: normal; }\n  .scroller.y {\n    overflow-x: hidden; }\n", ""]);
 
 // exports
 

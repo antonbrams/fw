@@ -53,6 +53,19 @@ export default class Vec {
             this.z / (vec.z || 1)
         )
     }
+    
+    mult (vec, set) {
+	    if (set) {
+	        this.x *= (vec.x || 1)
+	        this.y *= (vec.y || 1)
+	        this.z *= (vec.z || 1)
+	        return this
+        } else return new Vec(
+            this.x * (vec.x || 1),
+            this.y * (vec.y || 1),
+            this.z * (vec.z || 1)
+        )
+    }
 
     len () {
         return Math.sqrt(

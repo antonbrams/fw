@@ -33,14 +33,14 @@ export default class Layer {
         // if options are an tulpet
         } else if (val.isObj(options)) {
             // apply dom element
-            if ('dom' in options) {
+            if (val.exists(options.dom)) {
                 this.dom = options.dom
                 delete options.dom
             // if no dom, create just div with .layer
             } else this.dom = dom.create('.default')
             // parent
-            if ('parent' in options) {
-                if (options.parent === null) 
+            if (val.exists(options.parent)) {
+                if (options.parent === null)
                     delete options.parent
             } else this.parent = Screen
             // set other options
@@ -76,7 +76,7 @@ export default class Layer {
             var value = options[key]
             // use methods
             if (key in this) {
-                if (val.isFn(this[key])) 
+                if (val.isFn(this[key]))
                     this[key](value)
                 else
                     this[key] = value
@@ -115,7 +115,7 @@ export default class Layer {
                 set(key, options[key])
     }
     
-    _getCss (key) {
+    getCss (key) {
         return css.computed(this.dom, key)
     }
     
@@ -125,13 +125,13 @@ export default class Layer {
         if (val.isDom(value))
             this._dom = value
         // string a string
-        else if (val.isStr(value))
+        else if (val.isStr(value)) {
             // template
             if (value.match(/<.*>.*<\/.*>/))
                 this._dom = dom.fromString(value)
             // create new element
-            else
-                this._dom = dom.create(value)
+            else this._dom = dom.create(value)
+        }
         // link dom with layer
         this._dom.layer = this
         this.addClass('layer')
@@ -275,27 +275,27 @@ export default class Layer {
         return out 
     }
     
-    set parent (value) {
-        this.event.emit('parent', value)
-        if (value instanceof Layer) 
-            value.append(this.dom)
-        else
-            value.appendChild(this.dom)
+    get parent () {
+        if (this.dom.parentNode && this.dom.parentNode.layer) {
+            return this.dom.parentNode.layer instanceof Layer? 
+                this.dom.parentNode.layer :
+                new Layer(this.dom.parentNode)
+        }
     }
     
-    get parent () {
-        if (this.dom.parentNode)
-            if (this.dom.parentNode.layer instanceof Layer)
-                return this.dom.parentNode.layer
-            else
-                return new Layer(this.dom.parentNode)
+    set parent (value) {
+        this.event.emit('parent', value)
+        if (value instanceof Layer)
+            value.append(this)
+        else
+            value.appendChild(this.dom)
     }
     
     append (value) {
         this.event.emit('append', value)
         var append = el => {this.dom.appendChild(el instanceof Layer? el.dom: el)}
         if (val.isArr(value))
-            value.forEach(item => append(item))
+            value.forEach(append)
         else
             append(value)
     }

@@ -6,6 +6,24 @@ import {css, vec, math, val, event} from './index'
 
 export default {
 	
+	animate (dom) {
+		var name = `_${new Date().getTime()}`
+		var keyframes = `@keyframes ${name} {
+            to   {transform : translate(100%)}
+        }`
+		// from {transform : rotate(0.0deg)}
+        document.styleSheets[0].insertRule(keyframes, 0)
+        dom.style[css.vendor.animation] = `${name} 1s`
+		var end = e => {
+			if (e.animationName == name) {
+				document.styleSheets[0].removeRule(name)
+				dom.style[css.vendor.animation] = null
+				dom.removeEventListener('animationend', end)
+			}
+		}
+		dom.addEventListener('animationend', end)
+	},
+	
 	/*
 		fw.animation.request.on('move', () => {
 			scroller.translate = pointer

@@ -56,7 +56,7 @@ export default {
         var fn = e => {
             e.undef = () => {e.preventDefault(); return e}
             e.stop  = () => {e.stopPropagation(); return e}
-            e.both  = () => e.undef().stop()
+            e.block = () => e.undef().stop()
             return callback(e)
         }
         return {
