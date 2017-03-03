@@ -5,7 +5,7 @@ import {
     animation, vec, event, math, 
     Screen, matrix, Layer, val,
     geo, etc
-} from './index'
+} from '../index'
 
 var animationPreset = {
     time : .3, 
@@ -30,121 +30,212 @@ export default {
         })
     },
     
+    rotate (layer, transport = {}) {
+        var t     = {}
+        var out   = {}
+        return this._cornerInterface(layer, {
+            type  : 'rotate',
+            edges : transport.edges,
+            down (a) {
+                t.center = layer.center
+                t.init   = layer.rotate
+                t.down   = t.center.sub(a.pointer).angle2d() + parseInt(t.init)
+            },
+            move (a) {
+                var rotation = t.down - t.center.sub(a.pointer).angle2d()
+                if (out.constraints)
+                    rotation = math.rubberRange(
+                        rotation,
+                        out.constraints.min,
+                        out.constraints.max,
+                        out.constraints.length || 10, 
+                        out.constraints.onLimit
+                    )
+                // move and resize
+                if (transport.move && transport.move(out) !== false || !transport.move)
+                    animation.draw(`${layer.identifier}: resize.move`, 
+                        () => layer.rotate = rotation)
+            },
+            up (a) {
+                if (transport.up && transport.up(t) !== false || !transport.up)
+                    animation.draw(`${layer.identifier}: resize.up`, () => 
+                        layer.animate(animationPreset, {rotate : t.init}))
+            }
+        })
+    },
+    
     resize (layer, transport = {}) {
-        var edge = ['lt', 't', 'rt', 'l', 'r', 'lb', 'b', 'rb']
-        var t    = {}
-        var out  = {global: {min: {}, max: {}}}
-        var Corner = side => {
-            var div = document.createElement('div')
-            div.classList.add('edge', side)
-            var down = event.listener(div, event.types.down, e => {
-                t.down = new vec(e.clientX, e.clientY)
+        var t   = {}
+        var out = {}
+        var globalConstraints = c => (
+                c.min && (c.min.l || c.min.t || c.min.r || c.min.b)  
+            ||  c.max && (c.max.l || c.max.t || c.max.r || c.max.b))
+        var localConstraints = c => (
+                c.min && (c.min.w || c.min.h)  
+            ||  c.max && (c.max.w || c.max.h))
+        var globalRange = (range, drag, side) => {
+            var leftTop = drag
+                .add(t.rect.position)
+                .range({
+                    l: range.max.l, t: range.max.t, 
+                    r: range.min.l, b: range.min.t, 
+                    length: range.length || 20
+                })
+                .sub(t.rect.position)
+            var rightBottom = drag
+                .add(t.rect.opposite)
+                .range({
+                    l: range.min.r, t: range.min.b, 
+                    r: range.max.r, b: range.max.b, 
+                    length: range.length || 20
+                })
+                .sub(t.rect.opposite)
+            return new vec(
+                (side.match('l')? leftTop: rightBottom).x, 
+                (side.match('t')? leftTop: rightBottom).y
+            )
+        }
+        var localRange = (range, size) => {
+            size = size
+                .add(t.rect.size)
+                .range({
+                    l: range.min.w, t: range.min.h, 
+                    r: range.max.w, b: range.max.h, 
+                    length: range.length || 20
+                })
+                .sub(t.rect.size)
+            return size
+        }
+        return this._cornerInterface(layer, {
+            type  : 'resize',
+            edges : transport.edges,
+            down (a) {
+                t.down = a.pointer
                 t.rect = layer.rect
-                move.on()
-                up.on()
-                e.stop()
-            })
-            var move = event.listener(document, event.types.move, e => {
-                var drag  = new vec(e.clientX, e.clientY).sub(t.down)
-                var lSide = side == 'lt' || side == 'l' || side == 'lb'
-                var tSide = side == 'lt' || side == 't' || side == 'rt'
-                var size  = out.global? globalRange(out.global, drag, lSide || tSide): drag
+            },
+            move (a) {
+                var lSide = a.side == 'lt' || a.side == 'l' || a.side == 'lb'
+                var tSide = a.side == 'lt' || a.side == 't' || a.side == 'rt'
+                var drag  = a.pointer.sub(t.down)
+                // create size and set global constraints (absolute: l | t | r | b)
+                var size  = out.constraints && globalConstraints(out.constraints)? 
+                    globalRange(out.constraints, drag, a.side): drag
+                // resizing on the left/top side? invert motion
                 if (lSide) size.x *= -1
                 if (tSide) size.y *= -1
-                size = out.local? localRange(out.local, size): size
-                if (side == 't' || side == 'b') size.x = 0
-                if (side == 'l' || side == 'r') size.y = 0
+                // edit size and set local constraints (min max: width | height)
+                size = out.constraints && localConstraints(out.constraints)? 
+                    localRange(out.constraints, size): size
+                // movement on middle handles? set perpendicular axis to 0 
+                if (a.side == 't' || a.side == 'b') size.x = 0
+                if (a.side == 'l' || a.side == 'r') size.y = 0
+                // resizing on the left/top side? shift layer in opposite direction
+                var move = new vec()
                 if (lSide) move.x = -size.x
                 if (tSide) move.y = -size.y
-                // export
+                // export values
                 out.move = move
                 out.size = size
                 // move and resize
-                if (transport.move && transport.move(out) !== false || !transport.move) {
-                    layer.size = t.rect.size.add(size).unit('px')
-                    layer.move = t.rect.position.add(move).unit('px')
-                }
+                if (transport.move && transport.move(out) !== false || !transport.move)
+                    animation.draw(`${layer.identifier}: resize.move`, () => 
+                        layer.set({
+                            size : t.rect.size.add(size).unit('px'),
+                            move : t.rect.position.add(move).unit('px')
+                        }))
+            },
+            up (a) {
+                if (transport.up && transport.up(t) !== false || !transport.up)
+                    animation.draw(`${layer.identifier}: resize.up`, () => 
+                        layer.animate(animationPreset, {
+                            move : t.rect.position.unit('px'),
+                            size : t.rect.size.unit('px')
+                        }))
+            }
+        })
+    },
+    
+    _cornerInterface (layer, transport) {
+        var edges = transport.edges || ['lt', 't', 'rt', 'l', 'r', 'lb', 'b', 'rb']
+        var Corner = side => {
+            var div = document.createElement('div')
+            div.classList.add('edge', transport.type || 'resize', side)
+            var down = event.listener(div, event.types.down, e => {
+                transport.down({
+                    event   : e,
+                    pointer : new vec(e.clientX, e.clientY),
+                    side
+                })
+                move.on(); up.on(); e.stop()
+            })
+            var move = event.listener(document, event.types.move, e => {
+                transport.move({
+                    event   : e,
+                    pointer : new vec(e.clientX, e.clientY),
+                    side
+                })
                 e.stop()
             })
             var up = event.listener(document, event.types.up, e => {
-                move.off()
-                up.off()
-                e.stop()
+                transport.up({event : e, side})
+                move.off(); up.off(); e.stop()
             })
-            var globalRange = (range, drag, opposite) => {
-                if (opposite) {
-                    drag = drag
-                        .add(t.rect.position)
-                        .range({l: range.max.l, t: range.max.t, r: range.min.l, b: range.min.t})
-                        .sub(t.rect.position)
-                } else {
-                    drag = drag
-                        .add(t.rect.opposite)
-                        .range({l: range.min.r, t: range.min.b, r: range.max.r, b: range.max.b})
-                        .sub(t.rect.opposite)
-                }
-                return drag
-            }
-            var localRange = (range, size) => {
-                size = size
-                    .add(t.rect.size)
-                    .range({l: range.min.x, t: range.min.y, r: range.max.x, b: range.max.y})
-                    .sub(t.rect.size)
-                return size
-            }
             return {
-                get active () {
-                    return down.active
-                },
-                on () {
-                    layer.dom.appendChild(div)
-                    down.on()
-                },
-                off () {
-                    layer.dom.removeChild(div)
-                    down.off()
-                },
+                on  () {layer.dom.appendChild(div); down.on()},
+                off () {layer.dom.removeChild(div); down.off()},
+                get active () {return down.active}
             }
         }
         return {
-            get active () {
-                return edge[0].down.active
-            },
             on () {
-                edge.forEach(edge => {
-                    if (val.isStr(edge)) edge = Corner(edge)
-                    edge.on()
-                })
+                for (var i = 0; i < edges.length; i ++) {
+                    if (val.isStr(edges[i])) edges[i] = Corner(edges[i])
+                    edges[i].on()
+                }
                 return this
             },
-            off () {
-                edge.forEach(edge => edge.off())
-                return this
-            },
-            cancel () {
-                return this
-            },
+            off () {edges.forEach(edge => edge.off()); return this},
+            get active () {return edges[0].down.active}
         }
     },
     
     drag (layer, transport = {}) {
-        var translate = new vec()
-        var method = event.types.isTouch? '_initMultitouchGesture': '_dragMouse'
+        var translate   = new vec()
+        var method      = event.types.isTouch? '_initMultitouchGesture': '_dragMouse'
+        var temp        = {}
+        var out         = {}
+        var globalRange = (c, translate) => {
+            var size = temp.rect.size.scale(.5)
+            if (c.l) c.l += size.x
+            if (c.r) c.r -= size.x
+            if (c.t) c.t += size.y
+            if (c.b) c.b -= size.y
+            return translate
+                .add(temp.center)
+                .range(c)
+                .sub(temp.center)
+        }
         return this[method](layer, etc.clone(transport, {
+            down (t) {
+                Object.assign(out, t)
+                temp.rect   = layer.rect
+                temp.center = layer.center
+            },
             move (t) {
-                if (transport.move && transport.move(t) !== false || !transport.move) {
-                    translate = t.translate
-                    if (t.constraints) 
-                        translate.range(t.constraints, true)
-                    animation.draw(`${layer.identifier}: translate.move`,
-                        () => layer.matrix = new matrix().translate(translate))
-                }
+                Object.assign(out, t)
+                out.translate = out.constraints?
+                    globalRange(out.constraints, out.translate): out.translate
+                var defaultMove = transport.move && transport.move(out) === true || !transport.move
+                // constraints
+                if (defaultMove) animation.draw(`${layer.identifier}: translate.move`, () => 
+                    layer.matrix = new matrix().translate(out.translate))
             },
             cancel (t) {
-                t.translate = translate
-                if (transport.cancel && transport.cancel(t) !== false || !transport.cancel)
+                Object.assign(out, t)
+                if (transport.cancel && transport.cancel(out) === true || !transport.cancel)
                     animation.draw(`${layer.identifier}: translate.cancel`,
                         () => layer.animate(animationPreset, {matrix : new matrix()}))
+                out = {}
             }
         }), 'translate')
     },

@@ -1,7 +1,7 @@
 
 
 
-import {val, math} from './index'
+import {val, math} from '../index'
 
 export default class Vec {
 
@@ -67,7 +67,7 @@ export default class Vec {
         )
     }
 
-    len () {
+    get len () {
         return Math.sqrt(
             Math.pow(this.x || 0, 2) +
             Math.pow(this.y || 0, 2) +

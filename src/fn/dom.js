@@ -1,7 +1,7 @@
 
 
 
-import {css, val} from './index'
+import {css, val} from '../index'
 
 export default {
     
@@ -17,11 +17,11 @@ export default {
         return element
     },
     
-    template (model, tmp, callback) {
+    template (template, model, onUpdate) {
         var init   = true
         var active = true
-        var render = function () {
-            var result = tmp.replace(/{([A-z 0-9]+)}/g, ($1, $2) => {
+        var render = () => {
+            var result = template.replace(/{([A-z 0-9]+)}/g, ($1, $2) => {
                 if (init) {
                     var val = model[$2]
                     Object.defineProperty(model, $2, {
@@ -34,7 +34,7 @@ export default {
                 }
                 return model[$2]
             })
-            callback(result)
+            onUpdate(result)
             init = false
         }
         render()

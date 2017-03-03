@@ -1,7 +1,7 @@
 
 
 
-import {css, vec, math, val, event} from './index'
+import {css, vec, math, val, event} from '../index'
 
 
 export default {
@@ -117,36 +117,30 @@ export default {
 	    })
 	*/
 	
-	decay (callback, options = {}) {
-		var id   = window.performance.now()
-		var e    = new event.Machine('Decay', false)
-		var job, stop
+	decay (options, callback) {
+		var id    = window.performance.now()
+		var e     = new event.Machine('Decay', false)
 		var types = {
 			vec : {
-				calculate (a, b, c) {return a.add(b.sub(a).scale(c), 1)},
-				isEqual   (a, b, c) {return math.isEqual(b.sub(a).len(), 0)}
+				calculate : (a, b, c) => a.value.add(b.sub(a.value).scale(c), 1),
+				isEqual   : (a, b, c) => math.isEqual(b.sub(a.value).len(), c)
 			},
 			num : {
-				calculate (a, b, c) {return a += (b - a) * c},
-				isEqual   (a, b, c) {return math.isEqual(a, set)}
+				calculate : (a, b, c) => a.value += (b - a.value) * c,
+				isEqual   : (a, b, c) => math.isEqual(a.value, b, c)
 			}
 		}
-		var out = {
+		var value = options.value || 0
+		var job   = {value, type: types[value instanceof vec? 'vec': 'num']}
+		var stop  = false
+		callback(value)
+		var out   = {
 			to : value => {
-				if (!val.exists(job)) {
-					job = {
-						value : value,
-						type  : types[value instanceof vec? 'vec': 'num']
-					}
-					stop = false
-					e.emit('start')
-				}
 				this.jobs(id, () => {
 					if (!stop) {
-						job.type.calculate(job.value, value, options.speed || .1)
+						job.type.calculate(job, value, options.speed || .1)
 						callback(job.value)
-						if (job.type.isEqual(job.value, value)) {
-							// job  = undefined
+						if (job.type.isEqual(job, value, options.float || 1)) {
 							stop = true
 							e.emit('end')
 						}
@@ -156,9 +150,12 @@ export default {
 					return stopped
 				})
 			},
-			set (value) {
+			set value (value) {
 				job.value = value
 				callback(value)
+			},
+			get value () {
+				return job.value
 			},
 			stop () {
 				stop = true
@@ -169,6 +166,7 @@ export default {
 				e.on(topic, fn)
 				return out
 			},
+			set debug (value) {e.debug = value}
 		}
 		return out
 	},

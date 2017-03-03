@@ -33,15 +33,7 @@ html
     &.resize
         background: red
     .edge
-        position      : absolute
-        width         : 12px
-        height        : 12px
-        background    : $blue
-        border-radius : 6px
-        margin-left   : -6px
-        margin-top    : -6px
-        // border        : 1px white solid
-        // box-shadow    : 0px 0px 5px 0px rgba(0,0,0, .3)
+        position : absolute
         &.lt, &.l, &.lb
             left : 0%
         &.t, &.b
@@ -54,23 +46,55 @@ html
             top : 50%
         &.lb, &.b, &.rb
             top : 100%
-        &.l
-            cursor: w-resize
-        &.lt
-            cursor: nw-resize
-        &.t
-            cursor: n-resize
-        &.rt
-            cursor: ne-resize
-        &.r
-            cursor: e-resize
-        &.rb
-            cursor: se-resize
-        &.b
-            cursor: s-resize
-        &.lb
-            cursor: sw-resize
-        
+        &.resize
+            z-index       : 1 
+            width         : 12px
+            height        : 12px
+            margin-left   : -6px
+            margin-top    : -6px
+            border-radius : 6px
+            background    : $blue
+            &.l
+                cursor: w-resize
+            &.lt
+                cursor: nw-resize
+            &.t
+                cursor: n-resize
+            &.rt
+                cursor: ne-resize
+            &.r
+                cursor: e-resize
+            &.rb
+                cursor: se-resize
+            &.b
+                cursor: s-resize
+            &.lb
+                cursor: sw-resize
+        &.rotate
+            z-index       : 0
+            width         : 24px
+            height        : 24px
+            &.lt, &.l, &.lb
+                margin-left : -24+6px
+            &.t, &.b
+                margin-left : -6px
+                width       : 12px
+                cursor      : ew-resize
+            &.rt, &.r, &.rb
+                margin-left : -6px
+            &.lt, &.t, &.rt
+                margin-top : -24+6px
+            &.l, &.r
+                margin-top : -6px
+                height     : 12px
+                cursor     : ns-resize
+            &.lb, &.b, &.rb
+                margin-top : -6px
+            &.lt, &.rb
+                cursor : nesw-resize
+            &.rt, &.lb
+                cursor : nwse-resize
+            
 
 .scroller
     width  : 100%

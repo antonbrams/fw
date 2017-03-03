@@ -1,26 +1,75 @@
 
 
 
-{
+import {
     dom, Layer, Screen, Scroller, 
     vec, etc, model, matrix, 
-    animation, event
-} = fw
+    animation, event, css, math, Toggle, Device
+} from '../src/index.js'
 
+# Device
 if 1
+    device = new Device
+        type : 'iphone'
+
+# projection matrix
+if 0
+    points = []
+    
+    [
+        [100,  50],
+        [100, 400],
+        [300, 100],
+        [300, 300]
+    ].forEach (point) ->
+        points.push(new Layer(
+            position: 'absolute'
+            size   : new vec(10, 10).unit 'px'
+            bg     : color:'red'
+            border : radius:'5px'
+            move   : new vec(point[0], point[1]).unit 'px'
+            align  : new vec('c', 'c')
+        ).move)
+    
+    layer = new Layer
+        position : 'absolute'
+        size     : new vec(100, 100).unit 'px'
+        project  : points
+
+# toggle test
+if 0
+    masterSwitch = new Toggle
+        color    : off:'#BECADD', on:'red'
+        onChange : (state) ->
+            console.log 'slider', state
+    masterSwitch.toggle.set
+        center: Screen.center
+
+# animation css
+if 0
     layer = new Layer
         center : Screen.center
-        src    : 'test'
     
-    layer.on 'resize'
+    layer.on 'click', (e) ->
+        animation.animate(layer.dom)
+
+# video test
+if 0
+    layer = new Layer
+        center : Screen.center
+    
+    layer2 = new Layer
+        dom    : '<video></video>'
+        parent : layer
 
 # drag n drop file
 if 0
     layer = new Layer
             center : Screen.center
-        .on 'fileDrop',
-            drop : (data) ->
-                console.log data
+    
+    dnd = layer.on 'fileDrop',
+        drop : (data) ->
+            console.log data
 
 # dynamic templates
 if 0
@@ -35,14 +84,14 @@ if 0
                 bind : mod
         .on 'click', (e) ->
             mod.name = 'this is something different!'
-
+    
 # model
 if 0
     scroller = new Scroller
         position  : 'relative'
         center    : Screen.center
         flow      : 'x'
-        size      : new vec 200, 200
+        size      : new vec(200, 200).unit 'px'
         border    : radius : 5
         boxShadow : '0 2px 10px 0 rgba(0,0,0, .2)'
     
@@ -77,61 +126,92 @@ if 0
 
 # drag n drop
 if 0
-    m = model.put
-            count : 1
-            model :
-                image : '{type: image}'
+    mockup = model.put(
+        count : 1
+        model :
+            image : '{type: image, source: remote}'
+    )[0]
     
-    layer1 = new Layer
+    layer = new Layer
             position : 'absolute'
             zIndex   : 1
-            size     : new vec 300, 300
-            center   : Screen.center
-        .bind m[0],
+            size     : new vec(300, 300).unit 'px'
+            move     : new vec(300, 300).unit 'px'
+        .bind mockup,
             image: 'image'
     
-    onDrag   = layer1.on 'drag',
+    onDrag = layer.on 'drag',
         move : (t) ->
             t.constraints = 
-                l: -10,
-                r: 10
-            # layer1.rect.position.log('tight')
+                l : 250
+                t : 250
+                r : 650
+                b : 650
             
-    onZoom   = layer1.on 'pinchToZoom',
+    onZoom = layer.on 'pinchToZoom',
         move : (t) ->
             t.constraints = 
                 min: 1,
                 max: 2
-    onRotate = layer1.on 'pinchToRotate',
+                
+    onRotate = layer.on 'pinchToRotate',
         move : (t) ->
             t.constraints = 
                 min: -10,
-                max: 10
+                max:  10
         cancel : (t) ->
             console.log 'tight'
+    
+    outter = new Layer
+        position : 'absolute'
+        move     : new vec(250, 250).unit 'px'
+        size     : new vec(400, 400).unit 'px'
+        bg       : color : 'transparent'
+        border   : '1px red solid'
+    
+    # inner = new Layer
+    #     position : 'absolute'
+    #     move     : new vec(370, 370).unit 'px'
+    #     size     : new vec(130, 130).unit 'px'
+    #     bg       : color : 'transparent'
+    #     border   : '1px red solid'
+    
+    onResize = layer.on 'resize',
+        # edges : ['rb']
+        move : (t) ->
+            t.constraints =
+                max : {l: 250, t: 250, r: 650, b: 650}
+                min : {l: 370, t: 370, r: 500, b: 500}
+            # t.constraints =
+            #     min : {w: 300, h: 300}
+            #     max : {w: 500, h: 500}
+    # onResize.off()
+    
+    
+    onResize = layer.on 'rotate',
+        move : (t) ->
+            t.constraints =
+                min : -10
+                max : 10
+    
     
 # toggle
 if 0
     toggle = new Layer
         position : 'absolute'
-        size     : new vec 100, 50
+        size     : new vec(100, 50).unit 'px'
         center   : Screen.center
-        border   : radius: 25
+        border   : radius: '25px'
         padding  : 10
 
     knob = new Layer
         parent : toggle
         size   : new vec(40, 100).unit '%'
-        border : 
-            radius : 25
+        border : radius : '25px'
 
     knob.on 'drag',
         move : (t) ->
-            matrix = t.transformation
-            move   = matrix.getTranslation()
-            move.y = 0
-            t.transformation = new matrix().translate move
-            return true
+            t.translate.y = 0
     
     states =
         current : 'on'
@@ -145,17 +225,17 @@ if 0
 if 0
     button = new Layer
         position    : 'absolute'
-        size        : new vec 300, 200
+        size        : new vec(300, 200).unit 'px'
         center      : Screen.center
         bg          : 'none'
         perspective : '500px'
-    
+        
     layer = new Layer
         position : 'absolute'
         overflow : 'hidden'
         parent   : button
         size     : new vec(100, 100).unit '%'
-        border   : radius : 10
+        border   : radius : '10px'
         center   : button.center
     
     background = new Layer
@@ -167,9 +247,9 @@ if 0
     foreground = new Layer
         parent   : button
         position : 'absolute'
-        size     : new vec 200, 100
+        size     : new vec(200, 100).unit 'px'
         center   : button.center
-        border   : radius : 10
+        border   : radius : '10px'
         bg       : color : 'red'
     
     decay = animation.decay (pointer) ->

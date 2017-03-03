@@ -1,31 +1,26 @@
-
-
-
 {
-    "name": "fw",
-    "version": "1.0.0",
-    "description": "My own javascript framework for web development",
-    "author": "antonkluev",
-    "email": "dev@antonkluev.com",
-
-    "scripts": {
-        "build": "NODE_ENV=server.build webpack --progress",
-        "watch": "NODE_ENV=server.watch webpack --progress",
-        "nodeserver": "sudo nodemon ./test.js"
-    },
-
-    "devDependencies": {
-        "webpack": "^2.1.0-beta.19",
-        "babel-core": "^6.17.0",
-        "babel-loader": "^6.2.4",
-        "babel-preset-es2015-native-modules": "^6.9.0",
-        "node-sass": "^3.11.2",
-        "sass-loader": "^4.0.2",
-        "style-loader": "^0.13.1",
-        "css-loader": "^0.25.0",
-        "url-loader": "^0.5.7",
-        "coffee-loader": "^0.7.2"
-    }
+  "name": "fw",
+  "version": "1.0.0",
+  "description": "My own javascript framework for web development",
+  "author": "antonkluev",
+  "email": "dev@antonkluev.com",
+  "scripts": {
+    "client": "NODE_ENV=client.client webpack-dev-server",
+    "server": "NODE_ENV=server.server webpack --progress",
+    "build": "NODE_ENV=server.build webpack --progress",
+    "nodeserver": "sudo nodemon ./test.js"
+  },
+  "devDependencies": {
+    "babel-core": "^6.17.0",
+    "babel-loader": "^6.2.4",
+    "babel-preset-es2015-native-modules": "^6.9.0",
+    "coffee-loader": "^0.7.2",
+    "coffee-script": "^1.12.4",
+    "css-loader": "^0.25.0",
+    "node-sass": "^3.11.2",
+    "sass-loader": "^4.0.2",
+    "style-loader": "^0.13.1",
+    "url-loader": "^0.5.7",
+    "webpack": "^2.1.0-beta.19"
+  }
 }
-
-

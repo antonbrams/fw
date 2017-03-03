@@ -5,7 +5,7 @@ import {
     dom, css, val, geo, vec, matrix,
     animation, event, text, gesture,
     Screen
-} from './index'
+} from '../index'
 
 export default class Layer {
     
@@ -317,7 +317,7 @@ export default class Layer {
         }
         if (val.isObj(value))
             this._props.templateUpdater = 
-                dom.template(value.bind, value.html, set)
+                dom.template(value.html, value.bind, set)
         else {
             set(value)
             if (this._props.templateUpdater)
@@ -580,12 +580,12 @@ export default class Layer {
     // center
     set center (value) {
         if (val.exists(value.x)) {
-            this._setCss('left', `${value.x - this.rect.position.x}px`)
-            this.translate = {x: '-50%'}
+            this._setCss('left', `${value.x - this.dom.parentNode.rect.position.x}px`)
+            this.align = {x: 'c'}
         }
         if (val.exists(value.y)) {
-            this._setCss('top', `${value.y - this.rect.position.y}px`)
-            this.translate = {y: '-50%'}
+            this._setCss('top', `${value.y - this.dom.parentNode.position.y}px`)
+            this.align = {y: 'c'}
         }
     }
     
@@ -596,6 +596,21 @@ export default class Layer {
     // offset
     get rect () {
         return geo.vpo(this.dom)
+    }
+    
+    set align (options) {
+        if (options.x) this.translate = {x: `${
+            options.x == 'c'? -50:
+            options.x == 'r'? -100: 0}%`}
+        if (options.y) this.translate = {y: `${
+            options.y == 'c'? -50:
+            options.y == 'b'? -100: 0}%`}
+    }
+    
+    project (v) {
+        this.origin = new vec()
+        this.matrix = new matrix()
+            .project(this.size, v[0], v[1], v[2], v[3])
     }
     
 }

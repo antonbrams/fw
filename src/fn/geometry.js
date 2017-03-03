@@ -1,7 +1,7 @@
 
 
 
-import {vec, val, math} from './index'
+import {vec, val, math} from '../index'
 
 export default {
 	

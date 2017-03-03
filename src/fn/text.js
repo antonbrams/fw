@@ -1,7 +1,7 @@
 
 
 
-import {css, math} from './index'
+import {css, math} from '../index'
 
 export default {
     

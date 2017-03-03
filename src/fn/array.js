@@ -1,7 +1,7 @@
 
 
 
-import {val} from './index'
+import {val} from '../index'
 
 export default {
     

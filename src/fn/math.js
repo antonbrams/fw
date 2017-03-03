@@ -1,6 +1,6 @@
 
 
-import {val} from './index'
+import {val} from '../index'
 
 export default {
 	
@@ -37,8 +37,8 @@ export default {
 	},
 	
 	isEqual (a, b, tolerance = 1) {
-		var shit = Math.pow(10, -tolerance)
-		return a - shit < b && b < a + shit
+		var range = Math.pow(10, -tolerance)
+		return a - range < b && b < a + range
 	},
 	
 	binarySearch (length, check) {
