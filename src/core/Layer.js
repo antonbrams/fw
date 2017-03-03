@@ -580,11 +580,11 @@ export default class Layer {
     // center
     set center (value) {
         if (val.exists(value.x)) {
-            this._setCss('left', `${value.x - this.dom.parentNode.rect.position.x}px`)
+            this._setCss('left', `${value.x - this.dom.parentNode.layer.rect.position.x}px`)
             this.align = {x: 'c'}
         }
         if (val.exists(value.y)) {
-            this._setCss('top', `${value.y - this.dom.parentNode.position.y}px`)
+            this._setCss('top', `${value.y - this.dom.parentNode.layer.rect.position.y}px`)
             this.align = {y: 'c'}
         }
     }
@@ -609,6 +609,7 @@ export default class Layer {
     
     project (v) {
         this.origin = new vec()
+        this.move   = new vec()
         this.matrix = new matrix()
             .project(this.size, v[0], v[1], v[2], v[3])
     }

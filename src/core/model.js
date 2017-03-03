@@ -58,6 +58,8 @@ var expressions = {
         var source = {
             remote (i) {return `https://unsplash.it/500?image=${i}`},
             local  (i) {return `file:///Library/Desktop%20Pictures/${
+                escape(assets.image.mac[i % assets.image.mac.length])}.jpg`},
+            server  (i) {return `./graphic/${
                 escape(assets.image.mac[i % assets.image.mac.length])}.jpg`}
         }
         var seed = math.randInt(0, 1000)

@@ -11,10 +11,13 @@ html
     width  : 100%
     height : 100%
     body
-        background-color : hsl(210,13%,14%)
-        perspective      : 500px
-        width            : 100%
-        height           : 100%
+        background-size     : cover
+        background-position : center
+        background-repeat   : no-repeat
+        background-color    : hsl(210,13%,14%)
+        perspective         : 500px
+        width               : 100%
+        height              : 100%
 
 .layer
     font-family : 'arial'
@@ -94,24 +97,5 @@ html
                 cursor : nesw-resize
             &.rt, &.lb
                 cursor : nwse-resize
-            
-
-.scroller
-    width  : 100%
-    height : 100%
-    -webkit-scroll-snap-type        : mandatory
-    -webkit-scroll-snap-destination : 50% 50%
-    & > .layer
-        width  : 100%
-        height : 100%
-        -webkit-scroll-snap-coordinate : 50% 50%
-    &.x
-        overflow-y  : hidden
-        white-space : nowrap
-        & > .layer
-            display     : inline-block
-            white-space : normal
-    &.y
-        overflow-x : hidden
         
 

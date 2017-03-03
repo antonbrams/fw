@@ -1,6 +1,7 @@
 
 
 
+import './style.sass'
 import {Layer} from '../index'
 
 export default class Scroller extends Layer {

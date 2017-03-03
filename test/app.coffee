@@ -9,8 +9,31 @@ import {
 
 # Device
 if 1
-    device = new Device
-        type : 'iphone'
+    Screen.set 
+        image : 'http://www.1designshop.com/wp-content/uploads/2015/12/1dsp-20151221-backgroung007.png'
+        overflow : 'hidden'
+    
+    iPhone = new Device
+        type   : 'iphone'
+        color  : 'black'
+        scale  : 0.3
+    
+    scroller = new Scroller
+        flow   : 'y'
+        parent : iPhone
+    
+    mockup = model.put
+        # options
+            count : 5
+            model : 
+                image : '{type: image, source: server}'
+        # on events
+        .on 'make', (item) ->
+            layer = new Layer
+                parent : scroller
+                size   : new vec('100', '25').unit '%'
+            etc.compressImage item.image, .1, (url) -> layer.image url
+            return layer
 
 # projection matrix
 if 0
@@ -23,15 +46,15 @@ if 0
         [300, 300]
     ].forEach (point) ->
         points.push(new Layer(
-            position: 'absolute'
-            size   : new vec(10, 10).unit 'px'
-            bg     : color:'red'
-            border : radius:'5px'
-            move   : new vec(point[0], point[1]).unit 'px'
-            align  : new vec('c', 'c')
+            position : 'absolute'
+            size     : new vec(10, 10).unit 'px'
+            bg       : color:'red'
+            border   : radius:'5px'
+            move     : new vec(point[0], point[1]).unit 'px'
+            align    : new vec('c', 'c')
         ).move)
     
-    layer = new Layer
+    a = new Layer
         position : 'absolute'
         size     : new vec(100, 100).unit 'px'
         project  : points
@@ -52,15 +75,6 @@ if 0
     
     layer.on 'click', (e) ->
         animation.animate(layer.dom)
-
-# video test
-if 0
-    layer = new Layer
-        center : Screen.center
-    
-    layer2 = new Layer
-        dom    : '<video></video>'
-        parent : layer
 
 # drag n drop file
 if 0
@@ -99,7 +113,7 @@ if 0
             count : 3
             model :
                 id    : '{type: int, mode: forward, from: 1}'
-                image : '{type: image}'
+                image : '{type: image, source: server}'
         .on 'make', (item) ->
             new Layer
                 parent : scroller
@@ -147,6 +161,7 @@ if 0
                 t : 250
                 r : 650
                 b : 650
+            return true
             
     onZoom = layer.on 'pinchToZoom',
         move : (t) ->
@@ -193,34 +208,6 @@ if 0
             t.constraints =
                 min : -10
                 max : 10
-    
-    
-# toggle
-if 0
-    toggle = new Layer
-        position : 'absolute'
-        size     : new vec(100, 50).unit 'px'
-        center   : Screen.center
-        border   : radius: '25px'
-        padding  : 10
-
-    knob = new Layer
-        parent : toggle
-        size   : new vec(40, 100).unit '%'
-        border : radius : '25px'
-
-    knob.on 'drag',
-        move : (t) ->
-            t.translate.y = 0
-    
-    states =
-        current : 'on'
-        on      : left : '0px'
-        off     : left : '50px'
-    
-    toggle.on 'click', (e) ->
-        states.current = if states.current == 'on' then 'off' else 'on'
-        knob.animate time : .2, states[states.current]
 
 if 0
     button = new Layer
@@ -252,7 +239,7 @@ if 0
         border   : radius : '10px'
         bg       : color : 'red'
     
-    decay = animation.decay (pointer) ->
+    decay = animation.decay {value: new vec()}, (pointer) ->
         rotate = (obj) ->
             offset = obj.size.scale .5
             new matrix()

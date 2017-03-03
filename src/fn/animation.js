@@ -123,7 +123,7 @@ export default {
 		var types = {
 			vec : {
 				calculate : (a, b, c) => a.value.add(b.sub(a.value).scale(c), 1),
-				isEqual   : (a, b, c) => math.isEqual(b.sub(a.value).len(), c)
+				isEqual   : (a, b, c) => math.isEqual(b.sub(a.value).len, c)
 			},
 			num : {
 				calculate : (a, b, c) => a.value += (b - a.value) * c,
