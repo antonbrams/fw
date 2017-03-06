@@ -1,7 +1,8 @@
 
 
 
-import {Layer, animation, math} from '../index'
+import './style.sass'
+import {Layer, animation, math} from '../../index'
 
 /*
     toggle = Toggle
@@ -11,15 +12,13 @@ import {Layer, animation, math} from '../index'
 */
 
 export default function (transport = {}) {
-    var state = false
+    var state  = false
     var params = {
         left       : 0,
         opacityOff : 0,
         opacityOn  : 0
     }
-    var c = transport.color
-    var colorOff = c && c.off? c.off: '#BECADD'
-    var colorOn  = c && c.on ? c.on : '#00aaff'
+    
     var template = `<defs>
             <mask id="masterMask">
                 <circle fill="white" cx="33.33" cy="33.33" r="33.33" />
@@ -29,13 +28,12 @@ export default function (transport = {}) {
             </mask>
         </defs>
         <g mask="url(#masterMask)">
-            <rect fill="${colorOff}" width="100" height="66.66" opacity="{opacityOff}" />
-            <rect fill="${colorOn}" width="100" height="66.66" opacity="{opacityOn}" />
+            <rect width="100" height="66.66" opacity="{opacityOff}" />
+            <rect width="100" height="66.66" opacity="{opacityOn}" />
         </g>`
-        
+    
     var toggle = new Layer({
-        position : 'relative',
-        dom      : '<svg viewBox="0 0 100 66.66" width="45" height="30"></svg>',
+        dom      : '<svg class="toggle" viewBox="0 0 100 66.66" width="45" height="30"></svg>',
         content  : {html:template, bind:params},
     })
     
@@ -50,8 +48,13 @@ export default function (transport = {}) {
             slide.value = t.translate.x / 16.66 + (state? 1: 0)
             transport.onDrag && transport.onDrag(slide.value)
         },
-        cancel (t) {
-            state = t.translate && t.translate.len > 2? slide.value > .5: !state
+        up (t) {
+            state = slide.value > .5
+            slide.to(state? 1: 0)
+            transport.onChange && transport.onChange(state)
+        },
+        click (t) {
+            state = !state
             slide.to(state? 1: 0)
             transport.onChange && transport.onChange(state)
         }
@@ -61,12 +64,12 @@ export default function (transport = {}) {
         toggle,
         enable () {
             onDrag.on()
-            toggle.set({opacity : 1})
+            toggle.dom.classList.remove('disabled')
             return this
         },
         disable () {
             onDrag.off()
-            toggle.set({opacity : .3})
+            toggle.dom.classList.add('disabled')
             return this
         },
         on () {

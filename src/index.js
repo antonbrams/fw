@@ -17,15 +17,14 @@ export {default as text}      from './fn/text'
 export {default as css}       from './fn/css'
 
 // core
-import './core/style.sass'
-export {default as Layer}     from './core/Layer'
-export {default as Screen}    from './core/Screen'
+export {default as Layer}     from './core/layer/'
+export {default as Screen}    from './core/screen/'
+export {default as gesture}   from './core/gesture/'
 export {default as model}     from './core/model'
-export {default as gesture}   from './core/gesture'
 
 // elements
-export {default as Scroller}  from './ui/Scroller'
-export {default as Toggle}    from './ui/Toggle'
-export {default as Device}    from './ui/Device'
+export {default as Scroller}  from './ui/scroller/'
+export {default as Toggle}    from './ui/toggle/'
+export {default as Device}    from './ui/devices/'
 
 

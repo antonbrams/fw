@@ -1,6 +1,7 @@
 
 
 
+import './style.sass'
 import {
     dom, Layer, Screen, Scroller, 
     vec, etc, model, matrix, 
@@ -8,7 +9,7 @@ import {
 } from '../src/index.js'
 
 # Device
-if 1
+if 0
     Screen.set 
         image : 'http://www.1designshop.com/wp-content/uploads/2015/12/1dsp-20151221-backgroung007.png'
         overflow : 'hidden'
@@ -22,18 +23,16 @@ if 1
         flow   : 'y'
         parent : iPhone
     
-    mockup = model.put
-        # options
-            count : 5
-            model : 
-                image : '{type: image, source: server}'
-        # on events
-        .on 'make', (item) ->
-            layer = new Layer
-                parent : scroller
-                size   : new vec('100', '25').unit '%'
-            etc.compressImage item.image, .1, (url) -> layer.image url
-            return layer
+    mockup = model.put count: 5, model: 
+            image : '{type: image, source: server}'
+    
+    # on events
+    mockup.on 'make', (item) ->
+        layer = new Layer
+            parent : scroller
+            size   : new vec('100', '25').unit '%'
+        etc.compressImage item.image, .1, (url) -> layer.image url
+        return layer
 
 # projection matrix
 if 0
@@ -58,15 +57,19 @@ if 0
         position : 'absolute'
         size     : new vec(100, 100).unit 'px'
         project  : points
+        
+    window.a = a
 
 # toggle test
-if 0
+if 1
     masterSwitch = new Toggle
-        color    : off:'#BECADD', on:'red'
         onChange : (state) ->
             console.log 'slider', state
+            
     masterSwitch.toggle.set
         center: Screen.center
+        
+    window.masterSwitch = masterSwitch
 
 # animation css
 if 0
@@ -140,10 +143,8 @@ if 0
 
 # drag n drop
 if 0
-    mockup = model.put(
-        count : 1
-        model :
-            image : '{type: image, source: remote}'
+    mockup = model.put(count:1, model:
+        image : '{type: image, source: remote}'
     )[0]
     
     layer = new Layer
@@ -152,7 +153,7 @@ if 0
             size     : new vec(300, 300).unit 'px'
             move     : new vec(300, 300).unit 'px'
         .bind mockup,
-            image: 'image'
+            image    : 'image'
     
     onDrag = layer.on 'drag',
         move : (t) ->
@@ -162,6 +163,8 @@ if 0
                 r : 650
                 b : 650
             return true
+        click : (t) ->
+            console.log 'click'
             
     onZoom = layer.on 'pinchToZoom',
         move : (t) ->
@@ -174,7 +177,7 @@ if 0
             t.constraints = 
                 min: -10,
                 max:  10
-        cancel : (t) ->
+        up : (t) ->
             console.log 'tight'
     
     outter = new Layer

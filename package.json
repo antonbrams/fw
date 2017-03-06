@@ -5,9 +5,9 @@
   "author": "antonkluev",
   "email": "dev@antonkluev.com",
   "scripts": {
-    "client": "NODE_ENV=client.client webpack-dev-server",
-    "server": "NODE_ENV=server.server webpack --progress",
-    "build": "NODE_ENV=server.build webpack --progress",
+    "client": "NODE_ENV=client.client webpack-dev-server --config ./webpack.js",
+    "server": "NODE_ENV=server.server webpack --config ./webpack.js --progress",
+    "build": "NODE_ENV=server.build webpack --config ./webpack.js --progress",
     "nodeserver": "sudo nodemon ./test.js"
   },
   "devDependencies": {

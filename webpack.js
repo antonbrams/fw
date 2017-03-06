@@ -44,10 +44,10 @@ var lib = {
 
 // browser test
 if (env.mode == 'client') Object.assign(config, {
-	entry     : {'./app.js' : './test/app.coffee'},
+	entry     : {'./app.js' : './dev/app.coffee'},
     output    : {filename : '[name]'},
 	devServer : {
-		contentBase : './test',
+		contentBase : './dev',
 		stats       : 'errors-only',
 		inline      : true,
 		port        : 8000

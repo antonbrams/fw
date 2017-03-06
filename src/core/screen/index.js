@@ -1,7 +1,8 @@
 
 
 
-import {vec, event, gesture, Layer} from '../index'
+import './style.sass'
+import {vec, event, gesture, Layer} from '../../index'
 
 class Screen extends Layer {
     

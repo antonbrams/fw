@@ -1,8 +1,8 @@
 
 
 
-import './devices/style.sass'
-import {Layer} from '../index'
+import './style.sass'
+import {Layer} from '../../index'
 
 export default class Device extends Layer {
     

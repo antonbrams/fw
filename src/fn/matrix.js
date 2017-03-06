@@ -203,7 +203,8 @@ export default class Matrix {
                 0, 0, a[6]*d.x+a[7]*d.y+a[8]
             ])
         }
-        var t = m3x3(basisToPoints(lt, rt, lb, rb), adjugate(
+        var t = m3x3(
+            basisToPoints(lt, rt, lb, rb), adjugate(
             basisToPoints(new vec(), new vec(size.x), new vec(0, size.y), size)))
         for (var i = 0; i < 9; i ++) t[i] /= t[8]
         return this.multiply([

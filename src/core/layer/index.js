@@ -1,11 +1,12 @@
 
 
 
+import './style.sass'
 import {
     dom, css, val, geo, vec, matrix,
     animation, event, text, gesture,
     Screen
-} from '../index'
+} from '../../index'
 
 export default class Layer {
     
@@ -24,7 +25,7 @@ export default class Layer {
             },
             pop : {},
             templateUpdater              : null,
-            transformationTouchEventLink : null,
+            transformationTouchEventLink : null, // see in gestures
         }
         // if no options at all
         if (!val.exists(options)) {
@@ -247,9 +248,7 @@ export default class Layer {
     clone (options) {
         var clone = this.dom.cloneNode(true)
 		this.dom.parentNode.appendChild(clone)
-        return new Layer({
-            dom : clone
-        }).set(options)
+        return new Layer(clone).set(options)
     }
     
     collision (layer) {
@@ -263,15 +262,15 @@ export default class Layer {
     
     // dom structure
     child (query) {
-        var children = this.dom.querySelector(query)
-        return children.layer || new Layer(children)
+        var child = this.dom.querySelector(query)
+        return child.layer || new Layer(child)
     }
     
     childs (query) {
-        var children = this.dom.querySelectorAll(query)
+        var childs = this.dom.querySelectorAll(query)
         var out = []
-        for (var i = 0; i < children.length; i ++)
-            out.push(children[i].layer || new Layer(children[i]))
+        for (var i = 0; i < childs.length; i ++)
+            out.push(childs[i].layer || new Layer(childs[i]))
         return out 
     }
     
@@ -607,7 +606,7 @@ export default class Layer {
             options.y == 'b'? -100: 0}%`}
     }
     
-    project (v) {
+    set project (v) {
         this.origin = new vec()
         this.move   = new vec()
         this.matrix = new matrix()
