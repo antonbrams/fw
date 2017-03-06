@@ -6,7 +6,6 @@ import {Layer, animation, math} from '../../index'
 
 /*
     toggle = Toggle
-        color    : off:'#BECADD', on:'#00aaff'
         onChange : (state) ->
             console.log 'slider', state
 */
@@ -21,19 +20,16 @@ export default function (transport = {}) {
     
     var template = `<defs>
             <mask id="masterMask">
-                <circle fill="white" cx="33.33" cy="33.33" r="33.33" />
-                <circle fill="white" cx="66.66" cy="33.33" r="33.33" />
-                  <rect fill="white"  x="33.33" width="33.33" height="66.66" />
-                <circle fill="black" cx="{left}" cy="33.33" r="30.33" />
+                <circle/><circle/><rect/><circle cx="{left}"/>
             </mask>
         </defs>
         <g mask="url(#masterMask)">
-            <rect width="100" height="66.66" opacity="{opacityOff}" />
-            <rect width="100" height="66.66" opacity="{opacityOn}" />
+            <rect opacity="{opacityOff}" />
+            <rect opacity="{opacityOn}" />
         </g>`
     
     var toggle = new Layer({
-        dom      : '<svg class="toggle" viewBox="0 0 100 66.66" width="45" height="30"></svg>',
+        dom      : '<svg class="toggle" viewBox="0 0 100 66.66"></svg>',
         content  : {html:template, bind:params},
     })
     

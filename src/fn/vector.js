@@ -12,7 +12,7 @@ export default class Vec {
     }
 
     copy () {
-        return new Vec(this.x, this.y)
+        return new Vec(this.x, this.y, this.z)
     }
 
     add (vec, set) {

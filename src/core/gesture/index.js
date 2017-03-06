@@ -230,7 +230,7 @@ var multitouch = (layer, transport) => {
 var dragMouseEventPattern = (layer, transport) => {
     var t = {}
     var down = event.listener(layer.dom, 'mousedown', e => {
-        move.on(); up.on(); e.preventDefault()
+        down.off(); move.on(); up.on(); e.preventDefault()
         Object.assign(t, {
             event : e,
             onDownPointer : new vec(e.clientX, e.clientY)
@@ -247,11 +247,11 @@ var dragMouseEventPattern = (layer, transport) => {
     })
     var up = event.listener(document, 'mouseup', e => {
         Object.assign(t, {
-            event : e,
+            event       : e,
             onUpPointer : new vec(e.clientX, e.clientY)
         })
         transport.up && transport.up(t)
-        t = {}; move.off(); up.off(); e.preventDefault()
+        down.on(); move.off(); up.off(); t = {}; e.preventDefault()
     })
     return {
         get active () {return down.active},
@@ -489,31 +489,49 @@ export default {
             down (t) {
                 temp.rect   = layer.rect
                 temp.center = layer.center
-                transport.down && transport.down(t)
+                temp.init   = false
             },
             move (t) {
-                // global range
-                var translate = t.constraints? 
-                    globalRange(t.constraints, t.translate):
-                    t.translate
-                // velocity
-                t.velocity = t.translate.sub(translate)
-                // apply translate to export
-                t.translate = translate
-                // call interface function
-                var defaultMove = transport.move && transport.move(t) === true || !transport.move
-                // move if return true
-                if (defaultMove) animation.draw(`${layer.identifier}: translate.move`, () => 
-                    layer.matrix = new matrix().translate(t.translate))
+                // init drag
+                if (!temp.init) {
+                    if (t.translate.len > 5) {
+                        temp.init       = true
+                        t.onDownPointer = t.onMovePointer
+                        t.translate     = new vec()
+                        transport.down && transport.down(t)
+                    }
+                // if initialized
+                } else {
+                    // global range
+                    var translate = t.constraints? 
+                        globalRange(t.constraints, t.translate):
+                        t.translate
+                    // velocity
+                    t.velocity = t.translate.sub(translate)
+                    // apply translate to export
+                    t.translate = translate
+                    // call interface function
+                    var def = transport.move && transport.move(t) !== 'false' || !transport.move
+                    // move if return true
+                    if (def) animation.draw(`${layer.identifier}: translate.move`, () => 
+                        layer.matrix = new matrix().translate(t.translate))
+                }
             },
             up (t) {
                 // if user has clicked
-                if (!t.translate || t.translate.len < 5) 
+                if (!temp.init)
                     transport.click && transport.click(t)
                 // bring it back
-                else if (transport.up && transport.up(t) === true || !transport.up)
-                        animation.draw(`${layer.identifier}: translate.cancel`,
-                            () => layer.animate(animationPreset, {matrix : new matrix()}))
+                else if (transport.up && transport.up(t) !== 'false' || !transport.up) {
+                    if (t.target) layer.set({
+                        matrix    : new matrix().translate(layer.rect.position.sub(t.target)),
+                        translate : t.target.unit('px')
+                    })
+                    animation.draw(`${layer.identifier}: translate.cancel`, () => 
+                        layer.animate(animationPreset, {
+                            matrix : new matrix()
+                        }, () => transport.end(t)))
+                }
             }
         }), 'translate')
     },

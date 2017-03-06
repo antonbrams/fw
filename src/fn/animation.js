@@ -89,7 +89,8 @@ export default {
 			if (!active) {
 				active = true
 				var loop = setInterval(() => {
-					for (var i in jobs) if (jobs[i]()) delete jobs[i]
+					for (var i in jobs) 
+						if (jobs[i] && jobs[i]() === 'false') delete jobs[i]
 					if (Object.keys(jobs).length == 0) {
 						active = false
 						clearTimeout(loop)
@@ -130,23 +131,23 @@ export default {
 				isEqual   : (a, b, c) => math.isEqual(a.value, b, c)
 			}
 		}
-		var value = options.value || 0
-		var job   = {value, type: types[value instanceof vec? 'vec': 'num']}
-		var stop  = false
+		var value  = options.value || 0
+		var job    = {value, type: types[value instanceof vec? 'vec': 'num']}
+		var active = false
 		callback(value)
 		var out   = {
 			to : value => {
 				this.jobs(id, () => {
-					if (!stop) {
+					if (!active) {
 						job.type.calculate(job, value, options.speed || .1)
 						callback(job.value)
 						if (job.type.isEqual(job, value, options.float || 1)) {
-							stop = true
+							active = true
 							e.emit('end')
 						}
 					}
-					var stopped = stop
-					stop = false
+					var stopped = !active
+					active = false
 					return stopped
 				})
 			},
@@ -158,7 +159,7 @@ export default {
 				return job.value
 			},
 			stop () {
-				stop = true
+				active = true
 				e.emit('stop')
 				return out
 			},

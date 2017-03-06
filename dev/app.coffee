@@ -4,9 +4,90 @@
 import './style.sass'
 import {
     dom, Layer, Screen, Scroller, 
-    vec, etc, model, matrix, 
+    vec, etc, geo, model, matrix, 
     animation, event, css, math, Toggle, Device
 } from '../src/index.js'
+
+# List drag n drop
+if 1
+    
+    # scroller
+    # rScroller = new Scroller etc.clone presetScroller, right : '5%'
+    lScroller = new Scroller 
+        position : 'absolute'
+        flow     : 'y'
+        size     : new vec(44, 50).unit '%'
+        center   : Screen.center
+        
+    # model
+    lModel = model.put count: 10, model: 
+        title : '{type: string, mode: text, count: 3}'
+        notes : '{type: string, mode: text, count: 5}'
+    
+    # make list
+    lModel.on 'make', (item) -> 
+        tmpl = """
+            <div style="font-size: 18px; font-weight:bold; margin-bottom: 5px;">#{item.title}</div>
+            <div>#{item.notes}</div>
+        """
+        listItem = new Layer
+            content : tmpl
+            parent  : lScroller
+            height  : 'auto'
+            padding : '20px'
+            margin  : b:'1px'
+        
+        dragInit = false
+        
+        listItem.on 'drag',
+            down : (t) ->
+                listItem.pop()
+                lScroller.lockContent()
+            move : (t) ->
+                t.constraints = etc.clone geo.vecdim(
+                    lScroller.rect.position, 
+                    lScroller.rect.size), 
+                    length  : 100
+                    onLimit : y : (a) ->
+                        animation.jobs 'scroll', () ->
+                            dir = if a == 'min' then 1 else if a == 'max' then -1 else 0
+                            lScroller.dom.scrollTop += 10 * dir
+                            return a != null
+                # check left
+                lScroller.firstLevel.forEach (node) ->
+                    top  = if listItem.center.y - 2 < node.center.y then listItem.size.y else 0
+                    node.translate = new vec(0, top).unit 'px'
+                # enable animation
+                if !dragInit
+                    dragInit = true
+                    # animate left
+                    setTimeout () ->
+                        lScroller.firstLevel.forEach (node) -> node.set transition:'.3s',
+                        100
+            up : (t) ->
+                # find new place
+                animation.jobs 'scroll'
+                lScroller.firstLevel.forEach (node) -> 
+                    if listItem.center.y > node.center.y then t.prevItem = node
+                # find end coordinates
+                t.target = if t.prevItem 
+                        new vec(t.prevItem.rect.position.x, t.prevItem.rect.opposite.y)
+                    else 
+                        lScroller.rect.position
+            end : (t) ->
+                # insert before or after
+                if !t.prevItem
+                then lScroller.prepend listItem 
+                else t.prevItem.insertAfter listItem
+                # reset left translate
+                lScroller.firstLevel.forEach (node) -> node.set
+                    translate  : new vec()
+                    transition : null
+                # bake items back
+                lScroller.unlockContent()
+                dragInit = false
+    
+        return listItem
 
 # Device
 if 0
@@ -61,7 +142,7 @@ if 0
     window.a = a
 
 # toggle test
-if 1
+if 0
     masterSwitch = new Toggle
         onChange : (state) ->
             console.log 'slider', state

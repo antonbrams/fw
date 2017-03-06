@@ -76,6 +76,33 @@ var expressions = {
     },
 }
 
+var parseExpressions = string => {
+    var out = {type: 'expression', expressions: []}
+    // find all the queries and replace them with functions
+    var string = string.replace(/{.*?}/g, match => {
+        var query = {}
+        // parse match
+        match.replace(/{| |}/g, '').split(',').forEach(p => {
+            p = p.split(':')
+            query[p[0]] = parseInt(p[1]) || p[1]
+        })
+        // find method of this and push generated expression
+        out.expressions.push(expressions[query.type](query))
+        // save index of array {1}
+        return `{${out.expressions.length - 1}}`
+    })
+    out.render = function () {
+        // replace all {1} with expression result
+        var result = string.replace(/{.*?}/g, i => {
+            // bundle.expressions[{1}]
+            return this.expressions[i.match(/\d+/)[0]].render()
+        })
+        // convert to int if no characters
+        return result.match(/[^\d+]/)? result: parseInt(result)
+    }
+    return out
+}
+
 export default {
     
     /*
@@ -186,40 +213,13 @@ export default {
         for (var key in model) {
             // init expression
             if (val.isStr(model[key]) && model[key].match(/{.*?}/))
-                model[key] = this._parseExpressions(model[key])
+                model[key] = parseExpressions(model[key])
             // render value if expression
             if (model[key].type == 'expression')
                 out[key] = model[key].render()
             // transfer value
             else
                 out[key] = model[key]
-        }
-        return out
-    },
-    
-    _parseExpressions (string) {
-        var out = {type: 'expression', expressions: []}
-        // find all the queries and replace them with functions
-        var string = string.replace(/{.*?}/g, match => {
-            var query = {}
-            // parse match
-            match.replace(/{| |}/g, '').split(',').forEach(p => {
-                p = p.split(':')
-                query[p[0]] = parseInt(p[1]) || p[1]
-            })
-            // find method of this and push generated expression
-            out.expressions.push(expressions[query.type](query))
-            // save index of array {1}
-            return `{${out.expressions.length - 1}}`
-        })
-        out.render = function () {
-            // replace all {1} with expression result
-            var result = string.replace(/{.*?}/g, i => {
-                // bundle.expressions[{1}]
-                return this.expressions[i.match(/\d+/)[0]].render()
-            })
-            // convert to int if no characters
-            return result.match(/[^\d+]/)? result: parseInt(result)
         }
         return out
     },

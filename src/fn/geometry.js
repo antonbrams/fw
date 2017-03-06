@@ -49,7 +49,7 @@ export default {
 		box.b = box.t + box.h
 		return box
 	},
-
+	
 	boxCollision (a, b) {
 		return (
 			a.l < b.l + b.w && a.t < b.t + b.h

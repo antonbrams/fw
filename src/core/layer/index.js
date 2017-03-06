@@ -13,7 +13,6 @@ export default class Layer {
     constructor (options) {
         this.identifier = new Date().getTime()
         this.event      = event.Machine('Layer')
-        this.data       = null
         this._dom       = null
         this._props     = {
             transformation : {
@@ -205,13 +204,13 @@ export default class Layer {
         this.event.emit('pop', this._props.pop)
         this._props.pop = {
             parent : this.dom.parentNode,
-            pos    : new vec(this.dom.style.left, this.dom.style.top),
+            move   : new vec(this.dom.style.left, this.dom.style.top),
             size   : new vec(this.dom.style.width, this.dom.style.height),
             offset : geo.vpo(this.dom)
         }
         this.set({
             position  : 'fixed',
-            pos       : new vec(),
+            move      : new vec(),
             size      : new vec(this.dom.offsetWidth +.5, this.dom.offsetHeight +.5).unit('px'),
             translate : this._props.pop.offset.position.unit('px')
         })
@@ -224,7 +223,7 @@ export default class Layer {
         this._props.pop.parent.appendChild(this.dom)
         this.set({
             position  : null,
-            pos       : this._props.pop.pos,
+            move      : this._props.pop.move,
             size      : this._props.pop.size,
             translate : new vec(),
             scale     : new vec(1, 1, 1),
@@ -247,18 +246,31 @@ export default class Layer {
     
     clone (options) {
         var clone = this.dom.cloneNode(true)
-		this.dom.parentNode.appendChild(clone)
+        this.dom.parentNode.insertBefore(clone, this.dom.nextSibling)
         return new Layer(clone).set(options)
     }
     
-    collision (layer) {
-        var a = geo.vpo(this.dom)
-        var b = geo.vpo(layer.dom)
-        return geo.boxCollision(
-            geo.vecdim(a.position, a.size), 
-            geo.vecdim(b.position, b.size)
-        )
+    collision (object) {
+        var a = this.rect
+        if (object instanceof Layer) {
+            var b = object.rect
+            return geo.boxCollision(
+                geo.vecdim(a.position, a.size),
+                geo.vecdim(b.position, b.size)
+            )
+        } else if (object instanceof vec)
+            return geo.hitTest(
+                geo.vecdim(a.position, a.size), 
+                object
+            )
     }
+    
+    hitTest (a, pointer) {
+		return (
+			a.l < pointer.x && pointer.x < a.l + a.w
+		&&  a.t < pointer.y && pointer.y < a.t + a.h
+		)
+	}
     
     // dom structure
     child (query) {
@@ -275,11 +287,8 @@ export default class Layer {
     }
     
     get parent () {
-        if (this.dom.parentNode && this.dom.parentNode.layer) {
-            return this.dom.parentNode.layer instanceof Layer? 
-                this.dom.parentNode.layer :
-                new Layer(this.dom.parentNode)
-        }
+        if (this.dom.parentNode && this.dom.parentNode.layer)
+            return this.dom.parentNode.layer || new Layer(this.dom.parentNode)
     }
     
     set parent (value) {
@@ -288,6 +297,11 @@ export default class Layer {
             value.append(this)
         else
             value.appendChild(this.dom)
+    }
+    
+    prepend (value) {
+        this.event.emit('prepend', value)
+        dom.prepend(this.dom, value instanceof Layer? value.dom: value)
     }
     
     append (value) {
@@ -299,9 +313,18 @@ export default class Layer {
             append(value)
     }
     
-    prepend (value) {
-        this.event.emit('prepend', value)
-        dom.prepend(this.dom, value instanceof Layer? value.dom: value)
+    insertBefore (value) {
+        this.event.emit('insertBefore', value)
+        this.dom.parentNode.insertBefore(
+            value instanceof Layer? value.dom: value, 
+            this.dom)
+    }
+    
+    insertAfter (value) {
+        this.event.emit('insertAfter', value)
+        this.dom.parentNode.insertBefore(
+            value instanceof Layer? value.dom: value, 
+            this.dom.nextSibling)
     }
     
     detach (value) {
@@ -326,6 +349,32 @@ export default class Layer {
     
     get content () {
         return this.dom.innerHTML
+    }
+    
+    get firstLevel () {
+        var n   = this.dom.childNodes
+        var out = []
+        for (var i = 0; i < n.length; i ++)
+            out.push(n[i].layer? n[i].layer: new Layer(n[i]))
+        return out
+    }
+    
+    lockContent () {
+        var posi = []
+        this.firstLevel.forEach((node, i) => posi[i] = node.move.unit('px'))
+        this.firstLevel.forEach((node, i) => node.set({
+            position : 'absolute',
+            move     : posi[i]
+        }))
+    }
+    
+    unlockContent () {
+        // TODO: maybe the reordering is necessary
+        this.firstLevel.forEach((node, i) => node.set({
+            position : null,
+            left     : null,
+            top      : null
+        }))
     }
     
     // classes
