@@ -10,15 +10,15 @@ import {
 
 # List drag n drop
 if 1
-    
     # scroller
     # rScroller = new Scroller etc.clone presetScroller, right : '5%'
     lScroller = new Scroller 
         position : 'absolute'
         flow     : 'y'
-        size     : new vec(44, 50).unit '%'
+        size     : new vec(50, 50).unit '%'
         center   : Screen.center
-        
+        border   : radius:'5px'
+    
     # model
     lModel = model.put count: 10, model: 
         title : '{type: string, mode: text, count: 3}'
@@ -43,6 +43,7 @@ if 1
             down : (t) ->
                 listItem.pop()
                 lScroller.lockContent()
+                listItem.addClass 'drag'
             move : (t) ->
                 t.constraints = etc.clone geo.vecdim(
                     lScroller.rect.position, 
@@ -67,6 +68,7 @@ if 1
             up : (t) ->
                 # find new place
                 animation.jobs 'scroll'
+                listItem.removeClass 'drag'
                 lScroller.firstLevel.forEach (node) -> 
                     if listItem.center.y > node.center.y then t.prevItem = node
                 # find end coordinates
@@ -224,6 +226,10 @@ if 0
 
 # drag n drop
 if 0
+    
+    device = new Device
+        scale : .3
+    
     mockup = model.put(count:1, model:
         image : '{type: image, source: remote}'
     )[0]
@@ -233,6 +239,7 @@ if 0
             zIndex   : 1
             size     : new vec(300, 300).unit 'px'
             move     : new vec(300, 300).unit 'px'
+            parent   : device
         .bind mockup,
             image    : 'image'
     
@@ -267,6 +274,7 @@ if 0
         size     : new vec(400, 400).unit 'px'
         bg       : color : 'transparent'
         border   : '1px red solid'
+        parent   : device
     
     # inner = new Layer
     #     position : 'absolute'
@@ -292,6 +300,10 @@ if 0
             t.constraints =
                 min : -10
                 max : 10
+    
+    layer.on 'wheel', (e) ->
+        console.log e.vector
+        
 
 if 0
     button = new Layer

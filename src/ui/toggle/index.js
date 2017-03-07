@@ -5,19 +5,20 @@ import './style.sass'
 import {Layer, animation, math} from '../../index'
 
 /*
-    toggle = Toggle
+    toggle = new Toggle
         onChange : (state) ->
             console.log 'slider', state
 */
 
 export default function (transport = {}) {
+    // states
     var state  = false
     var params = {
         left       : 0,
         opacityOff : 0,
         opacityOn  : 0
     }
-    
+    // template
     var template = `<defs>
             <mask id="masterMask">
                 <circle/><circle/><rect/><circle cx="{left}"/>
@@ -27,22 +28,23 @@ export default function (transport = {}) {
             <rect opacity="{opacityOff}" />
             <rect opacity="{opacityOn}" />
         </g>`
-    
+    // toggle object
     var toggle = new Layer({
         dom      : '<svg class="toggle" viewBox="0 0 100 66.66"></svg>',
         content  : {html:template, bind:params},
     })
-    
+    // slide function
     var slide = animation.decay({speed: .3, float: 2, value: 0}, value => { 
         params.left       = math.to(value, 33.33, 66.66)
         params.opacityOff = math.to(value, .3, .0)
         params.opacityOn  = math.to(value, .0, 1)
     })
-    
+    // ondrag event
     var onDrag = toggle.on('drag', {
         move (t) {
             slide.value = t.translate.x / 16.66 + (state? 1: 0)
             transport.onDrag && transport.onDrag(slide.value)
+            return false
         },
         up (t) {
             state = slide.value > .5
@@ -55,7 +57,7 @@ export default function (transport = {}) {
             transport.onChange && transport.onChange(state)
         }
     })
-    
+    // export of the interface
     return {
         toggle,
         enable () {

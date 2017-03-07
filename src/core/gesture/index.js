@@ -329,19 +329,19 @@ var dragTouchEventPattern = (layer, transport) => {
 
 export default {
     
-    wheel (layer, transport = {}) {
+    wheel (layer, callback) {
         return layer.on('mousewheel', e => {
-            var vector = 0
+            var v = 0
             var w = e.wheelDelta
             var d = e.detail
             if (d) {
                 // Opera
-                if (w) vector = w / d / 40 * d > 0? 1: -1
+                if (w) v = w / d / 40 * d > 0? 1: -1
                 // Firefox
-                else vector = -d / 3
+                else v = -d / 3
             // IE / Safari / Chrome
-            } else vector = w / 120
-            transport({e, vector})
+            } else v = w / 120
+            callback({e, vector: v})
         })
     },
     
@@ -511,7 +511,7 @@ export default {
                     // apply translate to export
                     t.translate = translate
                     // call interface function
-                    var def = transport.move && transport.move(t) !== 'false' || !transport.move
+                    var def = transport.move && transport.move(t) !== false || !transport.move
                     // move if return true
                     if (def) animation.draw(`${layer.identifier}: translate.move`, () => 
                         layer.matrix = new matrix().translate(t.translate))
@@ -522,7 +522,7 @@ export default {
                 if (!temp.init)
                     transport.click && transport.click(t)
                 // bring it back
-                else if (transport.up && transport.up(t) !== 'false' || !transport.up) {
+                else if (transport.up && transport.up(t) !== false || !transport.up) {
                     if (t.target) layer.set({
                         matrix    : new matrix().translate(layer.rect.position.sub(t.target)),
                         translate : t.target.unit('px')
@@ -530,45 +530,45 @@ export default {
                     animation.draw(`${layer.identifier}: translate.cancel`, () => 
                         layer.animate(animationPreset, {
                             matrix : new matrix()
-                        }, () => transport.end(t)))
+                        }, () => transport.end && transport.end(t)))
                 }
             }
         }), 'translate')
     },
     
-    pinchToRotate (layer, transport = {}) {
-        return initMultitouchGesture(layer, etc.clone(transport, {
-            move (t) {
-                if (transport.move && transport.move(t) !== false || !transport.move)
-                    animation.draw(`${layer.identifier}: rotate.move`,
-                        () => layer.rotate = t.rotate)
-            },
-            cancel (t) {
-                if (transport.cancel && transport.cancel(t) !== false || !transport.cancel)
-                    animation.draw(`${layer.identifier}: rotate.cancel`, 
-                        () => layer.animate(animationPreset, {rotate : 0}))
-            }
-        }), 'rotate')
-    },
-    
-    pinchToZoom (layer, transport = {}) {
-        return initMultitouchGesture(layer, etc.clone(transport, {
-            move (t) {
-                if (transport.move && transport.move(t) !== false || !transport.move)
-                    animation.draw(`${layer.identifier}: scale.move`, () => {
-                        layer.scale = t.scale
-                    })
-            },
-            cancel (t) {
-                if (transport.cancel && transport.cancel(t) !== false || !transport.cancel)
-                    animation.draw(`${layer.identifier}: scale.cancel`, () => {
-                        layer.animate(animationPreset, {
-                            scale : 1
-                        })
-                    })
-            }
-        }), 'scale')
-    },
+    // pinchToRotate (layer, transport = {}) {
+    //     return initMultitouchGesture(layer, etc.clone(transport, {
+    //         move (t) {
+    //             if (transport.move && transport.move(t) !== false || !transport.move)
+    //                 animation.draw(`${layer.identifier}: rotate.move`,
+    //                     () => layer.rotate = t.rotate)
+    //         },
+    //         cancel (t) {
+    //             if (transport.cancel && transport.cancel(t) !== false || !transport.cancel)
+    //                 animation.draw(`${layer.identifier}: rotate.cancel`, 
+    //                     () => layer.animate(animationPreset, {rotate : 0}))
+    //         }
+    //     }), 'rotate')
+    // },
+    // 
+    // pinchToZoom (layer, transport = {}) {
+    //     return initMultitouchGesture(layer, etc.clone(transport, {
+    //         move (t) {
+    //             if (transport.move && transport.move(t) !== false || !transport.move)
+    //                 animation.draw(`${layer.identifier}: scale.move`, () => {
+    //                     layer.scale = t.scale
+    //                 })
+    //         },
+    //         cancel (t) {
+    //             if (transport.cancel && transport.cancel(t) !== false || !transport.cancel)
+    //                 animation.draw(`${layer.identifier}: scale.cancel`, () => {
+    //                     layer.animate(animationPreset, {
+    //                         scale : 1
+    //                     })
+    //                 })
+    //         }
+    //     }), 'scale')
+    // },
     
 }
 

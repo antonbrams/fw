@@ -16,18 +16,18 @@ var config = {
 			},
 			{
 				test	: /\.(js)$/,
-				loader	: 'babel',
+				loader	: 'babel-loader',
 				query	: {presets: ["es2015"]},
 				exclude	: /node_modules/
 			},
 			{
 				test    : /\.(sass)$/,
-				loaders : ['style', 'css', 'sass?sourceMap'],
+				loaders : ['style-loader', 'css-loader', 'sass-loader?sourceMap'],
 				exclude	: /node_modules/
 			},
 			{
 				test: /\.(jpg|png|svg)$/, 
-				loader: 'url'
+				loader: 'url-loader'
 			}
 		]
     }
@@ -50,8 +50,12 @@ if (env.mode == 'client') Object.assign(config, {
 		contentBase : './dev',
 		stats       : 'errors-only',
 		inline      : true,
+		hot         : true,
 		port        : 8000
-	}
+	},
+	plugins : [
+		new webpack.HotModuleReplacementPlugin()
+	]
 });
 
 // server js test
