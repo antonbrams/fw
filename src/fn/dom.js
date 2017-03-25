@@ -9,7 +9,7 @@ export default {
     create (query = '') {
         var classes  = query.replace(/ /g, '').split('.')
         var tagAndId = []
-        if (classes[0].length == 0) tagAndId = classes[0].split('#')
+        if (classes[0] != '') tagAndId = classes[0].split('#')
         classes.shift()
         var element = document.createElement(tagAndId[0] || 'div')
         if (tagAndId.length > 1) element.id = tagAndId[1]

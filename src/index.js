@@ -2,6 +2,7 @@
 
 
 // functions
+export {default as dev}       from './fn/dev'
 export {default as animation} from './fn/animation'
 export {default as val}       from './fn/value'
 export {default as geo}       from './fn/geometry'
@@ -20,7 +21,7 @@ export {default as css}       from './fn/css'
 export {default as Layer}     from './core/layer/'
 export {default as Screen}    from './core/screen/'
 export {default as gesture}   from './core/gesture/'
-export {default as model}     from './core/model'
+export {default as model}     from './core/model/'
 
 // elements
 export {default as Scroller}  from './ui/scroller/'

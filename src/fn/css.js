@@ -46,6 +46,36 @@ export default {
         'animation'
     ]),
     
+    unit (value, unit = 'px') {
+        return value + (val.isNum(value)? unit: '')
+    },
+    
+    setLTRB (type, value, out, unit = 'px') {
+        if (val.isObj(value)) {
+            if ('x' in value && 'y' in value) {
+                out(type, `${this.unit(value.y, unit)} ${this.unit(value.x, unit)}`)
+            } else {
+                var params = {}
+                if ('x' in value) params[type]          = `0 ${this.unit(value.x, unit)}`
+                if ('y' in value) params[type]          = `${this.unit(value.y, unit)} 0`
+                if ('l' in value) params[type+'Left']   = this.unit(value.l, unit)
+                if ('t' in value) params[type+'Top']    = this.unit(value.t, unit)
+                if ('r' in value) params[type+'Right']  = this.unit(value.r, unit)
+                if ('b' in value) params[type+'Bottom'] = this.unit(value.b, unit)
+                out(params)
+            }
+        } else out(type, this.unit(value, unit))
+    },
+    
+    getLTRB (type, dom) {
+        return {
+            l: this.computed(dom, type+'-left'),
+            t: this.computed(dom, type+'-top'),
+            r: this.computed(dom, type+'-right'),
+            b: this.computed(dom, type+'-bottom')
+        }
+    },
+    
 }
 
 

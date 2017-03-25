@@ -57,19 +57,17 @@ export default {
 	*/
 	
 	flow (layer, time, ease, delay, next, end) {
-		// will be deprecated
-		var bang = () => {
-			layer.dom.removeEventListener('transitionend', bang)
+		layer.dom.ontransitionend = e => {
+			layer.dom.ontransitionend              = null
 			layer.dom.style[css.vendor.transition] = null
 			if (end) {
-				if (val.isFn(end))
+				if (val.isFn(end)) 
 					end()
-				else if (val.isObj(end))
+				else if (val.isObj(end)) 
 					layer.set(end)
 				end = null
 			}
 		}
-		layer.dom.addEventListener('transitionend', bang)
 		layer.dom.style[css.vendor.transition] = `${time}s ${ease} ${delay}s`
 		setTimeout(() => {
 			if (val.isFn(next))

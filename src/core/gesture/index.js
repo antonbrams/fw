@@ -490,6 +490,7 @@ export default {
                 temp.rect   = layer.rect
                 temp.center = layer.center
                 temp.init   = false
+                t.layer     = layer
             },
             move (t) {
                 // init drag

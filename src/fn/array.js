@@ -47,15 +47,12 @@ export default {
 
     // var deleted = del(workspaces, {'title.color': color});
     delete (array, query) {
-        var deleted
-        if (val.isObj(query)) {
-            deleted = this.find(array, query)
-            deleted.forEach(found => array.splice(array.indexOf(found), 1))
-        } else {
-            var i = array.indexOf(query)
-            deleted = array.splice(i, 1)
-        }
-        return deleted
+        if (val.isObj(query))
+            return this
+                .find(array, query)
+                .forEach(found => array.splice(array.indexOf(found), 1))
+        else 
+            return array.splice(array.indexOf(query), 1)
     },
 
 	// updateColumn([{id: 15}, {id: 30}], {id: [20, 15]}); -> [{id: 20}, {id: 15}]

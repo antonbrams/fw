@@ -5,7 +5,7 @@ import './style.sass'
 import {
     dom, css, val, geo, vec, matrix,
     animation, event, text, gesture,
-    Screen
+    Screen, dev, etc
 } from '../../index'
 
 export default class Layer {
@@ -28,7 +28,7 @@ export default class Layer {
         }
         // if no options at all
         if (!val.exists(options)) {
-            this.dom    = dom.create('.default')
+            this.dom    = dom.create('.default '+ (dev.debug? '.debug': ''))
             this.parent = Screen
         // if options are an tulpet
         } else if (val.isObj(options)) {
@@ -37,7 +37,7 @@ export default class Layer {
                 this.dom = options.dom
                 delete options.dom
             // if no dom, create just div with .layer
-            } else this.dom = dom.create('.default')
+        } else this.dom = dom.create('.default '+ (dev.debug? '.debug': ''))
             // parent
             if (val.exists(options.parent)) {
                 if (options.parent === null)
@@ -81,14 +81,14 @@ export default class Layer {
                 else
                     this[key] = value
             // set attributes
-            } else if (key in this.dom) this._setAttribute(key, value)
+            } else if (key in this.dom) this.setAttribute(key, value)
             // set css parameters
-            else if (key in this.dom.style) this._setCss(key, value)
+            else if (key in this.dom.style) this.setCss(key, value)
         }
         return this
     }
     
-    _setAttribute (option, value) {
+    setAttribute (option, value) {
         var set = (key, value) => {
             this.event.emit(key, value)
             if (val.exists(value))
@@ -103,7 +103,7 @@ export default class Layer {
                 set(key, option[key])
     }
     
-    _setCss (options, value) {
+    setCss (options, value) {
         var set = (key, value) => {
             this.event.emit(key, value)
             this.dom.style[key] = value
@@ -134,7 +134,7 @@ export default class Layer {
         }
         // link dom with layer
         this._dom.layer = this
-        this.addClass('layer')
+        this._dom.classList.add('layer')
         // replace old dom
         if (old) old.replaceWith(this.dom) 
     }
@@ -286,17 +286,19 @@ export default class Layer {
         return out 
     }
     
-    get parent () {
-        if (this.dom.parentNode && this.dom.parentNode.layer)
-            return this.dom.parentNode.layer || new Layer(this.dom.parentNode)
-    }
-    
     set parent (value) {
         this.event.emit('parent', value)
         if (value instanceof Layer)
             value.append(this)
-        else
+        else if (val.isDom(value))
             value.appendChild(this.dom)
+        else if (value == null && this.dom.parentNode)
+            this.dom.parentNode.removeChild(this.dom)
+    }
+    
+    get parent () {
+        if (this.dom.parentNode && this.dom.parentNode.layer)
+            return this.dom.parentNode.layer || new Layer(this.dom.parentNode)
     }
     
     prepend (value) {
@@ -351,6 +353,10 @@ export default class Layer {
         return this.dom.innerHTML
     }
     
+    clear () {
+        this.dom.innerHTML = ''
+    }
+    
     get firstLevel () {
         var n   = this.dom.childNodes
         var out = []
@@ -388,23 +394,23 @@ export default class Layer {
     }
     
     addClass (value) {
-        this.event.emit('addClass', value)
-        if (val.isArr(value)) 
-            value.forEach(item => this.dom.classList.add(item))
-        else this.dom.classList.add(value)
+        var set = item => {
+            this.event.emit('addClass', item)
+            this.dom.classList.add(item)}
+        ;(val.isArr(value)? value: value.split(' ')).forEach(set)
     }
     
     removeClass (value) {
-        this.event.emit('deleteClass', value)
-        if (val.isArr(value)) 
-            value.forEach(item => this.dom.classList.remove(item))
-        else this.dom.classList.remove(value)
+        var set = item => {
+            this.event.emit('removeClass', item)
+            this.dom.classList.remove(item)}
+        ;(val.isArr(value)? value: value.split(' ')).forEach(set)
     }
     
     // css
     set move (value) {
-        if ('x' in value) this._setCss('left', value.x)
-        if ('y' in value) this._setCss('top', value.y)
+        if ('x' in value) this.setCss('left', value.x)
+        if ('y' in value) this.setCss('top', value.y)
     }
     
     get move () {
@@ -412,80 +418,44 @@ export default class Layer {
     }
     
     set size (value) {
-        if ('x' in value) this._setCss('width', value.x)
-        if ('y' in value) this._setCss('height', value.y)
+        if ('x' in value) this.setCss('width', value.x)
+        if ('y' in value) this.setCss('height', value.y)
     }
     
     get size () {
         return new vec(this.dom.offsetWidth, this.dom.offsetHeight)
     }
     
-    image (value) {
+    set image (value) {
         this.bg({image: value})
     }
     
     set padding (value) {
-        if (val.isObj(value)) {
-            if ('x' in value && 'y' in value) {
-                this._setCss('padding', `${value.y} ${value.x}`)
-            } else {
-                var params = {}
-                if ('x' in value) params.padding       = `0 ${value.x}`
-                if ('y' in value) params.padding       = `${value.y} 0`
-                if ('l' in value) params.paddingLeft   = value.l
-                if ('t' in value) params.paddingTop    = value.t
-                if ('r' in value) params.paddingRight  = value.r
-                if ('b' in value) params.paddingBottom = value.b
-                this._setCss(params)
-            }
-        } else
-            this._setCss('padding', value)
+        css.setLTRB('padding', value, (param, value) => 
+            this.setCss(param, value), 'px')
     }
     
     get padding () {
-        return {
-            l: css.computed(this.dom, 'padding-left'),
-            t: css.computed(this.dom, 'padding-top'),
-            r: css.computed(this.dom, 'padding-right'),
-            b: css.computed(this.dom, 'padding-bottom')
-        }
+        return css.getLTRB('padding', this.dom)
     }
     
     set margin (value) {
-        if (val.isObj(value)) {
-            if ('x' in value && 'y' in value) {
-                this._setCss('margin', `${value.y} ${value.x}`)
-            } else {
-                var params = {}
-                if ('x' in value) params.margin       = `0 ${value.x}`
-                if ('y' in value) params.margin       = `${value.y} 0`
-                if ('l' in value) params.marginLeft   = value.l
-                if ('t' in value) params.marginTop    = value.t
-                if ('r' in value) params.marginRight  = value.r
-                if ('b' in value) params.marginBottom = value.b
-                this._setCss(params)
-            }
-        } else
-            this._setCss('margin', value)
+        css.setLTRB('margin', value, (param, value) => 
+            this.setCss(param, value), 'px')
     }
     
     get margin () {
-        return {
-            l: css.computed(this.dom, 'margin-left'),
-            t: css.computed(this.dom, 'margin-top'),
-            r: css.computed(this.dom, 'margin-right'),
-            b: css.computed(this.dom, 'margin-bottom')
-        }
+        return css.getLTRB('margin', this.dom)
     }
     
     bg (value) {
         if (val.isStr(value))
-            this._setCss('background', value)
+            this.setCss('background', value)
         else if (val.isObj(value)) {
             var params = {}
             if ('image' in value)
-                params.backgroundImage = 
-                    `url(${value.image})`
+                etc.imgOnLoad(value.image, e => 
+                    this.setCss('backgroundImage', `url('${e.image}')`))
             if ('origin' in value)
                 params.backgroundOrigin = val.isObj(value.origin)?
                     `${value.origin.x} ${value.origin.y}`: value.origin
@@ -503,34 +473,35 @@ export default class Layer {
                     value.repeat == 'yes'? 'repeat': value.repeat
             if ('color' in value)
                 params.backgroundColor = value.color
-            this._setCss(params)
+            this.setCss(params)
         }
     }
     
-    text (value) {
+    font (value) {
         if (val.isStr(value))
-            this._setCss('font', value)
+            this.setCss('font', value)
         else if (val.isObj(value)) {
             var props = {
                 style      : 'fontStyle', 
                 variant    : 'fontVariant', 
-                weight     : 'fontWeight', 
+                weight     : 'fontWeight',
                 size       : 'fontSize', 
                 height     : 'fontHeight', 
                 family     : 'fontFamily',
                 color      : 'color',
                 align      : 'textAlign', 
+                valign     : 'verticalAlign',
                 lineHeight : 'lineHeight',
                 shadow     : 'textShadow'
             }
             for (var key in props) 
-                if (key in value) this._setCss(props[key], value[key])
+                if (key in value) this.setCss(props[key], value[key])
         }
     }
     
     border (value) {
         if (val.isStr(value))
-            this._setCss('border', value)
+            this.setCss('border', value)
         else if (val.isObj(value)) {
             var set = (value, side) => {
                 var props = {
@@ -540,8 +511,7 @@ export default class Layer {
                     style  : 'Style'
                 }
                 for (var key in props)
-                    if (key in value)
-                        this._setCss(`border${side}${props[key]}`, value[key])
+                    if (value[key]) this.setCss(`border${side}${props[key]}`, value[key])
             }
             set(value, '')
             var props = {
@@ -555,8 +525,7 @@ export default class Layer {
                 br: 'BottomRight'
             }
             for (var key in props)
-                if (key in value) 
-                    set(value[key], props[key])
+                if (key in value) set(value[key], props[key])
         }
     }
     
@@ -628,17 +597,17 @@ export default class Layer {
     // center
     set center (value) {
         if (val.exists(value.x)) {
-            this._setCss('left', `${value.x - this.dom.parentNode.layer.rect.position.x}px`)
+            this.setCss('left', `${value.x - this.dom.parentNode.layer.rect.position.x}px`)
             this.align = {x: 'c'}
         }
         if (val.exists(value.y)) {
-            this._setCss('top', `${value.y - this.dom.parentNode.layer.rect.position.y}px`)
+            this.setCss('top', `${value.y - this.dom.parentNode.layer.rect.position.y}px`)
             this.align = {y: 'c'}
         }
     }
     
     get center () {
-        return geo.center(this.rect) 
+        return geo.center(this.rect)
     }
     
     // offset

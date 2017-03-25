@@ -7,12 +7,13 @@ import {Layer} from '../../index'
 export default class Scroller extends Layer {
     
     constructor (options) {
-        options.dom = '.scroller'
+        options.dom = '.scroller .y'
         super(options)
     }
     
     flow (value) {
-        this.dom.classList.add(value || 'y')
+        ['x', 'y'].forEach(axis => 
+            this.dom.classList[value == axis? 'add': 'remove'](value))
     }
 }
 

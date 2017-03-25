@@ -1,7 +1,7 @@
 
 
 
-import {val} from '../index'
+import {val, vec} from '../index'
 
 export default {
 	
@@ -15,6 +15,17 @@ export default {
 			Math.floor((1 + Math.random()) * 0x10000)
 				.toString(16).substring(1))
   	},
+	
+	imgOnLoad (src, callback) {
+		var img    = document.createElement('img')
+		img.onload = function () {
+			callback({
+				image : src,
+				size  : new vec (this.width, this.height)
+			})
+		}
+		img.src    = src
+	},
 	
 	uploadFile (input, onready) {
 		input.onchange = (() => {

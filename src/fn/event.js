@@ -52,7 +52,7 @@ export default {
         return out
     },
     
-    listener (dom, type, callback, flag) {
+    listener (dom, type, callback, flag = false) {
         var fn = e => {
             e.undef = () => {e.preventDefault(); return e}
             e.stop  = () => {e.stopPropagation(); return e}

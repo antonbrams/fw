@@ -140,14 +140,6 @@ export default class Vec {
     angle2d () {
 	    return Math.atan2(this.x, this.y) * 180 / Math.PI
     }
-
-    unit (unit) {
-        var data = {}
-        if (val.exists(this.x)) data.x = this.x + unit
-        if (val.exists(this.y)) data.y = this.y + unit
-        if (val.exists(this.z)) data.z = this.z + unit
-    	return data
-    }
     
     ununit() {
         if (val.exists(this.x)) this.x = parseFloat(this.x)
@@ -224,6 +216,25 @@ export default class Vec {
             this.y = vec.y
         } else return vec
 	}
+    
+    unit (unit) {
+        var data = {}
+        if (val.exists(this.x)) data.x = this.x + unit
+        if (val.exists(this.y)) data.y = this.y + unit
+        if (val.exists(this.z)) data.z = this.z + unit
+    	return data
+    }
+    
+    get px  () {return this.unit('px')}
+    get pt  () {return this.unit('pt')}
+    get pc  () {return this.unit('%')}
+    get em  () {return this.unit('em')}
+    get vw  () {return this.unit('vw')}
+    get vh  () {return this.unit('vh')}
+    get cm  () {return this.unit('cm')}
+    get mm  () {return this.unit('mm')}
+    get em  () {return this.unit('em')}
+    get rem () {return this.unit('rem')}
 }
 
 

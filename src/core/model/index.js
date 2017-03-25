@@ -1,7 +1,8 @@
 
 
 
-import {val, text, math, etc, arr} from '../index'
+
+import {val, text, math, etc, arr} from '../../index'
 
 var assets = {
     signs : ['', ',', '.', '?', '!'],
@@ -25,7 +26,7 @@ var expressions = {
     int (opt) {
         return {i: 0, method: 'int', mode: opt.mode, render () {
             return opt.mode == 'forward' || opt.mode == 'loop'?
-                opt.from + this.i ++:
+                (opt.from || 0) + this.i ++:
             opt.mode == 'random'?
                 Math.floor(math.to(Math.random(), opt.min, opt.max)):
                 this.i
@@ -56,20 +57,21 @@ var expressions = {
     // {type: image, source: local}
     image (opt) {
         var source = {
-            remote (i) {return `https://unsplash.it/500?image=${i}`},
-            local  (i) {return `file:///Library/Desktop%20Pictures/${
-                escape(assets.image.mac[i % assets.image.mac.length])}.jpg`},
-            server  (i) {return `./graphic/${
-                escape(assets.image.mac[i % assets.image.mac.length])}.jpg`}
+            remote : i => `https://unsplash.it/300?image=${i}`,
+            local  : i => `file:///Library/Desktop%20Pictures/${escape(assets.image.mac[i % assets.image.mac.length])}.jpg`,
+            server : i => `./graphic/images/${escape(assets.image.mac[i % assets.image.mac.length])}.jpg`,
+            custom : i => `${opt.path}${i % opt.path.max}.${opt.path.ext || '.jpg'}`
         }
-        var seed = math.randInt(0, 1000)
+        var seed = math.randInt(0, 500)
         return {i: 0, render () {
-            return source[opt.source || 'local'](seed + this.i ++)
+            return (
+                source[source[opt.source]? opt.source: 'custom']
+            )(seed + this.i ++)
         }}
     },
     
     // get(i => {return custom[i]})
-    iterate (callback) {
+    i (callback) {
         return {type: 'expression', i: 0, render () {
             return callback(this.i ++)
         }}
@@ -125,37 +127,43 @@ export default {
     */
     
     init (model = []) {
-        var destroy = layer => {layer.destroy()}
+        var destroy = layer => layer.destroy && layer.destroy()
         var make    = item  => {/* no initial value */}
         var methods = {
             on (topic, callback) {
                 if (topic == 'make') {
-                    make = item => {
-                        var layer  = callback(item)
-                        layer.data = item
-                        Object.defineProperty(item, 'layer', {
-                            value      : layer, 
-                            enumerable : false
-                        })
+                    make = (item, i, array) => {
+                        var _link = callback(item, i, array)
+                        if (_link) {
+                            _link.link = item
+                            Object.defineProperty(item, '_link', {
+                                value      : _link, 
+                                enumerable : false
+                            })
+                        }
                     }
                     model.forEach(make)
-                } else if (topic == 'destroy')
-                    destroy = callback
+                } else if (topic == 'destroy') destroy = callback
                 return model
             },
             push () {
-                make(arguments[0])
+                make(arguments[0], model.length, model)
                 Array.prototype.push.apply(this, arguments)
+                return model
             },
             splice () {
                 var deleted = Array.prototype.splice.apply(this, arguments)
-                deleted.forEach(a => destroy(a.layer))
+                deleted.forEach(a => destroy(a._link))
                 return deleted
             },
-            find      (query) {return arr.find(model, query)},
-            delete    (query) {return arr.delete(model, query)},
-            filterMap (query) {return arr.filterMap(model, query)},
-            reset     () {return model.splice(0, model.length)},
+            concat (array) {
+                array.forEach(a => this.push(a))
+                return model
+            },
+            find      : query => arr.find(model, query),
+            delete    : query => arr.delete(model, query),
+            filterMap : query => arr.filterMap(model, query),
+            reset     : query => model.splice(0, model.length),
         }
         for (var key in methods)
             Object.defineProperty(model, key,
