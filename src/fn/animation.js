@@ -57,8 +57,8 @@ export default {
 	*/
 	
 	flow (layer, time, ease, delay, next, end) {
-		layer.dom.ontransitionend = e => {
-			layer.dom.ontransitionend              = null
+		onEnd = e => {
+			layer.dom.removeEventListener('transitionend', onEnd)
 			layer.dom.style[css.vendor.transition] = null
 			if (end) {
 				if (val.isFn(end)) 
@@ -68,6 +68,7 @@ export default {
 				end = null
 			}
 		}
+		layer.dom.addEventListener('transitionend', onEnd)
 		layer.dom.style[css.vendor.transition] = `${time}s ${ease} ${delay}s`
 		setTimeout(() => {
 			if (val.isFn(next))
