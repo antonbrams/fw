@@ -472,7 +472,7 @@ export default {
     
     drag (layer, transport = {}) {
         var translate   = new vec()
-        var method      = event.types.isTouch? initMultitouchGesture: dragMouse
+        var method      = dragMouse //event.types.isTouch? initMultitouchGesture: dragMouse
         var temp        = {}
         var globalRange = (c, translate) => {
             var size = temp.rect.size.scale(.5)
