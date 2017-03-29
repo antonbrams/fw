@@ -3,6 +3,8 @@
 
 import {val, math} from '../index'
 
+const axis = ['x', 'y', 'z']
+
 export default class Vec {
 
     constructor (x = 0, y = 0, z = 0) {
@@ -10,116 +12,29 @@ export default class Vec {
         this.y = y
         this.z = z
     }
-
-    copy () {
-        return new Vec(this.x, this.y, this.z)
-    }
-
-    add (vec, set) {
-	    if (set) {
-	        this.x += (vec.x || 0)
-	        this.y += (vec.y || 0)
-	        this.z += (vec.z || 0)
-	        return this
-        } else return new Vec(
-            this.x + (vec.x || 0),
-            this.y + (vec.y || 0),
-            this.z + (vec.z || 0)
-        )
-    }
-
-    sub (vec, set) {
-		if (set) {   
-	        this.x -= (vec.x || 0)
-	        this.y -= (vec.y || 0)
-	        this.z -= (vec.z || 0)
-	        return this
-		} else return new Vec(
-            this.x - (vec.x || 0),
-            this.y - (vec.y || 0),
-            this.z - (vec.z || 0)
-        )
-    }
     
-    div (vec, set) {
-	    if (set) {
-	        this.x /= (vec.x || 1)
-	        this.y /= (vec.y || 1)
-	        this.z /= (vec.z || 1)
-	        return this
-        } else return new Vec(
-            this.x / (vec.x || 1),
-            this.y / (vec.y || 1),
-            this.z / (vec.z || 1)
-        )
-    }
+    add (vec, set) {return this.apply(axis => axis.value + (vec[axis.name] || 0), set)}
+    sub (vec, set) {return this.apply(axis => axis.value - (vec[axis.name] || 0), set)}
+    div (vec, set) {return this.apply(axis => axis.value / (vec[axis.name] || 1), set)}
+    mlt (vec, set) {return this.apply(axis => axis.value * (vec[axis.name] || 1), set)}
     
-    mult (vec, set) {
-	    if (set) {
-	        this.x *= (vec.x || 1)
-	        this.y *= (vec.y || 1)
-	        this.z *= (vec.z || 1)
-	        return this
-        } else return new Vec(
-            this.x * (vec.x || 1),
-            this.y * (vec.y || 1),
-            this.z * (vec.z || 1)
-        )
-    }
-
+    scale (len, set) {return this.mlt(new Vec().fill(len))}
+    norm (set) {return this.scale(1 / this.len(), set)}
+    
+    to (vec, i, set) {return this.apply(t => math.map(i, vec[t.name] || 0, t.value), set)}
+    copy () {return new Vec(this.x, this.y, this.z)}
+    fill (value) {return this.apply(t => value, true)}
+    reset () {return this.fill(0)}
+    
     get len () {
-        return Math.sqrt(
-            Math.pow(this.x || 0, 2) +
-            Math.pow(this.y || 0, 2) +
-            Math.pow(this.z || 0, 2)
-        )
+        var value = 0
+        axis.forEach(x => value += Math.pow(this[x] || 0, 2))
+        return Math.sqrt(value)
     }
-
-    scale (len, set) {
-	    if (set) {	
-			this.x *= len
-			this.y *= len
-			this.z *= len
-			return this
-		} else return new Vec(
-            this.x * len,
-            this.y * len,
-            this.z * len
-        )
-    }
-
-    norm (set) {
-	    if (set) {
-		    var len = 1 / this.len()
-	        this.x *= len
-	        this.y *= len
-	        this.z *= len
-	        return this
-	    } else {
-		    var len = 1 / this.len()
-	        return new Vec(
-	            this.x * len,
-	            this.y * len,
-	            this.z * len
-	        )
-        }
-    }
- 
-    resize (len) {
-        var norm = this.getNorm()
-        return new Vec(
-            norm.x * len,
-            norm.y * len,
-            norm.z * len
-        )
-    }
-
-    to (vec, i) {
-    	return new Vec(
-	    	i * ((vec.x || 0) - this.x) + this.x,
-	    	i * ((vec.y || 0) - this.y) + this.y,
-	    	i * ((vec.z || 0) - this.z) + this.z
-    	)
+    
+    resize (len, set) {
+        var norm = this.norm()
+        return this.apply(t => norm[t.name] * len, set)
     }
     
     rotate (angle, set) {
@@ -140,49 +55,27 @@ export default class Vec {
     angle2d () {
 	    return Math.atan2(this.x, this.y) * 180 / Math.PI
     }
-    
-    ununit() {
-        if (val.exists(this.x)) this.x = parseFloat(this.x)
-        if (val.exists(this.y)) this.y = parseFloat(this.y)
-        if (val.exists(this.z)) this.z = parseFloat(this.z)
-    	return this
-    }
-    
-    reset () {
-        if (val.exists(this.x)) this.x = 0
-        if (val.exists(this.y)) this.y = 0
-        if (val.exists(this.z)) this.z = 0
-    	return this
-    }
 
     log (name) {
-        var data = {x: this.x}
-        if (val.exists(this.y)) data.y = this.y
-        if (val.exists(this.z)) data.z = this.z
-        if (typeof name === 'undefined') 
-            console.log(data)
-        else
-            console.log(name, data)
+        var out = {}
+        axis.forEach(x => {
+            if (val.exists(this[x])) out[x] = this[x]})
+        if (typeof name === 'undefined') console.log(out)
+        else console.log(name, out)
     }
     
     set (params) {
-        for (var i in params)
-            this[i](params[i])
+        for (var i in params) this[i](params[i])
     }
     
-    apply (fn) {
-        return new Vec(
-            fn({dimension: 'x', value: this.x}),
-            fn({dimension: 'y', value: this.y}),
-            fn({dimension: 'z', value: this.z})
-        )
-    }
-    
-    fill (value) {
-        this.x = value
-        this.y = value
-        this.z = value
-        return this
+    apply (fn, set) {
+        var out = new Vec()
+        axis.forEach(axis => 
+            (set? this: out)[axis] = fn({
+                name  : axis, 
+                value : this[axis]
+            }))
+        return set? this: out
     }
     
     mix (list) {
@@ -217,13 +110,9 @@ export default class Vec {
         } else return vec
 	}
     
-    unit (unit) {
-        var data = {}
-        if (val.exists(this.x)) data.x = this.x + unit
-        if (val.exists(this.y)) data.y = this.y + unit
-        if (val.exists(this.z)) data.z = this.z + unit
-    	return data
-    }
+    int () {return this.apply(axis => parseInt(axis.value))}
+    float () {return this.apply(axis => parseFloat(axis.value))}
+    unit (unit) {return this.apply(axis => axis.value + unit)}
     
     get px  () {return this.unit('px')}
     get pt  () {return this.unit('pt')}

@@ -230,12 +230,12 @@ var multitouch = (layer, transport) => {
 var dragMouseEventPattern = (layer, transport) => {
     var t = {}
     var down = event.listener(layer.dom, 'mousedown', e => {
-        down.off(); move.on(); up.on(); e.preventDefault()
         Object.assign(t, {
             event : e,
             onDownPointer : new vec(e.clientX, e.clientY)
         })
         transport.down && transport.down(t)
+        down.off(); move.on(); up.on(); e.block()
     })
     var move = event.listener(document, 'mousemove', e => {
         Object.assign(t, {
@@ -243,7 +243,7 @@ var dragMouseEventPattern = (layer, transport) => {
             onMovePointer : new vec(e.clientX, e.clientY)
         })
         transport.move && transport.move(t)
-        e.preventDefault()
+        e.block()
     })
     var up = event.listener(document, 'mouseup', e => {
         Object.assign(t, {
@@ -251,7 +251,7 @@ var dragMouseEventPattern = (layer, transport) => {
             onUpPointer : new vec(e.clientX, e.clientY)
         })
         transport.up && transport.up(t)
-        down.on(); move.off(); up.off(); t = {}; e.preventDefault()
+        down.on(); move.off(); up.off(); t = {}; e.block()
     })
     return {
         get active () {return down.active},
