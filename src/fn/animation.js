@@ -57,7 +57,7 @@ export default {
 	*/
 	
 	flow (layer, time, ease, delay, next, end) {
-		onEnd = e => {
+		var onEnd = e => {
 			layer.dom.removeEventListener('transitionend', onEnd)
 			layer.dom.style[css.vendor.transition] = null
 			if (end) {
