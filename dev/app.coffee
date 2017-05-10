@@ -8,8 +8,11 @@ import {
     animation, event, css, math, Toggle, Device
 } from '../src/index.js'
 
+import './freeSpots.js'
+import './zoom.js'
+
 # List drag n drop
-if 1
+if 0
     # scroller
     # rScroller = new Scroller etc.clone presetScroller, right : '5%'
     lScroller = new Scroller 

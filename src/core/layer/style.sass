@@ -3,18 +3,17 @@
 @import ../../global.sass
 
 .layer
-    font-family : 'arial'
-    font-size   : 13
-    transition  : box-shadow .2s
-    &.default
-        position            : relative
-        display             : inline-block
-        width               : 100px
-        height              : 100px
-        background-size     : cover
-        background-position : center
-        background-repeat   : no-repeat 
-        &.debug
-            background-color : rgba(silver, .7)
-        
-
+	font-family : 'arial'
+	font-size   : 13
+	transition  : box-shadow .2s
+	&.default
+		position            : relative
+		display             : inline-block
+		background-size     : cover
+		background-position : center
+		background-repeat   : no-repeat 
+		color               : $colorBase
+		&.debug
+			background-color : rgba(silver, .7)
+			
+			

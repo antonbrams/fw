@@ -1,6 +1,4 @@
 
-
-
 // functions
 export {default as dev}       from './fn/dev'
 export {default as animation} from './fn/animation'
@@ -27,5 +25,3 @@ export {default as model}     from './core/model/'
 export {default as Scroller}  from './ui/scroller/'
 export {default as Toggle}    from './ui/toggle/'
 export {default as Device}    from './ui/devices/'
-
-

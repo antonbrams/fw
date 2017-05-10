@@ -7,7 +7,7 @@ export default {
 	to (t, a, b) {
 		return this.map(t, 0, 1, a, b, true)
 	},
-
+	
 	map (value, aMin, aMax, bMin, bMax, clamp) {
 		var x = clamp == true? (
 			value < aMin? aMin:
@@ -42,14 +42,14 @@ export default {
 	},
 	
 	binarySearch (length, check) {
-        var i =  Math.floor(.5 * length) // result
+		var i =  Math.floor(.5 * length) // result
 		var h = i // pointer
-        while (h > 1) {
-            h = Math.round(.5 * h)
-            i += (check(i)? 1: -1) * h
+		while (h > 1) {
+			h = Math.round(.5 * h)
+			i += (check(i)? 1: -1) * h
 		}
-        check(i, true)
-        return i
+		check(i, true)
+		return i
 	},
 	
 	linearInterpolation (t, points) {
@@ -68,17 +68,16 @@ export default {
 		// Return
 		return params
 	},
-
+	
 	getValueFromDictionary (value, list) {
 		var out
-		for (var i = 0; i < list.length; i ++)
-			if 	(value >= list[i][0]) out = list[i][1]
+		list.forEach(l => {if (value >= l[0]) out = l[1]})
 		return out
 	},
 
 	rubberRange (value, min, max, range, state) {
-        // https://www.desmos.com/calculator
-        // Based on 1-pow(1+x,-1)
+		// https://www.desmos.com/calculator
+		// Based on 1-pow(1+x,-1)
 		var factor = 1.3
 		var isMax  = val.exists(min)
 		var isMin  = val.exists(max)
@@ -96,24 +95,21 @@ export default {
 	},
 	
 	// var buffer = new Buffer(10) then var value = buffer.get(23.445) 
-    buffer : class {
-		
+	buffer : class {
 		constructor (size) {
-        	this.array = []
-        	this.size  = size
-        }
-		
-        get (value) {
-            var sum    = 0
-            var length = this.array.length
-            if (length > this.size) this.array.shift()
-            this.array.push(value)
-            for (var i = 0; i < length; i ++) 
-            	if (isFinite(this.array[i])) 
-                    sum += parseFloat(this.array[i])
-            return sum / length
-        }
-    },
+			this.array = []
+			this.size  = size
+		}
+		get (value) {
+			var sum    = 0
+			var length = this.array.length
+			if (length > this.size) this.array.shift()
+			this.array.push(value)
+			this.array.forEach(num => {
+				if (isFinite(num)) sum += parseFloat(num)})
+			return sum / length
+		}
+	},
 }
 
 
