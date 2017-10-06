@@ -1,8 +1,5 @@
 
-
-
 import {val, math} from '../index'
-
 const axis = ['x', 'y', 'z']
 
 export default class Vec {
@@ -123,5 +120,3 @@ export default class Vec {
 	get em  () {return this.unit('em')}
 	get rem () {return this.unit('rem')}
 }
-		
-		

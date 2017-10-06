@@ -1,30 +1,10 @@
+
 {
-  "name": "fw",
-  "version": "1.0.0",
-  "description": "My own javascript framework for web development",
-  "author": "antonkluev",
-  "email": "dev@antonkluev.com",
-  "git": "https://github.com/antonkluev/fw.git",
-  "scripts": {
-    "client": "NODE_ENV=client.client webpack-dev-server --config ./webpack.js",
-    "server": "NODE_ENV=server.server webpack --config ./webpack.js --progress",
-    "build": "NODE_ENV=server.build webpack --config ./webpack.js --progress",
-    "nodeserver": "sudo nodemon ./test.js"
-  },
-  "devDependencies": {
-    "babel-core": "^6.17.0",
-    "babel-loader": "^6.2.4",
-    "babel-preset-es2015-native-modules": "^6.9.0",
-    "coffee-loader": "^0.7.2",
-    "coffee-script": "^1.12.4",
-    "css-loader": "^0.25.0",
-    "file-loader": "^0.10.1",
-    "loader-utils": "^1.0.3",
-    "node-sass": "^3.11.2",
-    "sass-loader": "^4.0.2",
-    "style-loader": "^0.13.1",
-    "url-loader": "^0.5.7",
-    "webpack": "^2.2.1",
-    "webpack-dev-server": "^2.4.1"
-  }
+	"name": "fw",
+	"version": "1.0.0",
+	"main": "index.js",
+	"description": "My own javascript framework",
+	"author": "antonkluev",
+	"email": "dev@antonkluev.com",
+	"git": "https://github.com/antonkluev/fw.git"
 }

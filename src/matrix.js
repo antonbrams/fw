@@ -1,6 +1,4 @@
 
-
-
 import {val, vec, math} from '../index'
 
 /*
@@ -266,5 +264,15 @@ export default class Matrix {
 			out[i] = math.to(t, this.value[i], matrix.value[i])
 		return this.apply(out, set)
 	}
+	
+	// http://mathinsight.org/matrix_vector_multiplication
+	vec4d (v) {
+		let m = this.value
+		let out = new vec(
+			m[ 0]*v.x + m[ 1]*v.y + m[ 2]*v.z + m[ 3]*v.w,
+			m[ 4]*v.x + m[ 5]*v.y + m[ 6]*v.z + m[ 7]*v.w,
+			m[ 8]*v.x + m[ 9]*v.y + m[10]*v.z + m[11]*v.w)
+		out.w = m[12]*v.x + m[13]*v.y + m[14]*v.z + m[15]*v.w
+		return out
+	}
 }
-		
